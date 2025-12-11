@@ -6,7 +6,6 @@ Claude Code extension for structured, opinionated development workflows. No fluf
 
 ```bash
 git clone https://github.com/ash4180/vorbit.git
-cp -r vorbit/commands/* ~/.claude/commands/
 ```
 
 ## Onboarding
@@ -131,12 +130,13 @@ tools/scripts/task.sh start .vorbit/features/<slug>/tasks.md T001a
 tools/scripts/task.sh complete .vorbit/features/<slug>/tasks.md T001a
 ```
 
-## Important Note: DO NOT believe agents' output, they are not reliable. check the documentation all the time by yourself. ensure the feature is align your requirements.
+## Important 
+DO NOT believe agents' output, they are not reliable. check the documentation all the time by yourself. ensure the feature is align your requirements.
 
 
 ## Requirements
 
-- Claude Code
+Claude Code
 
 ## License
 
