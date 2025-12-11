@@ -12,10 +12,10 @@ git clone https://github.com/ash4180/vorbit.git
 
 1. Copy commands to Claude's command directory:
    ```bash
-   cp -r vorbit/commands/* ~/.claude/commands/
+   mkdir -p ~/.claude/commands/vorbit && cp -r commands/* ~/.claude/commands/vorbit/ 
    ```
 
-2. Copy `tools/` folder to your project root.
+2. Copy `vorbit/tools/` to `<your-project>/tools/`
 
 3. **(Optional)** Use Vorbit's coding standards globally:
    ```bash
