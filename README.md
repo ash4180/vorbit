@@ -15,13 +15,14 @@ git clone https://github.com/ash4180/vorbit.git
    mkdir -p ~/.claude/commands/vorbit && cp -r commands/* ~/.claude/commands/vorbit/ 
    ```
 
-2. Copy `vorbit/tools/` to `<your-project>/tools/`
+2. Copy tools to your project:
+   ```bash
+   cp -r vorbit/tools/ <your-project>/tools/
+   ```
 
 3. **(Optional)** Use Vorbit's coding standards globally:
-   ```bash
-   cp vorbit/AGENT.md ~/.claude/CLAUDE.md
-   ```
-   Copy the agent.md content to your claud.md file. This applies Vorbit's opinionated guidelines to ALL your Claude Code sessions.
+   - Open `~/.claude/CLAUDE.md` (create if it doesn't exist)
+   - Append the contents of `vorbit/AGENT.md` 
 
 4. Try `/vorbit:init:explore {idea}` to start.
 
@@ -84,14 +85,15 @@ You can use the following commands to create a new feature with the flow, if you
 
 ```bash
 # 1. Create implementation plan directly
-/vorbit:init:epic "improve login flow"
+/vorbit:init:epic improve-login-flow
 
 # 2. Generate tasks and implement
 /vorbit:manage:task improve-login-flow
-And implement the task one by one.
+
+# 3. Implement the task one by one.
 /vorbit:manage:implement improve-login-flow T001 
 
-# 3. Validate
+# 4. Validate
 /vorbit:manage:validate improve-login-flow
 ```
 
@@ -117,19 +119,52 @@ Tasks are generated in pairs (TDD style):
 
 Tasks marked with `[P]` can run in parallel when they don't depend on each other.
 
-### Script Commands
+### Commands
+
 ```bash
-# List all features
-tools/scripts/task.sh features
+# List all features and their states
+/vorbit:manage:implement features
 
-# List all tasks
-tools/scripts/task.sh list
+# List all tasks across all features
+/vorbit:manage:implement list
 
-# Task progress
-tools/scripts/task.sh start .vorbit/features/<slug>/tasks.md T001a
-tools/scripts/task.sh complete .vorbit/features/<slug>/tasks.md T001a
+# Task progress tracking
+/vorbit:manage:implement start my-feature T001
+/vorbit:manage:implement complete my-feature T001
+/vorbit:manage:implement fail my-feature T001
+
+# Task context (for resuming interrupted work)
+/vorbit:manage:implement save T001
+/vorbit:manage:implement restore T001
+/vorbit:manage:implement resumable
+
+# Environment validation
+/vorbit:manage:implement setup
 ```
 
+### Data Flow Example
+
+1. User runs: `/vorbit:manage:implement my-feature`
+- Command (implement.md) tells Claude:
+- Source common.sh Run task.sh setup
+- Find tasks for `my-feature`
+- Execute `task.sh start` / `task.sh complete`
+2. Script (task.sh) executes:
+- Updates tasks.md with status emoji (✅🔄❌)
+- Saves context to .vorbit/logs/
+- Recalculates progress percentages
+3. Log stores context so if interrupted:
+- `task.sh resumable` lists saved contexts
+- Command `/vorbit:manage:implement my-feature restore T001` and task.sh restore T001` recovers working state
+
+### The Workflow Chain
+
+```
+explore → prd → epic → tasks → implement → validate
+   │        │      │       │         │          │
+   └────────┴──────┴───────┴─────────┴──────────┘
+      All write to: .vorbit/features/<slug>/
+```
 ## Important 
 DO NOT believe agents' output, they are not reliable. check the documentation all the time by yourself. ensure the feature is align your requirements.
 
