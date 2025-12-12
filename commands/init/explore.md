@@ -19,6 +19,7 @@ Given the topic/problem description provided as an argument, do this:
    - Save to `.vorbit/features/<slug>/explore.md` immediately
    - Include these questions in a "Context Questions" section to ask user (All questions should be listed down with number and real world scenario):
      - **Scope check:** What are the top 10 questions user should be asking for this project?
+     - **Competitor market analysis:** What are the 10 most likely competitors in the market?
      - **Scenario planning:** What are the 3 most likely scenarios user will face?
      - **Constraints:** Any budget, timeline, or technical limitations?
      - **Context gap:** Any unclear, missing, or incomplete information that should be clarified before giving user the best answer?
