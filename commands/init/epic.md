@@ -1,6 +1,15 @@
 ---
-description: Convert PRD into an EPIC for parallel task execution (Phase 1-2)
+description: Convert PRD into an EPIC for parallel task execution
 ---
+
+**Role**: You are the SOFTWARE ARCHITECT. You make technical decisions, evaluate trade-offs, and document the WHY. 
+
+## Philosophy
+
+- **Think before you write** - Understand the codebase before proposing changes
+- **Document decisions, not just conclusions** - The WHY matters more than the WHAT
+- **Trade-offs are explicit** - Every choice has costs; name them
+- **Testability is non-negotiable** - If you can't test it, rewrite it until you can
 
 Given the feature slug provided as an argument, do this:
 
@@ -14,34 +23,51 @@ Given the feature slug provided as an argument, do this:
    - **ELSE**: Create new slug from feature description using `slugify` function
 4. Run `ensure_feature_dir "$feature_slug"` to ensure feature directory exists
 
-## Phase 1: Design Complete
+## Phase 1: Technical Design
 
-5. Load implementation context (priority order):
+5. Load implementation context:
    - **IF EXISTS** `.vorbit/features/<slug>/prd.md`: Use PRD for requirements
    - **ELSE**: Use `{ARGS}` and conversation as requirements source
-   - Analyze codebase directly for patterns and context
-6. Load `tools/templates/epic-template.md` as base format
-7. Fill template and save to `.vorbit/features/<slug>/epic.md`:
-   - `[EPIC_NAME]` → extracted from PRD title or arguments
-   - `[DATE]` → current date
-   - `[PRD_FILE]` → path to source PRD
-   - Technical context and design decisions
-8. Mark Phase 1 complete in epic.md
 
-## Phase 2: Ready for Task Generation
+6. **Analyze codebase architecture** (REQUIRED before any design):
+   - Identify existing patterns (how similar features are built)
+   - Map integration points (what this feature touches)
+   - List dependencies (external libs, internal modules)
+   - Note constraints (performance, security, compatibility)
 
-9. Review User Stories are complete with:
-   - Clear acceptance criteria (Given/When/Then)
-   - Edge cases identified
-   - Story IDs (S-001, S-002, etc.) for task mapping
-10. Mark Phase 2 complete in epic.md
-11. Report completion with:
+7. **Make technical decisions** - For each significant choice, ask yourself:
+   - What problem does this solve?
+   - What alternatives exist?
+   - Why this approach over alternatives?
+   - What are the trade-offs?
+   - Document in the Technical Context section or in each story's Technical Notes field
+
+8. Load `tools/templates/epic-template.md` and create `.vorbit/features/<slug>/epic.md`:
+   - Fill all placeholder fields from PRD or conversation
+   - Complete Technical Context section with architectural decisions
+   - Include component/module breakdown
+
+9. Mark Phase 1 complete in epic.md
+
+## Phase 2: Prioritized User Stories
+
+10. Create user stories following the template format with ALL required fields
+
+11. **Priority ordering rules**:
+    - P1: Core functionality, blocks other stories
+    - P2: Important features, can start after P1
+    - P3: Nice-to-have, parallelizable
+    - Stories MUST be ordered by priority (P1 first, then P2, then P3)
+
+12. **Testability gate** - Each story MUST have:
+    - Measurable acceptance criteria (no vague "should work well")
+    - Clear pass/fail conditions
+    - Defined test approach
+    - If story isn't testable, REWRITE IT until it is. Mark as "UNCLEAR" only after 3 failed attempts.
+
+13. Mark Phase 2 complete in epic.md
+
+14. Report completion with:
     - Feature slug: `<slug>`
     - Epic file path
-
-## 5-Phase Progress Tracking
-- [ ] Phase 1: Design complete (this command)
-- [ ] Phase 2: Stories ID ready for task mapping (this command)
-- [ ] Phase 3: Tasks generated `/vorbit:manage:task` command
-- [ ] Phase 4: Implementation complete
-- [ ] Phase 5: Validation runs tests `/vorbit:manage:validate` command
+    - Count: X stories (P1: Y, P2: Z, P3: W)

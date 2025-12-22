@@ -10,21 +10,53 @@ git clone https://github.com/ash4180/vorbit.git
 
 ## Onboarding
 
-1. Copy commands to Claude's command directory:
-   ```bash
-   mkdir -p ~/.claude/commands/vorbit && cp -r commands/* ~/.claude/commands/vorbit/ 
-   ```
+Make the installer executable first:
+```bash
+chmod +x tools/install.sh
+```
 
-2. Copy tools to your project:
-   ```bash
-   cp -r vorbit/tools/ <your-project>/tools/
-   ```
+### For Claude Code
+```bash
+# Project-local
+bash tools/install.sh claude
+# → .claude/commands/vorbit/ + ./CLAUDE.md
 
-3. **(Optional)** Use Vorbit's coding standards globally:
-   - Open `~/.claude/CLAUDE.md` (create if it doesn't exist)
-   - Append the contents of `vorbit/AGENT.md` 
+# Global (all projects)
+bash tools/install.sh --global claude
+# → ~/.claude/commands/vorbit/ + ~/.claude/CLAUDE.md
+```
+Use `--force` to overwrite existing installation.
 
-4. Try `/vorbit:init:explore {idea}` to start.
+### For Cursor
+```bash
+bash tools/install.sh cursor
+```
+Adds Vorbit rules to `.cursorrules` in your project root.
+
+### For Gemini CLI / Antigravity IDE
+```bash
+# Project-local
+bash tools/install.sh gemini
+
+# Global (all projects)
+bash tools/install.sh --global gemini
+```
+Updates `GEMINI.md` with Vorbit rules.
+
+### Manual Installation
+If you prefer manual setup:
+1. Copy commands: `cp -r commands/ .claude/commands/vorbit/` (project) or `~/.claude/commands/vorbit/` (global)
+2. Append `AGENT.md` to `./CLAUDE.md` (project) or `~/.claude/CLAUDE.md` (global)
+
+### Dry Run
+Preview changes without modifying anything:
+```bash
+bash tools/install.sh --dry-run claude
+bash tools/install.sh --dry-run cursor
+bash tools/install.sh --dry-run gemini
+```
+
+Try `/vorbit:init:explore {idea}` to start.
 
 
 ## Commands
@@ -172,6 +204,7 @@ DO NOT believe agents' output, they are not reliable. check the documentation al
 ## Requirements
 
 Claude Code
+
 
 ## License
 
