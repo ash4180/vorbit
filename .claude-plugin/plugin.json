@@ -1,0 +1,16 @@
+{
+  "name": "vorbit",
+  "version": "2.0.0",
+  "description": "Flexible development workflow. Jump in at any step: PRD, User Flow, Epic, Prototype, Implement, Validate.",
+  "author": {
+    "name": "Vibranium Labs"
+  },
+  "keywords": [
+    "workflow",
+    "prd",
+    "epic",
+    "prototype",
+    "notion",
+    "linear"
+  ]
+}
