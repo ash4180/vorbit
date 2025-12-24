@@ -1,0 +1,39 @@
+{
+  "project": {
+    "name": "User Authentication",
+    "description": "## Overview\nImplement email/password authentication with session management.\n\n## PRD Reference\n[User Authentication PRD](https://notion.so/vibranium-labs/User-Auth-abc123)\n\n## Technical Decisions\n- JWT tokens for stateless auth (scales horizontally)\n- bcrypt for password hashing (industry standard)\n- 30-day refresh tokens (balance security/UX)",
+    "state": "planned"
+  },
+  "stories": [
+    {
+      "title": "User signup with email/password",
+      "priority": "P1",
+      "labels": ["feature", "auth"],
+      "description": "## User Story\nAs a new user, I want to create an account with my email and password, so that I can access personalized features.\n\n## Acceptance Criteria\n1. **Given** I am on the signup page\n   **When** I enter valid email and password\n   **Then** my account is created and I am logged in\n\n2. **Given** I try to signup\n   **When** email already exists\n   **Then** I see 'Email already registered' error\n\n3. **Given** I try to signup\n   **When** password is less than 8 characters\n   **Then** I see validation error before submit\n\n## Technical Notes\n- **Approach:** Create User model, signup endpoint, password validation\n- **Reasoning:** Standard email/password first, social auth later\n- **Dependencies:** Database schema must exist\n\n## Traceability\n- PRD: FR-001"
+    },
+    {
+      "title": "Write tests for user signup",
+      "priority": "P1",
+      "labels": ["test", "auth"],
+      "description": "## User Story\nAs a developer, I want tests for signup, so that we catch regressions.\n\n## Acceptance Criteria\n1. **Given** valid signup data\n   **When** signup endpoint called\n   **Then** user created, 201 returned\n\n2. **Given** duplicate email\n   **When** signup attempted\n   **Then** 409 conflict returned\n\n3. **Given** weak password\n   **When** signup attempted\n   **Then** 400 with validation errors\n\n## Technical Notes\n- **Test type:** Integration tests for API\n- **Fixtures:** Test database with seeded data\n- **Mocks:** None (per project rules)\n\n## Traceability\n- PRD: FR-001\n- Implements: User signup story"
+    },
+    {
+      "title": "User login with credentials",
+      "priority": "P1",
+      "labels": ["feature", "auth"],
+      "description": "## User Story\nAs a returning user, I want to log in with my email and password, so that I can access my account.\n\n## Acceptance Criteria\n1. **Given** I have an account\n   **When** I enter correct credentials\n   **Then** I am logged in and redirected to dashboard\n\n2. **Given** I enter wrong password\n   **When** I submit login\n   **Then** I see 'Invalid credentials' (no password leak)\n\n3. **Given** I am logged in\n   **When** I close and reopen browser\n   **Then** I remain logged in (session persistence)\n\n## Technical Notes\n- **Approach:** JWT access + refresh token pattern\n- **Reasoning:** Stateless, scalable, standard\n- **Dependencies:** Signup must work first\n\n## Traceability\n- PRD: FR-002"
+    },
+    {
+      "title": "Session persistence across refreshes",
+      "priority": "P2",
+      "labels": ["feature", "auth"],
+      "description": "## User Story\nAs a logged in user, I want my session to persist, so that I don't have to log in repeatedly.\n\n## Acceptance Criteria\n1. **Given** I am logged in\n   **When** I refresh the page\n   **Then** I remain logged in\n\n2. **Given** my access token expires\n   **When** I make a request\n   **Then** token refreshes automatically\n\n3. **Given** 30 days have passed\n   **When** I return to the site\n   **Then** I must log in again\n\n## Technical Notes\n- **Approach:** Refresh token in httpOnly cookie\n- **Reasoning:** Secure, prevents XSS token theft\n- **Dependencies:** Login must work\n\n## Traceability\n- PRD: FR-004"
+    },
+    {
+      "title": "Clear error messages for auth failures",
+      "priority": "P3",
+      "labels": ["feature", "auth", "ux"],
+      "description": "## User Story\nAs a user who made a mistake, I want clear error messages, so that I can fix the problem.\n\n## Acceptance Criteria\n1. **Given** I enter invalid email format\n   **When** I try to submit\n   **Then** I see 'Please enter a valid email'\n\n2. **Given** I enter wrong password\n   **When** login fails\n   **Then** I see 'Invalid email or password' (no password hints)\n\n## Technical Notes\n- **Approach:** Client-side validation + API error mapping\n- **Reasoning:** Good UX without security leaks\n- **Dependencies:** Can be done in parallel\n\n## Traceability\n- PRD: FR-003"
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "name": "Login Flow",
+  "description": "User authenticates with email and password",
+  "display_on": ["Login"],
+  "prd_reference": "https://notion.so/vibranium-labs/User-Authentication-abc123",
+  "steps": [
+    {"id": "S1", "type": "entry", "label": "Open login page", "next": ["S2"]},
+    {"id": "S2", "type": "action", "label": "Enter email", "next": ["S3"]},
+    {"id": "S3", "type": "action", "label": "Enter password", "next": ["S4"]},
+    {"id": "S4", "type": "action", "label": "Click Login", "next": {"condition": "S5", "default": "S6"}},
+    {"id": "S5", "type": "success", "label": "Dashboard", "next": ["S7"]},
+    {"id": "S6", "type": "error", "label": "Show error", "next": ["S2"]},
+    {"id": "S7", "type": "exit", "label": "User logged in", "next": null}
+  ],
+  "error_handling": [
+    {"trigger": "Invalid credentials", "recovery": "Clear password, show error, focus email"},
+    {"trigger": "Account locked", "recovery": "Show lockout message with support contact"}
+  ],
+  "mermaid": "flowchart TD\n    START([Open login page]) --> A[Enter email]\n    A --> B[Enter password]\n    B --> C[Click Login]\n    C -->|Valid| D[Dashboard]\n    C -->|Invalid| E[Show error]\n    E --> A\n    D --> END([User logged in])"
+}
