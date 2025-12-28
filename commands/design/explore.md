@@ -6,48 +6,56 @@ allowed-tools: Read, Grep, Glob, AskUserQuestion, Notion
 
 Explore: $ARGUMENTS
 
-Use the **explore-schema** skill for exact output format.
+Use the **explore** skill for output format and validation rules.
 
-## Step 1: Gather Context via Conversation
+## Step 1: Ask 10+ Questions
 
-Use the **AskUserQuestion** tool to gather context interactively:
+**MANDATORY: Ask at least 10 questions before generating options.**
 
-1. **Generate 10 questions** specific to the topic
-   - Questions should probe key decisions, trade-offs, and unknowns
-   - Present all 10 questions, let user answer or add their own
+Generate 10 questions specific to the topic. Present ALL 10 in a single AskUserQuestion call:
 
-2. **Competitors** - "Who are the main competitors or existing solutions?"
+```
+"For [topic], let's explore these questions:
+1. [Core functionality question]
+2. [User needs question]
+3. [Scale/volume question]
+4. [Error handling question]
+5. [Constraints question]
+6. [Integration question]
+7. [Security/compliance question]
+8. [Timeline question]
+9. [Trade-off question]
+10. [Edge case question]
 
-3. **User scenarios** - "What are 3 real scenarios users will face?"
+Which are most important? What's missing?"
+```
 
-4. **Constraints** - "Any budget, timeline, or technical limitations?"
+Then ask follow-ups:
+- **Competitors**: "Who are existing solutions?"
+- **User scenarios**: "Describe 3 real scenarios"
+- **Constraints**: "Budget, timeline, or technical limitations?"
 
-Keep questions conversational. Use tool options when there are clear choices, free text when open-ended.
+**DO NOT proceed until you have answers to 10+ questions.**
 
 ## Step 2: Analyze
 
 After gathering context:
-
-1. Summarize key insights from user's answers to the 10 questions
-2. Identify the core problem (root cause, not symptoms)
-3. Consider existing codebase patterns if relevant
-4. Propose 2-3 approaches with pros/cons
-5. Make a recommendation with trade-offs
+1. Summarize insights from all question answers
+2. Identify root cause (not symptoms)
+3. Propose 2-3 approaches with pros/cons/effort/risk
+4. Make recommendation addressing constraints
 
 ## Step 3: Save to Notion
 
-Ask user: "Where should I save this? (Notion database name, page URL, or 'skip')"
+Ask: "Where should I save this? (database name, page URL, or 'skip')"
 
-If user provides a location:
+If saving:
 1. Use `notion-search` or `notion-fetch` to find target
-2. Create exploration document:
-   - `Name` = topic
-   - `Description` = one-line summary
-   - Full analysis in body
-3. If database has `Type` property, set to `["Document"]`
+2. Create document with Name = topic, full analysis in body
+3. If database has `Type` property, set to `["Exploration"]`
 
 ## Report
 
-- Notion page URL (if saved)
+- Notion URL (if saved)
 - Recommended approach summary
-- Next: `/vorbit:design:prd` to create PRD
+- Next: `/vorbit:design:prd`

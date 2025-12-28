@@ -1,12 +1,8 @@
 ---
-description: Create parent issue + sub-issues in Linear from PRD
-argument-hint: [feature name or Notion PRD URL]
-allowed-tools: Read, Grep, Glob, AskUserQuestion, Notion, Linear
+trigger: always_on
 ---
 
-Create issues for: $ARGUMENTS
-
-Use the **epic** skill for issue format and validation rules.
+# EPIC Schema skill for issue format and validation rules.
 
 ## Step 1: Gather Context
 
