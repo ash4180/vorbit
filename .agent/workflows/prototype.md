@@ -1,12 +1,8 @@
----
-description: Generate UI prototype fast. Creates page/feature with mock data.
-argument-hint: [feature name]
-allowed-tools: Read, Write, Edit, Bash, Grep, Glob, AskUserQuestion, Notion
----
+# Prototype
 
-Create a prototype for: $ARGUMENTS
+Generate UI prototype fast. Creates page/feature with mock data.
 
-Use the **prototype** skill for patterns and structure.
+Use the **prototype-patterns** rule for structure.
 
 ## SPEED IS PRIORITY
 
@@ -15,22 +11,22 @@ Skip documentation. Skip over-engineering. Generate working UI fast.
 ## Step 1: Detect Framework
 
 Check `package.json`:
-- `react` → React/TSX
-- `vue` → Vue SFC
-- `svelte` → Svelte
-- None → Vanilla HTML/CSS
+* `react` → React/TSX
+* `vue` → Vue SFC
+* `svelte` → Svelte
+* None → Vanilla HTML/CSS
 
 ## Step 2: Analyze Existing Patterns
 
 Scan codebase for:
-- Where pages/routes live
-- Component structure
-- Styling approach (CSS modules, Tailwind, styled-components)
-- Existing UI components to reuse
+* Where pages/routes live
+* Component structure
+* Styling approach (CSS modules, Tailwind, styled-components)
+* Existing UI components to reuse
 
 ## Step 3: Create Prototype
 
-**RULE: If ANY requirement is unclear, use AskUserQuestion.**
+**RULE: If ANY requirement is unclear, ask questions.**
 
 For the feature:
 1. Create page/route component matching project patterns
@@ -49,11 +45,11 @@ src/pages/[Feature]/
 
 ## Mock Data Rules
 
-- Mock folder under feature: `pages/Feature/mocks/`
-- JSON filename = endpoint: `users.json` → `/api/users`
-- Mock shape MUST match expected API response
-- Add TODO comment: `// TODO: Replace with useSWR('/api/...')`
-- Use realistic data (real names, valid emails)
+* Mock folder under feature: `pages/Feature/mocks/`
+* JSON filename = endpoint: `users.json` → `/api/users`
+* Mock shape MUST match expected API response
+* Add TODO comment: `// TODO: Replace with real API call`
+* Use realistic data (real names, valid emails)
 
 ## Report
 
@@ -69,5 +65,5 @@ Mock data (delete mocks/ when implementing real API):
 Used existing components:
 - [list]
 
-Next: Review with team, then /vorbit:implement:epic
+Next: Review with team, then /epic
 ```

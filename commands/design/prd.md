@@ -1,75 +1,65 @@
 ---
 description: Create a Product Requirements Document. No fluff, just what needs building.
-argument-hint: [feature description]
-allowed-tools: Read, AskUserQuestion, Notion
+argument-hint: [feature description or Notion URL]
+allowed-tools: Read, Grep, Glob, AskUserQuestion, Notion
 ---
 
 Create a PRD for: $ARGUMENTS
 
+Use the **prd** skill for output format and validation rules.
+
 ## Step 1: Gather Context
 
-1. IF existing context (explore.md, Notion doc, conversation), use it
-2. IF starting fresh, proceed to Step 2
+**IF Notion URL provided:**
+1. Use `notion-find` with page title from URL
+2. If content retrieval fails, ask user to paste relevant sections
+3. Proceed to Step 3 (restructure mode)
 
-## Step 2: Clarify Requirements via Conversation
+**IF existing context (explore doc, conversation):**
+1. Use that context as input
+2. Proceed to Step 2 for gaps
 
-**RULE: If ANY requirement is unclear, MUST use AskUserQuestion tool.**
+**IF starting fresh:**
+1. Proceed to Step 2
 
-Use conversational questions with options (checkbox/radio) when possible:
+## Step 2: Clarify Requirements
 
+**RULE: If ANY requirement is unclear, use AskUserQuestion.**
+
+Ask about:
 1. **Problem** - "What problem does this solve?"
-   - Let user describe freely
-
-2. **Users** - "Who has this problem?"
-   - Options: Internal team, End users, Admins, API consumers, Other
-
-3. **Priority** - "How urgent is this?"
-   - Options: Critical (blocking), High (needed soon), Medium (planned), Low (nice-to-have)
-
-4. **Scope decisions** - For each ambiguous requirement, ask:
-   - "Should [feature] support X or Y?" with clear options
-   - "Do you need [capability]?" with Yes/No
-   - "Which approach: A, B, or C?" with trade-off descriptions
-
-5. **Constraints** - "Any limitations I should know?"
-   - Budget, timeline, compliance, technical
+2. **Users** - "Who has this problem?" (options: Internal team, End users, Admins, etc.)
+3. **Priority** - "How urgent?" (Critical, High, Medium, Low)
+4. **Scope** - For ambiguous requirements, ask with options
+5. **Constraints** - Budget, timeline, compliance
 
 Keep asking until ALL requirements are clear. Don't guess.
 
-## Step 3: Create PRD
+## Step 3: Generate PRD
 
-Use the **prd-schema** skill for exact output format.
-
-Generate PRD with confirmed details:
-- **Name**: Feature name (3-8 words, no jargon)
-- **Description**: One-line summary (max 100 chars)
-- **Problem**: What's broken (max 3 sentences, no tech)
-- **Users**: Who has this problem
-- **User Stories**: US-001, US-002... As a [user], I want [goal], so that [benefit]
-- **Acceptance Criteria**: Clear conditions per user story
-- **User Flow**: `[To be added via /vorbit:design:journey]`
-- **Constraints**: Budget, timeline, compliance limits
-- **Out of Scope**: What we're NOT building
-- **Success Criteria**: Measurable outcomes (numbers, percentages)
+Use the **prd** skill template. Include:
+- Name (3-8 words, no jargon)
+- Problem (max 3 sentences, no tech)
+- Users
+- User Stories with acceptance criteria
+- User Flow: `[To be added via /vorbit:design:journey]`
+- Constraints
+- Out of Scope
+- Success Criteria (with numbers)
 
 ## Step 4: Save to Notion
 
-Ask user: "Where should I save this PRD? (Notion database name, page URL, or 'skip')"
+Ask: "Where should I save this PRD? (database name, page URL, or 'skip')"
 
-If user provides a location:
+If saving:
 1. Use `notion-search` or `notion-fetch` to find target
-2. Create PRD document:
-   - `Name` = feature name
-   - `Description` = one-line summary
-   - Full PRD in body
+2. Create with Name = feature name, full PRD in body
 3. If database has `Type` property, set to `["PRD"]`
 
-## Validation
-
-Before saving, use **output-validator** agent to check PRD matches schema.
+**Hook auto-validates before save. Fix issues if prompted.**
 
 ## Report
 
-- Notion page URL (if saved)
-- Summary: X requirements, Y success criteria
+- Notion URL (if saved)
+- Summary: X user stories, Y success criteria
 - Next: `/vorbit:design:journey` or `/vorbit:implement:epic`

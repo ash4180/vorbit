@@ -1,49 +1,86 @@
 # Vorbit
 
-Claude Code plugin for structured development workflows. Notion-first, Linear-integrated.
+Product development workflows for AI coding agents. Notion-first, Linear-integrated.
+
+**Works with:** Claude Code, Google Antigravity (Gemini)
+
+**Jump in at any step.** No strict prerequisites.
 
 ## Installation
 
 ```bash
-# Clone and install as plugin
 git clone https://github.com/ash4180/vorbit.git
-cd vorbit
+```
 
-# Option 1: Use as plugin (recommended)
-# Copy .claude-plugin/ to make it a valid plugin
+### Claude Code
+Use as plugin directory or copy to `.claude/`.
 
-# Option 2: Copy commands to Claude's command directory
-mkdir -p ~/.claude/commands/vorbit && cp -r commands/* ~/.claude/commands/vorbit/
+### Google Antigravity
+Copy `.agent/` folder to your project root:
+```bash
+cp -r vorbit/.agent your-project/
+```
+
+Or symlink for updates:
+```bash
+ln -s /path/to/vorbit/.agent your-project/.agent
 ```
 
 ## Architecture
 
-**Notion** = Source of truth for documentation (PRDs, user flows, explorations)
-**Linear** = Issue tracking (parent + sub-issues)
+### Claude Code
+```
+commands/
+├── design/           # explore, prd, journey, prototype
+└── implement/        # epic, implement, verify, review
+
+skills/               # Pure schemas (no process instructions)
+├── explore/          # Exploration document schema
+├── prd/              # PRD schema with validation rules
+├── journey/          # User flow diagram schema (max 15 nodes)
+├── epic/             # Linear issue schema (branch-friendly titles)
+└── prototype/        # Page/feature prototype patterns
+
+hooks/
+└── hooks.json        # Auto-validation before Notion/Linear saves
+```
+
+### Google Antigravity
+```
+.agent/
+├── rules/            # Always-active schemas (like skills)
+│   ├── prd-schema.md
+│   ├── explore-schema.md
+│   ├── epic-schema.md
+│   ├── user-flow-schema.md
+│   └── prototype-patterns.md
+└── workflows/        # On-demand commands (triggered via /)
+    ├── explore.md
+    ├── prd.md
+    ├── journey.md
+    ├── prototype.md
+    ├── epic.md
+    ├── implement.md
+    ├── verify.md
+    └── review.md
+```
+
+**Notion** = Source of truth (PRDs, explorations, flows)
+**Linear** = Issue tracking (epics + sub-issues)
 **Code** = Prototypes and implementation
 
 ## Commands
 
-Jump in at any step. No strict prerequisites.
-
-### Design Commands
-
-| Command | Purpose |
-|---------|---------|
-| `/vorbit:design:explore [topic]` | Explore ideas, save to Notion |
-| `/vorbit:design:prd [feature]` | Create PRD in Notion |
-| `/vorbit:design:journey [feature]` | Create user flow diagram in Notion |
-| `/vorbit:design:prototype [feature]` | Generate UI prototype fast |
-
-### Implement Commands
-
-| Command | Purpose |
-|---------|---------|
-| `/vorbit:implement:epic [feature]` | Create parent issue + sub-issues in Linear |
-| `/vorbit:implement:implement [issue]` | Implement from Linear issue (supports parallel execution) |
-| `/vorbit:implement:verify [issue]` | Verify tests pass and acceptance criteria met |
-| `/vorbit:implement:review [file]` | Linus-style code review |
-
+| Purpose | Claude Code | Antigravity |
+|---------|-------------|-------------|
+| Explore ideas | `/vorbit:design:explore [topic]` | `/explore [topic]` |
+| Create PRD | `/vorbit:design:prd [feature]` | `/prd [feature]` |
+| User flow diagram | `/vorbit:design:journey [feature]` | `/journey [feature]` |
+| UI prototype | `/vorbit:design:prototype [feature]` | `/prototype [feature]` |
+| Create issues | `/vorbit:implement:epic [feature]` | `/epic [feature]` |
+| Implement | `/vorbit:implement:implement [issue]` | `/implement [issue]` |
+| Verify | `/vorbit:implement:verify [issue]` | `/verify [issue]` |
+| Code review | `/vorbit:implement:review [file]` | `/review [file]` |
 
 ## Flexible Workflow
 
@@ -73,49 +110,36 @@ Enter at any point:
                         └─────────────┘
 ```
 
+## Auto-Validation
+
+Hooks automatically validate before saving:
+
+- **Notion saves**: PRD, Exploration, User Flow validated against schemas
+- **Linear creates**: Issue title (kebab-case, branch-friendly) and description validated
+
+If validation fails, you'll be asked: "Found issues: [list]. Save anyway?"
+
 ## Skills
 
-Vorbit includes skills for consistent agent output:
-
-| Skill | Purpose | Key Features |
-|-------|---------|--------------|
-| **explore-schema** | Exploration structure | Context questions, options analysis, recommendations |
-| **prd-schema** | PRD structure for Notion | RICE prioritization, JSON schema, Notion mapping |
-| **user-flow-schema** | User flow diagrams | Mermaid patterns, step types, validation rules |
-| **epic-schema** | Linear issue structure | Parent + sub-issues, PRD mapping, priority |
-| **prototype-patterns** | Fast UI prototypes | Framework detection, mock data strategies |
-
-Each skill follows Claude Code patterns:
-```
-skills/skill-name/
-├── SKILL.md          # Core definition (lean)
-├── references/       # Detailed guides
-├── examples/         # Valid/invalid examples
-└── scripts/          # Helper scripts (optional)
-```
-
-## Agents
-
-- **output-validator** - Validates output before saving to Notion/Linear
-
-## Notion Integration
-
-Commands ask where to save (database name, page URL, or skip):
-- PRDs, explorations, and flows saved to user-specified location
-- If database has `Type` property, sets appropriate type (PRD, Flow Research, Document)
-
-## Linear Integration
-
-- Detects team's existing setup (labels, states, projects)
-- Creates parent issue + sub-issues (using `parentId`)
-- `[P]` marked sub-issues can run in parallel
-- Adapts to team's conventions, doesn't impose new patterns
+| Skill | Purpose | Key Rules |
+|-------|---------|-----------|
+| **explore** | Exploration structure | 10+ questions before options |
+| **prd** | PRD structure | 3-8 word name, numbers in success criteria |
+| **user-flow** | User flow diagrams | Max 15 nodes, split if needed |
+| **epic** | Linear issue structure | Title from user story → kebab-case |
+| **prototype** | Page/feature patterns | Mocks under feature folder |
 
 ## Requirements
 
-- Claude Code
+### Claude Code
+- Claude Code CLI
 - Notion MCP (for Notion integration)
 - Linear MCP (for Linear integration)
+
+### Google Antigravity
+- Google Antigravity IDE
+- Notion integration (if available)
+- Linear integration (if available)
 
 ## License
 
