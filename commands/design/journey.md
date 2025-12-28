@@ -1,20 +1,12 @@
 ---
-description: Create user journey diagrams in Excalidraw, update PRD in Notion with link
+description: Create user journey diagrams in FigJam, update PRD in Notion with link
 argument-hint: [feature or PRD reference]
-allowed-tools: Read, AskUserQuestion, Notion, mcp__excalidraw__*
+allowed-tools: Read, AskUserQuestion, Notion, mcp__plugin_figma_figma__generate_diagram
 ---
 
 Create a user flow for: $ARGUMENTS
 
 Use the **user-flow** skill for output format and validation rules.
-
-## Prerequisites
-
-**Canvas server must be running:**
-```bash
-cd ~/.claude/mcps/excalidraw-mcp && npm run canvas
-```
-View diagrams at: http://localhost:3000
 
 ## Step 1: Gather Context
 
@@ -33,15 +25,18 @@ Ask about:
 4. **Error scenarios** - "What can go wrong? How to handle?"
 5. **Exit points** - "Where can the user complete or leave?"
 
-## Step 3: Create User Flow in Excalidraw
+## Step 3: Create User Flow in FigJam
 
 **CRITICAL: Max 15 nodes total. Split complex flows.**
 
-Use Excalidraw MCP to create visual flow:
+Use `mcp__plugin_figma_figma__generate_diagram` with:
+- `name`: Descriptive title (e.g., "User Login Flow")
+- `mermaidSyntax`: Flowchart using LR direction, all text in quotes
+- `userIntent`: Brief description of what user is accomplishing
 
-### Option A: From Mermaid (Recommended)
-Use `create_from_mermaid` tool with Mermaid syntax:
-```
+### Mermaid Syntax Rules for FigJam
+
+```mermaid
 flowchart LR
     A(["Entry"]) --> B["Action"]
     B --> C{"Decision?"}
@@ -52,34 +47,24 @@ flowchart LR
     D --> G(["Success"])
 ```
 
-### Option B: Direct Elements
-Use `batch_create_elements` for custom layouts with annotations.
-
-### Adding Notes/Memos
-After creating flow, use `create_element` with type "text" to add:
-- Validation rules near input nodes
-- Error messages near error states
-- Business logic notes
+**IMPORTANT**:
+- Use `LR` direction (left-to-right)
+- Put ALL text in quotes (`["text"]`, `{"text?"}`, `-->|"label"|`)
+- No emojis in Mermaid code
+- No `\n` for newlines
 
 ## Step 4: Update PRD in Notion
 
 If PRD exists from Step 1:
 1. Fetch the PRD page
-2. Add flow reference: "User Flow: View in Excalidraw (local canvas)"
+2. Add FigJam URL under "User Flow" section
 3. Include the Mermaid source code as backup
 
-## Step 5: Export (Optional)
-
-Tell user: "Flow created! View at http://localhost:3000"
-
-Options for sharing:
-- Screenshot the canvas and upload to Notion
-- Export .excalidraw file from browser
-- Copy Mermaid source to Notion as text backup
+**IMPORTANT**: After calling generate_diagram, show the returned URL as a markdown link so user can view and edit.
 
 ## Report
 
-- Excalidraw flow created: Yes (view at localhost:3000)
+- FigJam flow created: Yes (with URL)
 - PRD updated: Yes/No (with URL)
 - Node count: X nodes, Y decisions, Z error paths
 - Next: `/vorbit:design:prototype` or `/vorbit:implement:epic`
