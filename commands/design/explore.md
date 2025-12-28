@@ -12,7 +12,7 @@ Use the **explore** skill for output format and validation rules.
 
 **MANDATORY: Ask at least 10 questions before generating options.**
 
-Generate 10 questions specific to the topic. Present ALL 10 in a single AskUserQuestion call:
+Generate 10 questions specific to the topic. Ask in batches of 3-4 using AskUserQuestion - wait for responses before asking the next batch:
 
 ```
 "For [topic], let's explore these questions:
@@ -26,14 +26,13 @@ Generate 10 questions specific to the topic. Present ALL 10 in a single AskUserQ
 8. [Timeline question]
 9. [Trade-off question]
 10. [Edge case question]
-
-Which are most important? What's missing?"
 ```
 
 Then ask follow-ups:
 - **Competitors**: "Who are existing solutions?"
 - **User scenarios**: "Describe 3 real scenarios"
 - **Constraints**: "Budget, timeline, or technical limitations?"
+- **Confirm**: "Which are most important? What's missing?"
 
 **DO NOT proceed until you have answers to 10+ questions.**
 
