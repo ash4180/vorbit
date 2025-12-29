@@ -1,5 +1,6 @@
 ---
 description: Linus-style code review. Brutal honesty. User approves before edits.
+allowed-tools: Read, Grep, Glob
 ---
 
 # Code Review - Linus Torvalds Style
@@ -59,5 +60,5 @@ Done. Fixed X files:
 - Fixed Z security issues
 - Renamed W functions
 
-Run `/vorbit:manage:validate` when ready.
+Run `/vorbit:implement:verify` when ready.
 ```
