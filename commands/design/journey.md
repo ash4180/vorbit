@@ -42,9 +42,7 @@ flowchart LR
     B --> C{"Decision?"}:::decision
     C -->|"Yes"| D["Continue"]:::action
     C -->|"No"| E["Error"]:::negative
-    E --> F["Recovery"]:::action
-    F --> B
-    D --> G(["Success"]):::positive
+    D --> F(["Success"]):::positive
 
     classDef startend fill:#CBD5E1,color:#334155,stroke:#94A3B8
     classDef action fill:#BAE6FD,color:#0c4a6e,stroke:#7DD3FC
@@ -53,6 +51,8 @@ flowchart LR
     classDef positive fill:#A7F3D0,color:#14532d,stroke:#6EE7B7
     classDef negative fill:#FECDD3,color:#881337,stroke:#FB7185
 ```
+
+Note: Error state `E` is terminal. User sees the error and retries implicitly - no back-loop needed.
 
 ### Color Palette (Required)
 
