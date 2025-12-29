@@ -56,12 +56,35 @@ flowchart LR
 
 | Type | Syntax | Use For |
 |------|--------|---------|
-| Start | `A(["Entry: ..."])` | Single entry point |
-| Action | `B["User does X"]` | User takes action |
-| Decision | `C{"Question?"}` | Branch point |
-| Success | `D(["Success: ..."])` | Happy path end |
-| Error | `E["Error: ..."]` | Failure state |
-| Sub-flow | `F["See: Flow Name"]` | Reference another diagram |
+| Start | `A(["Entry: ..."]):::startend` | Single entry point |
+| Action | `B["User does X"]:::action` | User takes action |
+| Condition | `C["Filter setting"]:::condition` | Settings/filter nodes |
+| Decision | `D{"Question?"}:::decision` | Branch point |
+| Success | `E(["Success: ..."]):::positive` | Happy path end |
+| Error | `F["Error: ..."]:::negative` | Failure state |
+| Sub-flow | `G["See: Flow Name"]:::action` | Reference another diagram |
+
+## Color Palette (Required)
+
+Apply these styles to ALL diagrams:
+
+```mermaid
+classDef startend fill:#CBD5E1,color:#334155,stroke:#94A3B8
+classDef action fill:#BAE6FD,color:#0c4a6e,stroke:#7DD3FC
+classDef condition fill:#C4B5FD,color:#4c1d95,stroke:#A78BFA
+classDef decision fill:#FED7AA,color:#7c2d12,stroke:#FDBA74
+classDef positive fill:#A7F3D0,color:#14532d,stroke:#6EE7B7
+classDef negative fill:#FECDD3,color:#881337,stroke:#FB7185
+```
+
+| Node Type | Fill | Stroke | Use For |
+|-----------|------|--------|---------|
+| Start & End | `#CBD5E1` | `#94A3B8` | Entry/exit points |
+| Action | `#BAE6FD` | `#7DD3FC` | User actions |
+| Condition | `#C4B5FD` | `#A78BFA` | Filter/settings nodes |
+| Decision | `#FED7AA` | `#FDBA74` | Branch points |
+| Positive | `#A7F3D0` | `#6EE7B7` | Success states |
+| Negative | `#FECDD3` | `#FB7185` | Error states |
 
 ## Validation Rules
 

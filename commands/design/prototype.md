@@ -1,7 +1,7 @@
 ---
 description: Generate UI prototype fast. Creates page/feature with mock data.
 argument-hint: [feature name]
-allowed-tools: Read, Write, Edit, Bash, Grep, Glob, AskUserQuestion, Notion
+allowed-tools: Read, Write, Edit, Bash, Grep, Glob, AskUserQuestion, mcp__plugin_Notion_notion__*
 ---
 
 Create a prototype for: $ARGUMENTS

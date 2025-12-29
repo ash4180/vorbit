@@ -1,7 +1,7 @@
 ---
 description: Create user journey diagrams in FigJam, update PRD in Notion with link
 argument-hint: [feature or PRD reference]
-allowed-tools: Read, AskUserQuestion, Notion, mcp__plugin_figma_figma__generate_diagram
+allowed-tools: Read, Skill, AskUserQuestion, mcp__plugin_Notion_notion__*, mcp__plugin_figma_figma__generate_diagram
 ---
 
 Create a user flow for: $ARGUMENTS
@@ -38,18 +38,37 @@ Use `mcp__plugin_figma_figma__generate_diagram` with:
 
 ```mermaid
 flowchart LR
-    A(["Entry"]) --> B["Action"]
-    B --> C{"Decision?"}
-    C -->|"Yes"| D["Continue"]
-    C -->|"No"| E["Error"]
-    E --> F["Recovery"]
+    A(["Entry"]):::startend --> B["Action"]:::action
+    B --> C{"Decision?"}:::decision
+    C -->|"Yes"| D["Continue"]:::action
+    C -->|"No"| E["Error"]:::negative
+    E --> F["Recovery"]:::action
     F --> B
-    D --> G(["Success"])
+    D --> G(["Success"]):::positive
+
+    classDef startend fill:#CBD5E1,color:#334155,stroke:#94A3B8
+    classDef action fill:#BAE6FD,color:#0c4a6e,stroke:#7DD3FC
+    classDef condition fill:#C4B5FD,color:#4c1d95,stroke:#A78BFA
+    classDef decision fill:#FED7AA,color:#7c2d12,stroke:#FDBA74
+    classDef positive fill:#A7F3D0,color:#14532d,stroke:#6EE7B7
+    classDef negative fill:#FECDD3,color:#881337,stroke:#FB7185
 ```
+
+### Color Palette (Required)
+
+| Node Type | Fill | Stroke | Use For |
+|-----------|------|--------|---------|
+| Start & End | `#CBD5E1` | `#94A3B8` | Entry/exit points |
+| Action | `#BAE6FD` | `#7DD3FC` | User actions |
+| Condition | `#C4B5FD` | `#A78BFA` | Filter/settings nodes |
+| Decision | `#FED7AA` | `#FDBA74` | Branch points |
+| Positive | `#A7F3D0` | `#6EE7B7` | Success states |
+| Negative | `#FECDD3` | `#FB7185` | Error states |
 
 **IMPORTANT**:
 - Use `LR` direction (left-to-right)
 - Put ALL text in quotes (`["text"]`, `{"text?"}`, `-->|"label"|`)
+- Apply color classes to ALL nodes using `:::className` syntax
 - No emojis in Mermaid code
 - No `\n` for newlines
 

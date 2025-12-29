@@ -1,7 +1,7 @@
 ---
 description: Create parent issue + sub-issues in Linear from PRD
 argument-hint: [feature name or Notion PRD URL]
-allowed-tools: Read, Grep, Glob, AskUserQuestion, Notion, Linear
+allowed-tools: Read, Grep, Glob, AskUserQuestion, mcp__plugin_Notion_notion__*, mcp__plugin_linear_linear__*
 ---
 
 Create issues for: $ARGUMENTS
