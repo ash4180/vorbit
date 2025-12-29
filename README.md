@@ -45,16 +45,10 @@ hooks/
 └── hooks.json        # Auto-validation before Notion/Linear saves
 ```
 
-### Google Antigravity
+### Antigravity (Gemini)
 ```
 .agent/
-├── rules/            # Always-active schemas (like skills)
-│   ├── prd-schema.md
-│   ├── explore-schema.md
-│   ├── epic-schema.md
-│   ├── user-flow-schema.md
-│   └── prototype-patterns.md
-└── workflows/        # On-demand commands (triggered via /)
+└──workflows/        # On-demand commands (triggered via /)
     ├── explore.md
     ├── prd.md
     ├── journey.md
@@ -133,13 +127,15 @@ If validation fails, you'll be asked: "Found issues: [list]. Save anyway?"
 
 ### Claude Code
 - Claude Code CLI
-- Notion MCP (for Notion integration)
-- Linear MCP (for Linear integration)
+- Notion MCP
+- Linear MCP
+- Figma MCP
 
 ### Google Antigravity
 - Google Antigravity IDE
-- Notion integration (if available)
-- Linear integration (if available)
+- Notion integration 
+- Linear integration 
+- Figma MCP
 
 ## License
 
