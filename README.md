@@ -45,7 +45,7 @@ hooks/
 └── hooks.json        # Auto-validation before Notion/Linear saves
 ```
 
-### Google Antigravity
+### Antigravity (Gemini)
 ```
 .agent/
 └──workflows/        # On-demand commands (triggered via /)
