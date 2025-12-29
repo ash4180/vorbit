@@ -1,6 +1,10 @@
 # Vorbit
 
-Claude Code extension for structured, opinionated development workflows. No fluff.
+Product development workflows for AI coding agents. Notion-first, Linear-integrated.
+
+**Works with:** Claude Code, Google Antigravity (Gemini)
+
+**Jump in at any step.** No strict prerequisites.
 
 ## Installation
 
@@ -8,170 +12,134 @@ Claude Code extension for structured, opinionated development workflows. No fluf
 git clone https://github.com/ash4180/vorbit.git
 ```
 
-## Onboarding
+### Claude Code
+Use as plugin directory or copy to `.claude/`.
 
-1. Copy commands to Claude's command directory:
-   ```bash
-   mkdir -p ~/.claude/commands/vorbit && cp -r commands/* ~/.claude/commands/vorbit/ 
-   ```
+### Google Antigravity
+Copy `.agent/` folder to your project root:
+```bash
+cp -r vorbit/.agent your-project/
+```
 
-2. Copy tools to your project:
-   ```bash
-   cp -r vorbit/tools/ <your-project>/tools/
-   ```
+Or symlink for updates:
+```bash
+ln -s /path/to/vorbit/.agent your-project/.agent
+```
 
-3. **(Optional)** Use Vorbit's coding standards globally:
-   - Open `~/.claude/CLAUDE.md` (create if it doesn't exist)
-   - Append the contents of `vorbit/AGENT.md` 
+## Architecture
 
-4. Try `/vorbit:init:explore {idea}` to start.
+### Claude Code
+```
+commands/
+├── design/           # explore, prd, journey, prototype
+└── implement/        # epic, implement, verify, review
 
+skills/               # Pure schemas (no process instructions)
+├── explore/          # Exploration document schema
+├── prd/              # PRD schema with validation rules
+├── journey/          # User flow diagram schema (max 15 nodes)
+├── epic/             # Linear issue schema (branch-friendly titles)
+└── prototype/        # Page/feature prototype patterns
+
+hooks/
+└── hooks.json        # Auto-validation before Notion/Linear saves
+```
+
+### Google Antigravity
+```
+.agent/
+├── rules/            # Always-active schemas (like skills)
+│   ├── prd-schema.md
+│   ├── explore-schema.md
+│   ├── epic-schema.md
+│   ├── user-flow-schema.md
+│   └── prototype-patterns.md
+└── workflows/        # On-demand commands (triggered via /)
+    ├── explore.md
+    ├── prd.md
+    ├── journey.md
+    ├── prototype.md
+    ├── epic.md
+    ├── implement.md
+    ├── verify.md
+    └── review.md
+```
+
+**Notion** = Source of truth (PRDs, explorations, flows)
+**Linear** = Issue tracking (epics + sub-issues)
+**Code** = Prototypes and implementation
 
 ## Commands
 
-Vorbit organizes commands into focused categories with workflow enforcement:
+| Purpose | Claude Code | Antigravity |
+|---------|-------------|-------------|
+| Explore ideas | `/vorbit:design:explore [topic]` | `/explore [topic]` |
+| Create PRD | `/vorbit:design:prd [feature]` | `/prd [feature]` |
+| User flow diagram | `/vorbit:design:journey [feature]` | `/journey [feature]` |
+| UI prototype | `/vorbit:design:prototype [feature]` | `/prototype [feature]` |
+| Create issues | `/vorbit:implement:epic [feature]` | `/epic [feature]` |
+| Implement | `/vorbit:implement:implement [issue]` | `/implement [issue]` |
+| Verify | `/vorbit:implement:verify [issue]` | `/verify [issue]` |
+| Code review | `/vorbit:implement:review [file]` | `/review [file]` |
 
-**Key Benefits:**
-- Feature isolation: Each feature gets its own `.vorbit/features/<slug>/` directory
-- Workflow enforcement: Commands check prerequisites before running
-- State tracking: Progress persists in feature directories
-- TDD enforcement: Tasks generated as test/implementation pairs
-- Parallel execution: Tasks marked `[P]` can run simultaneously
+## Flexible Workflow
 
-### Init Commands - Project Initialization
-Core workflow for any project:
-- `/vorbit:init:explore {idea}` - Explore solutions, creates feature slug
-- `/vorbit:init:prd {slug}` - Create PRD for feature
-- `/vorbit:init:epic {slug}` - Create implementation plan from PRD
-
-### Manage Commands - Project Management
-Works with epic-based workflow:
-- `/vorbit:manage:task {slug}` - Break epic into test/impl task pairs
-- `/vorbit:manage:implement {slug}` - Execute tasks from tasks.md
-- `/vorbit:manage:review {file}` - Linus-style code review
-- `/vorbit:manage:validate {slug}` - Validate implementation against epic
-
-### Learning Commands
-No workflow enforcement needed:
-- `/vorbit:learn:learn {topic}` - Programming lessons
-
-## Feature Workflow
-
-### New Feature (Full Workflow)
-You can use the following commands to create a new feature with the flow, if you're working on a new feature and you don't have the tech details. rely the flow to finish the feature.
-
-```bash
-# 1. Explore (Perform as product manager or designer) 
-/vorbit:init:explore {example feature}
-
-# 2. PRD (Perform as product manager or designer) 
-/vorbit:init:prd {example feature}
-
-# 3. Epic (Perform as Tech Architect) 
-/vorbit:init:epic {example feature}
-
-# 4. Generate tasks and implement (Perform as Developer)
-/vorbit:manage:task {example feature}
-
-# 5. Implement (Ensure tasks can be one by one to implement and pass acceptance criteria)
-/vorbit:manage:implement {example feature}    
-
-# 6. Validate against acceptance criteria (QA Engineer)
-/vorbit:manage:validate {example feature}
-```
-
-### Quick Feature (Skip Explore and PRD Focus on Tech Implementation)
-You can use the following commands to create a new feature with the flow, if you have the tech details very well. 
-
-```bash
-# 1. Create implementation plan directly
-/vorbit:init:epic improve-login-flow
-
-# 2. Generate tasks and implement
-/vorbit:manage:task improve-login-flow
-
-# 3. Implement the task one by one.
-/vorbit:manage:implement improve-login-flow T001 
-
-# 4. Validate
-/vorbit:manage:validate improve-login-flow
-```
-
-## File Structure
+Enter at any point:
 
 ```
-.vorbit/                         # Auto-created, gitignored
-├── features/
-│   ├── user-auth/               # Feature directory
-│   │   ├── explore.md           # Optional exploration
-│   │   ├── prd.md               # Product requirements
-│   │   ├── epic.md              # Implementation plan
-│   │   └── tasks.md             # Generated tasks
-│   └── payment-flow/            # Another feature
-└── logs/                        # Task context files
+┌─────────────────────────────────────────────────────────┐
+│                    ANY ENTRY POINT                      │
+└─────────────────────────────────────────────────────────┘
+         │              │              │              │
+         ▼              ▼              ▼              ▼
+    ┌─────────┐   ┌─────────┐   ┌─────────┐   ┌─────────┐
+    │ Explore │   │   PRD   │   │  Epic   │   │Prototype│
+    │ (Notion)│   │ (Notion)│   │ (Linear)│   │ (Code)  │
+    └────┬────┘   └────┬────┘   └────┬────┘   └────┬────┘
+         │              │              │              │
+         └──────────────┴──────────────┴──────────────┘
+                                │
+                                ▼
+                        ┌─────────────┐
+                        │  Implement  │
+                        └──────┬──────┘
+                               │
+                               ▼
+                        ┌─────────────┐
+                        │   Verify    │
+                        └─────────────┘
 ```
 
-## Task Management
+## Auto-Validation
 
-Tasks are generated in pairs (TDD style):
-- `T001a`: Write tests for feature
-- `T001b`: Implement feature (depends on T001a)
+Hooks automatically validate before saving:
 
-Tasks marked with `[P]` can run in parallel when they don't depend on each other.
+- **Notion saves**: PRD, Exploration, User Flow validated against schemas
+- **Linear creates**: Issue title (kebab-case, branch-friendly) and description validated
 
-### Commands
+If validation fails, you'll be asked: "Found issues: [list]. Save anyway?"
 
-```bash
-# List all features and their states
-/vorbit:manage:implement features
+## Skills
 
-# List all tasks across all features
-/vorbit:manage:implement list
-
-# Task progress tracking
-/vorbit:manage:implement start my-feature T001
-/vorbit:manage:implement complete my-feature T001
-/vorbit:manage:implement fail my-feature T001
-
-# Task context (for resuming interrupted work)
-/vorbit:manage:implement save T001
-/vorbit:manage:implement restore T001
-/vorbit:manage:implement resumable
-
-# Environment validation
-/vorbit:manage:implement setup
-```
-
-### Data Flow Example
-
-1. User runs: `/vorbit:manage:implement my-feature`
-- Command (implement.md) tells Claude:
-- Source common.sh Run task.sh setup
-- Find tasks for `my-feature`
-- Execute `task.sh start` / `task.sh complete`
-2. Script (task.sh) executes:
-- Updates tasks.md with status emoji (✅🔄❌)
-- Saves context to .vorbit/logs/
-- Recalculates progress percentages
-3. Log stores context so if interrupted:
-- `task.sh resumable` lists saved contexts
-- Command `/vorbit:manage:implement my-feature restore T001` and task.sh restore T001` recovers working state
-
-### The Workflow Chain
-
-```
-explore → prd → epic → tasks → implement → validate
-   │        │      │       │         │          │
-   └────────┴──────┴───────┴─────────┴──────────┘
-      All write to: .vorbit/features/<slug>/
-```
-## Important 
-DO NOT believe agents' output, they are not reliable. check the documentation all the time by yourself. ensure the feature is align your requirements.
-
+| Skill | Purpose | Key Rules |
+|-------|---------|-----------|
+| **explore** | Exploration structure | 10+ questions before options |
+| **prd** | PRD structure | 3-8 word name, numbers in success criteria |
+| **user-flow** | User flow diagrams | Max 15 nodes, split if needed |
+| **epic** | Linear issue structure | Title from user story → kebab-case |
+| **prototype** | Page/feature patterns | Mocks under feature folder |
 
 ## Requirements
 
-Claude Code
+### Claude Code
+- Claude Code CLI
+- Notion MCP (for Notion integration)
+- Linear MCP (for Linear integration)
+
+### Google Antigravity
+- Google Antigravity IDE
+- Notion integration (if available)
+- Linear integration (if available)
 
 ## License
 
