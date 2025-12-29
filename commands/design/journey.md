@@ -6,7 +6,7 @@ allowed-tools: Read, Skill, AskUserQuestion, mcp__plugin_Notion_notion__*, mcp__
 
 Create a user flow for: $ARGUMENTS
 
-Use the **user-flow** skill for output format and validation rules.
+Use the **journey** skill for output format and validation rules.
 
 ## Step 1: Gather Context
 
