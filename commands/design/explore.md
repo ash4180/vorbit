@@ -8,6 +8,19 @@ Explore: $ARGUMENTS
 
 Use the **explore** skill for output format and validation rules.
 
+## Step 0: Verify Notion Connection (if saving later)
+
+**At the START of exploration, ask user if they plan to save to Notion.**
+
+If yes:
+1. Run a lightweight test: use `notion-find` to search for "test"
+2. **IF the call fails (auth error, token expired, connection refused):**
+   - Tell the user: "Notion connection has expired. Please run `/mcp` and reconnect the Notion server, then run this command again."
+   - **STOP HERE** - do not proceed with the rest of the command
+3. **IF the call succeeds:** proceed to Step 1
+
+If no or skip: proceed directly to Step 1
+
 ## Step 1: Ask 10+ Questions
 
 **MANDATORY: Ask at least 10 questions before generating options.**

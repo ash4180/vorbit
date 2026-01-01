@@ -8,6 +8,15 @@ Create issues for: $ARGUMENTS
 
 Use the **epic** skill for issue format and validation rules.
 
+## Step 0: Verify Notion Connection (if Notion needed)
+
+**IF user provides a Notion URL OR args look like a feature name (will search Notion for PRD):**
+1. Run a lightweight test: use `notion-find` to search for "test"
+2. **IF the call fails (auth error, token expired, connection refused):**
+   - Tell the user: "Notion connection has expired. Please run `/mcp` and reconnect the Notion server, then run this command again."
+   - **STOP HERE** - do not proceed with the rest of the command
+3. **IF the call succeeds:** proceed to Step 1
+
 ## Step 1: Gather Context
 
 1. IF Notion PRD URL, fetch the PRD

@@ -6,6 +6,17 @@ allowed-tools: Read, Write, Edit, Bash, Grep, Glob, Task, mcp__plugin_Notion_not
 
 Implement: $ARGUMENTS
 
+## Step 0: Verify Notion Connection (if Notion needed)
+
+**IF the issue links to a Notion PRD or you need to check PRD context:**
+1. Run a lightweight test: use `notion-find` to search for "test"
+2. **IF the call fails (auth error, token expired, connection refused):**
+   - Tell the user: "Notion connection has expired. Please run `/mcp` and reconnect the Notion server, then run this command again."
+   - **STOP HERE** - do not proceed with the rest of the command
+3. **IF the call succeeds:** proceed
+
+**IF no Notion is needed:** skip this step
+
 ## Determine Context
 
 **Priority order for finding issue:**
@@ -23,7 +34,7 @@ For Linear issues:
 - Update issue status to "In Progress"
 - Read issue description for requirements
 - Check parent issue for SDD and style findings
-- Check linked PRD in Notion if available
+- Check linked PRD in Notion if available (run Step 0 first if not already done)
 
 ## Learn Codebase Style
 
