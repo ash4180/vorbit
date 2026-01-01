@@ -6,6 +6,15 @@ allowed-tools: Read, Bash, Grep, Glob, mcp__plugin_Notion_notion__*, mcp__plugin
 
 Validate: $ARGUMENTS
 
+## Step 0: Verify Notion Connection (if Notion needed)
+
+**IF user provides a Notion PRD URL:**
+1. Run a lightweight test: use `notion-find` to search for "test"
+2. **IF the call fails (auth error, token expired, connection refused):**
+   - Tell the user: "Notion connection has expired. Please run `/mcp` and reconnect the Notion server, then run this command again."
+   - **STOP HERE** - do not proceed with the rest of the command
+3. **IF the call succeeds:** proceed to Determine Context
+
 ## Determine Context
 
 1. **IF Linear issue ID**: Fetch issue and its acceptance criteria

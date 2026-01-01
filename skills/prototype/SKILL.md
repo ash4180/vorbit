@@ -1,24 +1,32 @@
 ---
 name: prototype
-description: Fast UI prototype patterns. Use when generating page/feature prototypes with mock data.
+description: Reusable UI prototype patterns. Prototypes become production code - frontend swaps mocks for real API.
 ---
 
 # Prototype Patterns
 
-Patterns for generating fast UI prototypes. A prototype is a **page or feature** (not just a component) that combines multiple components with mock data.
+A prototype is a **page or feature** that frontend devs will reuse. They swap mocks for real API - that's it.
 
 ## What is a Prototype?
 
 A prototype is:
 - A **complete page or feature** users can interact with
-- **Composition** of multiple components
-- **Mock data** that mirrors real API shapes
-- **Functional** enough to demo the flow
+- **Composition** of multiple components with clean props
+- **Mock data** that defines the API contract
+- **Reusable structure** - becomes production code
 
 A prototype is NOT:
-- A single reusable component
-- Production-ready code
-- Fully tested implementation
+- A single reusable component (that's a component, not a prototype)
+- Throwaway demo code
+- Fully tested (tests come in implementation phase)
+
+## Handover-Ready Structure
+
+For frontend to reuse easily:
+1. **Clean props** - Components receive data via props, not hardcoded
+2. **Single mock location** - Each component imports mock in ONE place
+3. **Props flow down** - Data flows through props, not scattered state
+4. **Types match API** - Interfaces/types define expected API response
 
 ## Framework Detection
 
@@ -52,7 +60,7 @@ Or match existing codebase structure.
 
 ## Mock Data Strategy
 
-**Mock data under feature folder = easy to find and replace.**
+**PURPOSE: Define data shape for backend. Easy handover to frontend.**
 
 ```
 src/pages/UserDashboard/
@@ -65,28 +73,34 @@ src/pages/UserDashboard/
 ```
 
 ```typescript
-// mocks/users.json - matches GET /api/users
+// mocks/users.json - shows exact fields UI needs (API contract)
 [
-  { "id": "u1", "name": "Alice Chen", "email": "alice@example.com", "role": "admin" },
-  { "id": "u2", "name": "Bob Smith", "email": "bob@example.com", "role": "member" }
+  { "id": "u1", "name": "Alice", "role": "admin" },
+  { "id": "u2", "name": "Bob", "role": "member" }
 ]
 ```
 
 ```typescript
-// In page component
+// MANDATORY: TODO comment after every mock import
 import mockUsers from './mocks/users.json';
-
-// TODO: Replace with useSWR('/api/users')
+// TODO: Replace with real API
 const users = mockUsers;
 ```
 
 Rules:
 - Mock folder lives inside feature folder: `pages/Feature/mocks/`
-- One JSON file per API endpoint the feature uses
+- One JSON file per API endpoint
 - JSON filename indicates endpoint: `users.json` → `/api/users`
-- Use realistic data (real names, valid emails, proper IDs)
-- Add TODO comment showing the real API call
-- When implementing real feature, delete entire `mocks/` folder
+- Show only fields the UI actually uses
+- **MANDATORY: TODO comment after every mock import**
+- If multiple components need same data, share the mock file
+- When implementing, delete entire `mocks/` folder
+
+**DON'T over-engineer:**
+- ❌ Add fields the UI doesn't use
+- ❌ Create mock utilities, factories, or generators
+- ❌ Duplicate same data in multiple mock files
+- ❌ Skip the TODO comment
 
 ## Composition Pattern
 
@@ -98,10 +112,10 @@ import { Layout } from '@/components/Layout';      // Existing
 import { Card } from '@/components/ui/Card';       // Existing
 import { UserStats } from './components/Stats';    // New for this feature
 import { ActivityFeed } from './components/Feed';  // New for this feature
-import mockActivity from './mocks/activity.json'; // Mock under feature
+import mockActivity from './mocks/activity.json';
+// TODO: Replace with real API
 
 export function UserDashboard() {
-  // TODO: Replace with useSWR('/api/activity')
   const activity = mockActivity;
 
   return (
@@ -117,13 +131,25 @@ export function UserDashboard() {
 
 ## Prototype Checklist
 
+**Before coding:**
+- [ ] Analyzed codebase patterns (pages, components, styling)
+- [ ] Asked user about layout, fields, actions, empty states
+- [ ] Did NOT invent features user didn't request
+
+**Structure:**
 - [ ] Framework detected from codebase
 - [ ] Page structure matches existing patterns
+- [ ] **Components receive data via props (not hardcoded)**
+- [ ] **Mock import in ONE place per component**
 - [ ] Composes existing UI components (buttons, cards, inputs)
-- [ ] New feature-specific components created
+
+**Mocks:**
 - [ ] Mock data under feature folder: `pages/Feature/mocks/`
-- [ ] Mock data shape matches expected API
-- [ ] TODO comments mark mock → real swaps
+- [ ] Mock shows only fields UI actually uses
+- [ ] **Every mock import has `// TODO: Replace with real API` comment**
+- [ ] Components needing same data share the same mock file
+
+**Final:**
 - [ ] Page is navigable/renderable
 
 ## Output Format
@@ -147,9 +173,13 @@ Next: Review with team, then /vorbit:implement:epic
 
 ## Rules
 
-1. **Reuse existing components** - Don't recreate buttons, cards, inputs
-2. **Match project style** - Follow existing naming and structure
-3. **Mocks under feature** - `pages/Feature/mocks/` not global
-4. **Complete page** - User can navigate to and interact with it
-5. **No tests yet** - Tests come in implementation phase
-6. **Minimal dependencies** - Don't add packages unless necessary
+1. **Ask before building** - Clarify layout, fields, actions, empty states
+2. **No invented features** - Don't add search/filter/tabs/pagination unless asked
+3. **Analyze codebase first** - Find patterns before writing any code
+4. **Handover-ready** - Frontend swaps mocks for API, keeps everything else
+5. **Clean props** - Data via props, not hardcoded in components
+6. **Single mock location** - One import per component, easy to find/replace
+7. **Reuse existing components** - Don't recreate buttons, cards, inputs
+8. **Match project style** - Follow existing naming and structure
+9. **Mocks under feature** - `pages/Feature/mocks/` not global
+10. **No tests yet** - Tests come in implementation phase
