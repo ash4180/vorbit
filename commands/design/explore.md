@@ -1,25 +1,32 @@
 ---
 description: Quick exploration of ideas before PRD creation
 argument-hint: [topic or problem]
-allowed-tools: Read, Grep, Glob, AskUserQuestion, mcp__plugin_Notion_notion__*
+allowed-tools: Read, Grep, Glob, AskUserQuestion, mcp__plugin_Notion_notion__*, mcp__anytype__*
 ---
 
 Explore: $ARGUMENTS
 
 Use the **explore** skill for output format and validation rules.
 
-## Step 0: Verify Notion Connection (if saving later)
+## Step 0: Verify Documentation Connection (if saving later)
 
-**At the START of exploration, ask user if they plan to save to Notion.**
+**At the START of exploration, ask user if they plan to save (Notion, Anytype, or skip).**
 
-If yes:
+### If Notion:
 1. Run a lightweight test: use `notion-find` to search for "test"
 2. **IF the call fails (auth error, token expired, connection refused):**
    - Tell the user: "Notion connection has expired. Please run `/mcp` and reconnect the Notion server, then run this command again."
    - **STOP HERE** - do not proceed with the rest of the command
 3. **IF the call succeeds:** proceed to Step 1
 
-If no or skip: proceed directly to Step 1
+### If Anytype:
+1. Run a lightweight test: use `API-list-spaces` to verify connection
+2. **IF the call fails:**
+   - Tell the user: "Anytype connection has expired. Please run `/mcp` and reconnect the Anytype server, then run this command again."
+   - **STOP HERE** - do not proceed with the rest of the command
+3. **IF the call succeeds:** proceed to Step 1
+
+### If skip: proceed directly to Step 1
 
 ## Step 1: Ask 10+ Questions
 
@@ -57,17 +64,28 @@ After gathering context:
 3. Propose 2-3 approaches with pros/cons/effort/risk
 4. Make recommendation addressing constraints
 
-## Step 3: Save to Notion
+## Step 3: Save Document
 
-Ask: "Where should I save this? (database name, page URL, or 'skip')"
+Ask: "Where should I save this exploration?"
+- Options: Notion, Anytype, Skip
 
-If saving:
-1. Use `notion-search` or `notion-fetch` to find target
-2. Create document with Name = topic, full analysis in body
-3. If database has `Type` property, set to `["Exploration"]`
+### If Notion:
+1. Ask for database name or page URL
+2. Use `notion-search` or `notion-fetch` to find target
+3. Create document with Name = topic, full analysis in body
+4. If database has `Type` property, set to `["Exploration"]`
+
+### If Anytype:
+1. Use `API-list-spaces` to show available spaces
+2. Ask user which space to save to
+3. Use `API-create-object` with:
+   - `type_key`: "page" (or appropriate type)
+   - `name`: topic
+   - `body`: full exploration content as markdown
 
 ## Report
 
-- Notion URL (if saved)
+- URL or object ID (if saved)
+- Platform used (Notion/Anytype)
 - Recommended approach summary
 - Next: `/vorbit:design:prd`
