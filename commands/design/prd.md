@@ -8,23 +8,28 @@ Create a PRD for: $ARGUMENTS
 
 Use the **prd** skill for output format and validation rules.
 
-## Step 0: Verify Documentation Connection (if saving later)
+## Step 0: Detect Platform & Verify Connection
 
-**IF user provides a Notion/Anytype URL OR will want to save:**
+**Auto-detect platform from user input:**
+- Notion URL (contains `notion.so` or `notion.site`) → use Notion
+- User mentions "Notion" → use Notion
+- Anytype URL or object ID → use Anytype
+- User mentions "Anytype" → use Anytype
+- Otherwise → ask at save time (Step 4)
 
-### For Notion:
-1. Run a lightweight test: use `notion-find` to search for "test"
-2. **IF the call fails (auth error, token expired, connection refused):**
-   - Tell the user: "Notion connection has expired. Please run `/mcp` and reconnect the Notion server, then run this command again."
-   - **STOP HERE** - do not proceed with the rest of the command
-3. **IF the call succeeds:** proceed to Step 1
+**Only verify the detected platform (don't test both):**
 
-### For Anytype:
-1. Run a lightweight test: use `API-list-spaces` to verify connection
-2. **IF the call fails:**
-   - Tell the user: "Anytype connection has expired. Please run `/mcp` and reconnect the Anytype server, then run this command again."
-   - **STOP HERE** - do not proceed with the rest of the command
-3. **IF the call succeeds:** proceed to Step 1
+### If Notion detected:
+1. Run `notion-find` to search for "test"
+2. **IF fails:** "Notion connection expired. Run `/mcp` to reconnect, then retry." → **STOP**
+3. **IF succeeds:** proceed to Step 1
+
+### If Anytype detected:
+1. Run `API-list-spaces` to verify connection
+2. **IF fails:** "Anytype connection expired. Run `/mcp` to reconnect, then retry." → **STOP**
+3. **IF succeeds:** proceed to Step 1
+
+### If no platform detected: proceed to Step 1 (ask later)
 
 ## Step 1: Gather Context
 
@@ -72,8 +77,10 @@ Use the **prd** skill template. Include:
 
 ## Step 4: Save Document
 
-Ask: "Where should I save this PRD?"
-- Options: Notion, Anytype, Skip
+**If platform was detected in Step 0:** use that platform directly (don't ask again).
+
+**If no platform detected:** Use AskUserQuestion: "Where should I save this PRD?"
+- Options: Notion, Anytype, Other
 
 ### If Notion:
 1. Ask for database name or page URL
