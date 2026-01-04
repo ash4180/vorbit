@@ -84,7 +84,7 @@ Use the **prd** skill template. Include:
 
 ### If Notion:
 1. Ask for database name or page URL
-2. Use `notion-search` or `notion-fetch` to find target
+2. Use `notion-find` to locate target database
 3. Create with Name = feature name, full PRD in body
 4. If database has `Type` property, set to `["PRD"]`
 

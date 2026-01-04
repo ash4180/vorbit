@@ -1,6 +1,6 @@
-# Implement
-
-Execute tasks from issue tracker or implement from description.
+---
+description: Execute tasks from issue tracker or implement from description.
+---
 
 ## Determine Context
 
@@ -90,7 +90,7 @@ After ALL sub-tasks done, create memory.md with:
 * Files changed
 * Tests added/updated
 * memory.md location
-* Next: `/verify` to validate
+* Next: `/verify`
 
 ## Quick Mode
 

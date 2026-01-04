@@ -1,5 +1,5 @@
 ---
-name: user-flow
+name: journey
 description: User flow diagram schema for FigJam. Use when creating user journeys via generate_diagram MCP tool.
 ---
 

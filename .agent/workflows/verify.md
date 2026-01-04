@@ -1,13 +1,14 @@
-# Verify
-
-Validate implementation against acceptance criteria.
+---
+description: Validate implementation against acceptance criteria.
+---
 
 ## Determine Context
 
 1. **IF issue ID**: Fetch issue and its acceptance criteria
-2. **IF Notion PRD URL**: Fetch PRD and use success criteria
-3. **IF description**: Ask user for acceptance criteria
-4. **IF no args**: Ask what to validate
+2. **IF Notion PRD URL**: Fetch PRD from Notion and use success criteria
+3. **IF Anytype PRD URL or object ID**: Fetch PRD from Anytype and use success criteria
+4. **IF description**: Ask user for acceptance criteria
+5. **IF no args**: Ask what to validate
 
 ## Run Tests
 
