@@ -129,8 +129,8 @@ Enter at any point:
 
 ### Google Antigravity
 - Google Antigravity IDE
-- Notion integration 
-- Linear integration 
+- Notion MCP 
+- Linear MCP 
 - Figma MCP
 
 ## License
