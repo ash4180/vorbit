@@ -1,17 +1,45 @@
 ---
 description: Create a Product Requirements Document. No fluff, just what needs building.
-argument-hint: [feature description or Notion URL]
-allowed-tools: Read, Grep, Glob, AskUserQuestion, mcp__plugin_Notion_notion__*
+argument-hint: [feature description or URL]
+allowed-tools: Read, Grep, Glob, AskUserQuestion, mcp__plugin_Notion_notion__*, mcp__anytype__*
 ---
 
 Create a PRD for: $ARGUMENTS
 
 Use the **prd** skill for output format and validation rules.
 
+## Step 0: Detect Platform & Verify Connection
+
+**Auto-detect platform from user input:**
+- Notion URL (contains `notion.so` or `notion.site`) → use Notion
+- User mentions "Notion" → use Notion
+- Anytype URL or object ID → use Anytype
+- User mentions "Anytype" → use Anytype
+- Otherwise → ask at save time (Step 4)
+
+**Only verify the detected platform (don't test both):**
+
+### If Notion detected:
+1. Run `notion-find` to search for "test"
+2. **IF fails:** "Notion connection expired. Run `/mcp` to reconnect, then retry." → **STOP**
+3. **IF succeeds:** proceed to Step 1
+
+### If Anytype detected:
+1. Run `API-list-spaces` to verify connection
+2. **IF fails:** "Anytype connection expired. Run `/mcp` to reconnect, then retry." → **STOP**
+3. **IF succeeds:** proceed to Step 1
+
+### If no platform detected: proceed to Step 1 (ask later)
+
 ## Step 1: Gather Context
 
 **IF Notion URL provided:**
 1. Use `notion-find` with page title from URL
+2. If content retrieval fails, ask user to paste relevant sections
+3. Proceed to Step 3 (restructure mode)
+
+**IF Anytype URL or object ID provided:**
+1. Use `API-get-object` to retrieve content
 2. If content retrieval fails, ask user to paste relevant sections
 3. Proceed to Step 3 (restructure mode)
 
@@ -47,19 +75,73 @@ Use the **prd** skill template. Include:
 - Out of Scope
 - Success Criteria (with numbers)
 
-## Step 4: Save to Notion
+## Step 4: Draft in Chat
 
-Ask: "Where should I save this PRD? (database name, page URL, or 'skip')"
+**Show the complete PRD in chat for review:**
 
-If saving:
-1. Use `notion-search` or `notion-fetch` to find target
-2. Create with Name = feature name, full PRD in body
-3. If database has `Type` property, set to `["PRD"]`
+```markdown
+# [Feature Name]
 
-**Hook auto-validates before save. Fix issues if prompted.**
+## Problem
+[Max 3 sentences, no tech details]
+
+## Users
+[Who has this problem]
+
+## User Stories
+
+### US1: [Title]
+As a [user], I want [goal], so that [benefit].
+
+**Acceptance Criteria:**
+- [ ] ...
+- [ ] ...
+
+### US2: [Title]
+...
+
+## User Flow
+[To be added via /vorbit:design:journey]
+
+## Constraints
+- ...
+
+## Out of Scope
+- ...
+
+## Success Criteria
+- [Measurable metric with number]
+- ...
+```
+
+**After showing draft, ask:** "Does this PRD look good? Ready to save?"
+
+## Step 5: Save Document
+
+**Only proceed after user confirms the draft.**
+
+**If platform was detected in Step 0:** use that platform directly (don't ask again).
+
+**If no platform detected:** Use AskUserQuestion: "Where should I save this PRD?"
+- Options: Notion, Anytype, Other
+
+### If Notion:
+1. Ask for database name or page URL
+2. Use `notion-find` to locate target database
+3. Create with Name = feature name, full PRD in body
+4. If database has `Type` property, set to `["PRD"]`
+
+### If Anytype:
+1. Use `API-list-spaces` to show available spaces
+2. Ask user which space to save to
+3. Use `API-create-object` with:
+   - `type_key`: "page" (or appropriate type)
+   - `name`: feature name
+   - `body`: full PRD content as markdown
 
 ## Report
 
-- Notion URL (if saved)
+- URL or object ID (if saved)
+- Platform used (Notion/Anytype)
 - Summary: X user stories, Y success criteria
 - Next: `/vorbit:design:journey` or `/vorbit:implement:epic`

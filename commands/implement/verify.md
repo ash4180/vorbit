@@ -1,17 +1,38 @@
 ---
 description: Validate implementation against acceptance criteria
 argument-hint: [Linear issue ID or feature description]
-allowed-tools: Read, Bash, Grep, Glob, mcp__plugin_Notion_notion__*, mcp__plugin_linear_linear__*
+allowed-tools: Read, Bash, Grep, Glob, mcp__plugin_Notion_notion__*, mcp__anytype__*, mcp__plugin_linear_linear__*
 ---
 
 Validate: $ARGUMENTS
 
+## Step 0: Detect Platform & Verify Connection (if PRD needed)
+
+**IF user provides a PRD reference, auto-detect platform:**
+- Notion URL (contains `notion.so` or `notion.site`) → use Notion
+- Anytype URL or object ID → use Anytype
+
+**Only verify the detected platform:**
+
+### If Notion detected:
+1. Run `notion-find` to search for "test"
+2. **IF fails:** "Notion connection expired. Run `/mcp` to reconnect, then retry." → **STOP**
+3. **IF succeeds:** proceed to Determine Context
+
+### If Anytype detected:
+1. Run `API-list-spaces` to verify connection
+2. **IF fails:** "Anytype connection expired. Run `/mcp` to reconnect, then retry." → **STOP**
+3. **IF succeeds:** proceed to Determine Context
+
+**IF no PRD is needed:** skip to Determine Context
+
 ## Determine Context
 
 1. **IF Linear issue ID**: Fetch issue and its acceptance criteria
-2. **IF Notion PRD URL**: Fetch PRD and use success criteria
-3. **IF description**: Ask user for acceptance criteria
-4. **IF no args**: Ask what to validate
+2. **IF Notion PRD URL**: Fetch PRD from Notion and use success criteria
+3. **IF Anytype PRD URL or object ID**: Fetch PRD from Anytype and use success criteria
+4. **IF description**: Ask user for acceptance criteria
+5. **IF no args**: Ask what to validate
 
 ## Run Tests
 

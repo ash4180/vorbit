@@ -6,7 +6,16 @@ allowed-tools: Read, Skill, AskUserQuestion, mcp__plugin_Notion_notion__*, mcp__
 
 Create a user flow for: $ARGUMENTS
 
-Use the **user-flow** skill for output format and validation rules.
+Use the **journey** skill for output format and validation rules.
+
+## Step 0: Verify Notion Connection (if Notion needed)
+
+**IF user provides a Notion URL OR wants to update PRD in Notion:**
+1. Run a lightweight test: use `notion-find` to search for "test"
+2. **IF the call fails (auth error, token expired, connection refused):**
+   - Tell the user: "Notion connection has expired. Please run `/mcp` and reconnect the Notion server, then run this command again."
+   - **STOP HERE** - do not proceed with the rest of the command
+3. **IF the call succeeds:** proceed to Step 1
 
 ## Step 1: Gather Context
 
@@ -25,7 +34,31 @@ Ask about:
 4. **Error scenarios** - "What can go wrong? How to handle?"
 5. **Exit points** - "Where can the user complete or leave?"
 
-## Step 3: Create User Flow in FigJam
+## Step 3: Draft Flow in Chat
+
+**Show the flow as a text outline for review:**
+
+```
+User Flow: [Feature Name]
+
+1. [Entry] User lands on...
+   ↓
+2. [Action] User clicks...
+   ↓
+3. [Decision] Is valid?
+   → Yes: Continue to step 4
+   → No: Show error → End
+   ↓
+4. [Action] System processes...
+   ↓
+5. [Success] User sees confirmation → End
+```
+
+**After showing draft, ask:** "Does this flow look correct? Ready to create in FigJam?"
+
+## Step 4: Create User Flow in FigJam
+
+**Only proceed after user confirms the draft.**
 
 **CRITICAL: Max 15 nodes total. Split complex flows.**
 
@@ -42,9 +75,7 @@ flowchart LR
     B --> C{"Decision?"}:::decision
     C -->|"Yes"| D["Continue"]:::action
     C -->|"No"| E["Error"]:::negative
-    E --> F["Recovery"]:::action
-    F --> B
-    D --> G(["Success"]):::positive
+    D --> F(["Success"]):::positive
 
     classDef startend fill:#CBD5E1,color:#334155,stroke:#94A3B8
     classDef action fill:#BAE6FD,color:#0c4a6e,stroke:#7DD3FC
@@ -53,6 +84,8 @@ flowchart LR
     classDef positive fill:#A7F3D0,color:#14532d,stroke:#6EE7B7
     classDef negative fill:#FECDD3,color:#881337,stroke:#FB7185
 ```
+
+Note: Error state `E` is terminal. User sees the error and retries implicitly - no back-loop needed.
 
 ### Color Palette (Required)
 
@@ -72,7 +105,7 @@ flowchart LR
 - No emojis in Mermaid code
 - No `\n` for newlines
 
-## Step 4: Update PRD in Notion
+## Step 5: Update PRD in Notion
 
 If PRD exists from Step 1:
 1. Fetch the PRD page

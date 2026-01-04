@@ -1,12 +1,24 @@
-# Prototype
-
-Generate UI prototype fast. Creates page/feature with mock data.
-
-Use the **prototype-patterns** rule for structure.
+---
+description: Generate UI prototype fast. Creates page/feature with mock data.
+---
 
 ## SPEED IS PRIORITY
 
 Skip documentation. Skip over-engineering. Generate working UI fast.
+
+## Step 0: Verify External Connections (if needed)
+
+**IF Notion PRD URL provided:**
+1. Run `notion-find` to search for "test"
+2. **IF fails:** "Notion connection expired. Run `/mcp` to reconnect, then retry." → **STOP**
+3. **IF succeeds:** fetch PRD for requirements
+
+**IF Figma URL provided:**
+1. Use Figma MCP to fetch design context
+2. **IF fails:** "Figma connection failed. Run `/mcp` to reconnect, then retry." → **STOP**
+3. **IF succeeds:** extract design specs for Step 3
+
+**IF no external services needed:** skip to Step 1
 
 ## Step 1: Detect Framework
 

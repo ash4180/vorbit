@@ -1,0 +1,7 @@
+{
+  "name": "vorbit",
+  "version": "1.0.0",
+  "description": "Product development workflows for AI coding agents. Notion-first, Linear-integrated.",
+  "commands": "commands",
+  "skills": "skills"
+}

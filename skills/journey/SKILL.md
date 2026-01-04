@@ -1,5 +1,5 @@
 ---
-name: user-flow
+name: journey
 description: User flow diagram schema for FigJam. Use when creating user journeys via generate_diagram MCP tool.
 ---
 
@@ -39,17 +39,15 @@ If your flow needs more than 15 nodes:
 
 ## Mermaid Syntax for FigJam
 
-**IMPORTANT**: FigJam requires all text in quotes.
+**IMPORTANT**: FigJam requires all text in quotes. No back-loops.
 
 ```mermaid
 flowchart LR
-    A(["Entry: User lands"]) --> B["User takes action"]
-    B --> C{"Decision?"}
-    C -->|"Yes"| D["Continue"]
-    C -->|"No"| E["Error state"]
-    E --> F["Recovery"]
-    F --> B
-    D --> G(["Success"])
+    A(["Entry: User lands"]):::startend --> B["User takes action"]:::action
+    B --> C{"Decision?"}:::decision
+    C -->|"Yes"| D["Continue"]:::action
+    C -->|"No"| E["Error state"]:::negative
+    D --> F(["Success"]):::startend
 ```
 
 ## Node Types
@@ -86,12 +84,32 @@ classDef negative fill:#FECDD3,color:#881337,stroke:#FB7185
 | Positive | `#A7F3D0` | `#6EE7B7` | Success states |
 | Negative | `#FECDD3` | `#FB7185` | Error states |
 
+## CRITICAL: No Back-Loops
+
+**Back-loops break left-to-right layout.** Mermaid's layout algorithm (Dagre) cannot maintain LR direction when edges point backward.
+
+❌ **Don't do this:**
+```mermaid
+A --> B --> C{"Valid?"}
+C -->|"No"| D["Error"]
+D --> B  // Back-loop breaks layout!
+```
+
+✅ **Do this instead:**
+```mermaid
+A --> B --> C{"Valid?"}
+C -->|"No"| D["Error shown"]  // Terminal - user retries implicitly
+C -->|"Yes"| E["Continue"]
+```
+
+**Error states should be terminal nodes.** The user's retry action is implicit - they see the error and correct their input. This keeps the diagram clean and strictly left-to-right.
+
 ## Validation Rules
 
 - Exactly one entry point
 - At least one exit point with success state
 - All decision nodes have labeled paths (`-->|"Yes"|`, `-->|"No"|`)
-- Error states have recovery paths
+- **No back-loops** - error states are terminal (implicit retry)
 - **MAX 15 nodes total** - split if more needed
 - Labels describe user actions, not technical operations
 - **All text in quotes** for FigJam compatibility
@@ -110,26 +128,27 @@ classDef negative fill:#FECDD3,color:#881337,stroke:#FB7185
 Name: [Feature] User Flow
 Mermaid:
 flowchart LR
-    START(["Entry: User opens feature"]) --> A["First action"]
-    A --> B{"Condition?"}
-    B -->|"Yes"| C["Second action"]
-    B -->|"No"| D["Error: Invalid input"]
-    D --> E["Show message"]
-    E --> A
-    C --> END(["Success: Goal achieved"])
+    START(["Entry: User opens feature"]):::startend --> A["First action"]:::action
+    A --> B{"Condition?"}:::decision
+    B -->|"Yes"| C["Second action"]:::action
+    B -->|"No"| D["Error: Invalid input"]:::negative
+    C --> END(["Success: Goal achieved"]):::startend
 
-Node count: 7/15
+Node count: 5/15
 
 ## FigJam URL
 [Generated URL from tool]
 ```
 
+Note: Error state `D` is terminal. User sees the error and retries - no back-loop needed.
+
 ## Common Mistakes
 
 | Wrong | Right | Why |
 |-------|-------|-----|
+| `Error --> Retry` (back-loop) | `Error` as terminal node | Back-loops break LR layout |
 | `POST /api/users` | `["User submits form"]` | Labels describe user actions |
 | 20+ node diagram | Split into sub-flows | Max 15 nodes per diagram |
 | No quotes on text | `["Text in quotes"]` | FigJam requires quotes |
 | `flowchart TD` | `flowchart LR` | LR is default for FigJam |
-| No error handling | Include error + recovery | Real flows have failures |
+| No error states | Include error states | Real flows have failures |
