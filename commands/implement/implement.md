@@ -1,10 +1,30 @@
 ---
 description: Execute tasks from Linear or implement from description
 argument-hint: [Linear issue ID or feature description]
-allowed-tools: Read, Write, Edit, Bash, Grep, Glob, Task, mcp__plugin_Notion_notion__*, mcp__plugin_linear_linear__*
+allowed-tools: Read, Write, Edit, Bash, Grep, Glob, Task, mcp__plugin_Notion_notion__*, mcp__anytype__*, mcp__plugin_linear_linear__*
 ---
 
 Implement: $ARGUMENTS
+
+## Step 0: Detect Platform & Verify Connection (if PRD needed)
+
+**IF the issue links to a PRD, auto-detect platform:**
+- Notion URL (contains `notion.so` or `notion.site`) → use Notion
+- Anytype URL or object ID → use Anytype
+
+**Only verify the detected platform:**
+
+### If Notion detected:
+1. Run `notion-find` to search for "test"
+2. **IF fails:** "Notion connection expired. Run `/mcp` to reconnect, then retry." → **STOP**
+3. **IF succeeds:** proceed
+
+### If Anytype detected:
+1. Run `API-list-spaces` to verify connection
+2. **IF fails:** "Anytype connection expired. Run `/mcp` to reconnect, then retry." → **STOP**
+3. **IF succeeds:** proceed
+
+**IF no PRD is needed:** skip this step
 
 ## Determine Context
 
@@ -23,7 +43,9 @@ For Linear issues:
 - Update issue status to "In Progress"
 - Read issue description for requirements
 - Check parent issue for SDD and style findings
-- Check linked PRD in Notion if available
+- Check linked PRD if available:
+  - **Notion PRD**: Use `notion-find` to fetch
+  - **Anytype PRD**: Use `API-get-object` to fetch
 
 ## Learn Codebase Style
 

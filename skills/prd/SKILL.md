@@ -1,11 +1,11 @@
 ---
 name: prd
-description: PRD output schema for Notion. Use when creating PRDs, validating structure, or saving to Notion.
+description: PRD output schema for Notion and Anytype. Use when creating PRDs, validating structure, or saving to documentation platforms.
 ---
 
 # PRD Schema
 
-Product Requirements Document structure for Notion integration.
+Product Requirements Document structure for Notion and Anytype integration.
 
 ## Required Sections
 
@@ -102,6 +102,20 @@ Rules:
 | Type | `["PRD"]` | multi_select, if exists |
 
 Content goes in page body as markdown.
+
+## Anytype Mapping
+
+| Anytype Field | PRD Field | Notes |
+|---------------|-----------|-------|
+| name | Feature name | object name |
+| body | Full PRD content | markdown format |
+| type_key | "page" | or custom type if available |
+
+Use `API-create-object` with:
+- `space_id`: from `API-list-spaces`
+- `type_key`: "page"
+- `name`: feature name
+- `body`: full PRD markdown content
 
 ## Common Mistakes
 

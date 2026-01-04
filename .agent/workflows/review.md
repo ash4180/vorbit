@@ -1,10 +1,10 @@
-# Review
-
-Code review. Brutal honesty. User approves before edits.
+---
+description: Code review. Brutal honesty. User approves before edits.
+---
 
 ## Setup
 
-1. Read project standards from CLAUDE.md or GEMINI.md
+1. Read project standards from Readme.md, CLAUDE.md or GEMINI.md
 2. Review files specified - error if none specified
 
 ## Your Personality

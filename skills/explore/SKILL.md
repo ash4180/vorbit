@@ -1,11 +1,11 @@
 ---
 name: explore
-description: Structure for exploration documents. Use when creating explorations or validating explore output format.
+description: Structure for exploration documents. Use when creating explorations or validating explore output format. Supports Notion and Anytype.
 ---
 
 # Explore Schema
 
-Quick idea exploration before PRD creation.
+Quick idea exploration before PRD creation. Supports saving to Notion or Anytype.
 
 ## Context Gathering (MANDATORY)
 
@@ -122,3 +122,17 @@ Competitors: [existing solutions mentioned]
 | Type | `["Exploration"]` | multi_select, if exists |
 
 Content goes in page body as markdown.
+
+## Anytype Mapping
+
+| Anytype Field | Explore Field | Notes |
+|---------------|---------------|-------|
+| name | Topic | object name |
+| body | Full exploration content | markdown format |
+| type_key | "page" | or custom type if available |
+
+Use `API-create-object` with:
+- `space_id`: from `API-list-spaces`
+- `type_key`: "page"
+- `name`: topic
+- `body`: full exploration markdown content
