@@ -75,7 +75,50 @@ Use the **prd** skill template. Include:
 - Out of Scope
 - Success Criteria (with numbers)
 
-## Step 4: Save Document
+## Step 4: Draft in Chat
+
+**Show the complete PRD in chat for review:**
+
+```markdown
+# [Feature Name]
+
+## Problem
+[Max 3 sentences, no tech details]
+
+## Users
+[Who has this problem]
+
+## User Stories
+
+### US1: [Title]
+As a [user], I want [goal], so that [benefit].
+
+**Acceptance Criteria:**
+- [ ] ...
+- [ ] ...
+
+### US2: [Title]
+...
+
+## User Flow
+[To be added via /vorbit:design:journey]
+
+## Constraints
+- ...
+
+## Out of Scope
+- ...
+
+## Success Criteria
+- [Measurable metric with number]
+- ...
+```
+
+**After showing draft, ask:** "Does this PRD look good? Ready to save?"
+
+## Step 5: Save Document
+
+**Only proceed after user confirms the draft.**
 
 **If platform was detected in Step 0:** use that platform directly (don't ask again).
 
@@ -95,8 +138,6 @@ Use the **prd** skill template. Include:
    - `type_key`: "page" (or appropriate type)
    - `name`: feature name
    - `body`: full PRD content as markdown
-
-**Hook auto-validates before save. Fix issues if prompted.**
 
 ## Report
 
