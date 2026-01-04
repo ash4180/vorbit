@@ -67,7 +67,40 @@ After gathering context:
 3. Propose 2-3 approaches with pros/cons/effort/risk
 4. Make recommendation addressing constraints
 
-## Step 3: Save Document
+## Step 3: Draft in Chat
+
+**Show the complete exploration document in chat for review:**
+
+```markdown
+# [Topic] - Exploration
+
+## Problem Statement
+[One sentence identifying root cause]
+
+## Context
+[Summary of insights from questions]
+
+## Options
+
+### Option 1: [Name]
+- **Description**: ...
+- **Pros**: ...
+- **Cons**: ...
+- **Effort**: Low/Medium/High
+- **Risk**: Low/Medium/High
+
+### Option 2: [Name]
+...
+
+## Recommendation
+[Which option and why, addressing constraints]
+```
+
+**After showing draft, ask:** "Does this look good? Ready to save?"
+
+## Step 4: Save Document
+
+**Only proceed after user confirms the draft.**
 
 **If platform was detected in Step 0:** use that platform directly (don't ask again).
 

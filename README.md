@@ -13,7 +13,15 @@ git clone https://github.com/ash4180/vorbit.git
 ```
 
 ### Claude Code
-Use as plugin directory or copy to `.claude/`.
+Run with plugin directory flag:
+```bash
+claude --plugin-dir /path/to/vorbit
+```
+
+Or add to your shell config for permanent use:
+```bash
+alias claude='claude --plugin-dir /path/to/vorbit'
+```
 
 ### Google Antigravity
 Copy `.agent/` folder to your project root:
@@ -40,9 +48,6 @@ skills/               # Pure schemas (no process instructions)
 ├── journey/          # User flow diagram schema (max 15 nodes)
 ├── epic/             # Linear issue schema (branch-friendly titles)
 └── prototype/        # Page/feature prototype patterns
-
-hooks/
-└── hooks.json        # Auto-validation before Notion/Linear saves
 ```
 
 ### Antigravity (Gemini)
@@ -103,15 +108,6 @@ Enter at any point:
                         │   Verify    │
                         └─────────────┘
 ```
-
-## Auto-Validation
-
-Hooks automatically validate before saving:
-
-- **Notion saves**: PRD, Exploration, User Flow validated against schemas
-- **Linear creates**: Issue title (kebab-case, branch-friendly) and description validated
-
-If validation fails, you'll be asked: "Found issues: [list]. Save anyway?"
 
 ## Skills
 

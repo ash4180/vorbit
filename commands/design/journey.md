@@ -34,7 +34,31 @@ Ask about:
 4. **Error scenarios** - "What can go wrong? How to handle?"
 5. **Exit points** - "Where can the user complete or leave?"
 
-## Step 3: Create User Flow in FigJam
+## Step 3: Draft Flow in Chat
+
+**Show the flow as a text outline for review:**
+
+```
+User Flow: [Feature Name]
+
+1. [Entry] User lands on...
+   ↓
+2. [Action] User clicks...
+   ↓
+3. [Decision] Is valid?
+   → Yes: Continue to step 4
+   → No: Show error → End
+   ↓
+4. [Action] System processes...
+   ↓
+5. [Success] User sees confirmation → End
+```
+
+**After showing draft, ask:** "Does this flow look correct? Ready to create in FigJam?"
+
+## Step 4: Create User Flow in FigJam
+
+**Only proceed after user confirms the draft.**
 
 **CRITICAL: Max 15 nodes total. Split complex flows.**
 
@@ -81,7 +105,7 @@ Note: Error state `E` is terminal. User sees the error and retries implicitly - 
 - No emojis in Mermaid code
 - No `\n` for newlines
 
-## Step 4: Update PRD in Notion
+## Step 5: Update PRD in Notion
 
 If PRD exists from Step 1:
 1. Fetch the PRD page

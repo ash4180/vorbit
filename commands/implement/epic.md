@@ -113,8 +113,6 @@ Using plan from Step 6:
 2. Create sub-issues with `parentId` = epic ID
 3. Use team's existing labels/states
 
-**Hook auto-validates before create. Fix issues if prompted.**
-
 ## Report
 
 - Parent issue URL
