@@ -119,7 +119,7 @@ If validation fails, you'll be asked: "Found issues: [list]. Save anyway?"
 |-------|---------|-----------|
 | **explore** | Exploration structure | 10+ questions before options |
 | **prd** | PRD structure | 3-8 word name, numbers in success criteria |
-| **user-flow** | User flow diagrams | Max 15 nodes, split if needed |
+| **journey** | User flow diagrams | Max 15 nodes, split if needed |
 | **epic** | Linear issue structure | Title from user story → kebab-case |
 | **prototype** | Page/feature patterns | Mocks under feature folder |
 

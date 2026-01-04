@@ -11,7 +11,9 @@ Use the **explore** skill for output format and validation rules.
 ## Step 0: Detect Platform & Verify Connection
 
 **Auto-detect platform from user input:**
+- Notion URL (contains `notion.so` or `notion.site`) → use Notion
 - User mentions "Notion" → use Notion
+- Anytype URL or object ID → use Anytype
 - User mentions "Anytype" → use Anytype
 - Otherwise → ask at save time (Step 3)
 
@@ -74,7 +76,7 @@ After gathering context:
 
 ### If Notion:
 1. Ask for database name or page URL
-2. Use `notion-search` or `notion-fetch` to find target
+2. Use `notion-find` to locate target database
 3. Create document with Name = topic, full analysis in body
 4. If database has `Type` property, set to `["Exploration"]`
 

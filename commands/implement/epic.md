@@ -1,27 +1,52 @@
 ---
 description: Create parent issue + sub-issues in Linear from PRD
-argument-hint: [feature name or Notion PRD URL]
-allowed-tools: Read, Grep, Glob, AskUserQuestion, mcp__plugin_Notion_notion__*, mcp__plugin_linear_linear__*
+argument-hint: [feature name or PRD reference]
+allowed-tools: Read, Grep, Glob, AskUserQuestion, mcp__plugin_Notion_notion__*, mcp__anytype__*, mcp__plugin_linear_linear__*
 ---
 
 Create issues for: $ARGUMENTS
 
 Use the **epic** skill for issue format and validation rules.
 
-## Step 0: Verify Notion Connection (if Notion needed)
+## Step 0: Detect Platform & Verify Connection
 
-**IF user provides a Notion URL OR args look like a feature name (will search Notion for PRD):**
-1. Run a lightweight test: use `notion-find` to search for "test"
-2. **IF the call fails (auth error, token expired, connection refused):**
-   - Tell the user: "Notion connection has expired. Please run `/mcp` and reconnect the Notion server, then run this command again."
-   - **STOP HERE** - do not proceed with the rest of the command
-3. **IF the call succeeds:** proceed to Step 1
+**Auto-detect platform from user input:**
+- Notion URL (contains `notion.so` or `notion.site`) → use Notion
+- User mentions "Notion" → use Notion
+- Anytype URL or object ID → use Anytype
+- User mentions "Anytype" → use Anytype
+- Otherwise → skip platform, gather requirements via conversation
+
+**Only verify the detected platform (don't test both):**
+
+### If Notion detected:
+1. Run `notion-find` to search for "test"
+2. **IF fails:** "Notion connection expired. Run `/mcp` to reconnect, then retry." → **STOP**
+3. **IF succeeds:** proceed to Step 1
+
+### If Anytype detected:
+1. Run `API-list-spaces` to verify connection
+2. **IF fails:** "Anytype connection expired. Run `/mcp` to reconnect, then retry." → **STOP**
+3. **IF succeeds:** proceed to Step 1
+
+### If no platform detected: proceed to Step 1
 
 ## Step 1: Gather Context
 
-1. IF Notion PRD URL, fetch the PRD
-2. IF feature name, search Notion for PRD
-3. IF no PRD exists, gather requirements via conversation
+**IF Notion PRD URL provided:**
+1. Use `notion-find` to fetch the PRD
+2. Extract user stories and acceptance criteria
+
+**IF Anytype PRD URL or object ID provided:**
+1. Use `API-get-object` to fetch the PRD
+2. Extract user stories and acceptance criteria
+
+**IF feature name provided:**
+1. Search detected platform for existing PRD
+2. Extract user stories and acceptance criteria
+
+**IF no PRD exists:**
+1. Gather requirements via conversation
 
 ## Step 2: Detect Team's Linear Setup
 
@@ -94,7 +119,8 @@ Using plan from Step 6:
 
 - Parent issue URL
 - Sub-issue count: X total (P1: Y, P2: Z, P3: W)
-- PRD link
+- PRD link (URL or object ID)
+- Platform used (Notion/Anytype)
 - SDD summary
 
 Next: `/vorbit:implement:implement ABC-123`

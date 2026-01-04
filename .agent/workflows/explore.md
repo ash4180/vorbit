@@ -1,8 +1,29 @@
-# Explore
+---
+description: Quick exploration of ideas before PRD creation
+---
 
-Quick exploration of ideas before PRD creation.
+## Step 0: Detect Platform & Verify Connection
 
-Use the **explore-schema** rule for output format and validation.
+**Auto-detect platform from user input:**
+- Notion URL (contains `notion.so` or `notion.site`) → use Notion
+- User mentions "Notion" → use Notion
+- Anytype URL or object ID → use Anytype
+- User mentions "Anytype" → use Anytype
+- Otherwise → ask at save time (Step 3)
+
+**Only verify the detected platform (don't test both):**
+
+### If Notion detected:
+1. Run `notion-find` to search for "test"
+2. **IF fails:** "Notion connection expired. Run `/mcp` to reconnect, then retry." → **STOP**
+3. **IF succeeds:** proceed to Step 1
+
+### If Anytype detected:
+1. Run `API-list-spaces` to verify connection
+2. **IF fails:** "Anytype connection expired. Run `/mcp` to reconnect, then retry." → **STOP**
+3. **IF succeeds:** proceed to Step 1
+
+### If no platform detected: proceed to Step 1 (ask later)
 
 ## Step 1: Ask 10+ Questions
 
@@ -39,17 +60,29 @@ After gathering context:
 3. Propose 2-3 approaches with pros/cons/effort/risk
 4. Make recommendation addressing constraints
 
-## Step 3: Save to Notion (if available)
+## Step 3: Save Document
 
-Ask: "Where should I save this? (database name, page URL, or 'skip')"
+**If platform was detected in Step 0:** use that platform directly (don't ask again).
 
-If saving:
-1. Search for target database
-2. Create document with Name = topic, full analysis in body
-3. If database has `Type` property, set to `["Exploration"]`
+**If no platform detected:** Ask: "Where should I save this? (Notion, Anytype, or skip)"
+
+### If Notion:
+1. Ask for database name or page URL
+2. Search for target database
+3. Create document with Name = topic, full analysis in body
+4. If database has `Type` property, set to `["Exploration"]`
+
+### If Anytype:
+1. Use `API-list-spaces` to show available spaces
+2. Ask user which space to save to
+3. Use `API-create-object` with:
+   - `type_key`: "page" (or appropriate type)
+   - `name`: topic
+   - `body`: full exploration content as markdown
 
 ## Report
 
-* Notion URL (if saved)
+* URL or object ID (if saved)
+* Platform used (Notion/Anytype)
 * Recommended approach summary
-* Next: `/prd` workflow
+* Next: `/prd`
