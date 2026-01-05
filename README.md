@@ -39,7 +39,7 @@ ln -s /path/to/vorbit/.agent your-project/.agent
 ### Claude Code
 ```
 commands/
-├── design/           # explore, prd, journey, prototype
+├── design/           # explore, prd, journey, prototype, webflow
 └── implement/        # epic, implement, verify, review
 
 skills/               # Pure schemas (no process instructions)
@@ -47,7 +47,8 @@ skills/               # Pure schemas (no process instructions)
 ├── prd/              # PRD schema with validation rules
 ├── journey/          # User flow diagram schema (max 15 nodes)
 ├── epic/             # Linear issue schema (branch-friendly titles)
-└── prototype/        # Page/feature prototype patterns
+├── prototype/        # Page/feature prototype patterns
+└── webflow/          # Webflow development from Figma designs
 ```
 
 ### Antigravity (Gemini)
@@ -76,38 +77,11 @@ skills/               # Pure schemas (no process instructions)
 | Create PRD | `/vorbit:design:prd [feature]` | `/prd [feature]` |
 | User flow diagram | `/vorbit:design:journey [feature]` | `/journey [feature]` |
 | UI prototype | `/vorbit:design:prototype [feature]` | `/prototype [feature]` |
+| Webflow development | `/vorbit:design:webflow [figma-url or description]` | - |
 | Create issues | `/vorbit:implement:epic [feature]` | `/epic [feature]` |
 | Implement | `/vorbit:implement:implement [issue]` | `/implement [issue]` |
 | Verify | `/vorbit:implement:verify [issue]` | `/verify [issue]` |
 | Code review | `/vorbit:implement:review [file]` | `/review [file]` |
-
-## Flexible Workflow
-
-Enter at any point:
-
-```
-┌─────────────────────────────────────────────────────────┐
-│                    ANY ENTRY POINT                      │
-└─────────────────────────────────────────────────────────┘
-         │              │              │              │
-         ▼              ▼              ▼              ▼
-    ┌─────────┐   ┌─────────┐   ┌─────────┐   ┌─────────┐
-    │ Explore │   │   PRD   │   │  Epic   │   │Prototype│
-    │ (Notion)│   │ (Notion)│   │ (Linear)│   │ (Code)  │
-    └────┬────┘   └────┬────┘   └────┬────┘   └────┬────┘
-         │              │              │              │
-         └──────────────┴──────────────┴──────────────┘
-                                │
-                                ▼
-                        ┌─────────────┐
-                        │  Implement  │
-                        └──────┬──────┘
-                               │
-                               ▼
-                        ┌─────────────┐
-                        │   Verify    │
-                        └─────────────┘
-```
 
 ## Skills
 
@@ -118,6 +92,7 @@ Enter at any point:
 | **journey** | User flow diagrams | Max 15 nodes, split if needed |
 | **epic** | Linear issue structure | Title from user story → kebab-case |
 | **prototype** | Page/feature patterns | Mocks under feature folder |
+| **webflow** | Webflow development | Figma optional, templates with page slots |
 
 ## Requirements
 
@@ -126,11 +101,12 @@ Enter at any point:
 - Notion MCP
 - Linear MCP
 - Figma MCP
+- Webflow MCP (for `/vorbit:design:webflow`)
 
 ### Google Antigravity
 - Google Antigravity IDE
-- Notion MCP 
-- Linear MCP 
+- Notion MCP
+- Linear MCP
 - Figma MCP
 
 ## License
