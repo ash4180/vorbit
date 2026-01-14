@@ -83,6 +83,40 @@ skills/               # Pure schemas (no process instructions)
 | Verify | `/vorbit:implement:verify [issue]` | `/verify [issue]` |
 | Code review | `/vorbit:implement:review [file]` | `/review [file]` |
 
+## Loop Mode (Ralph Wiggum Pattern)
+
+**Automatically iterate until task complete:**
+
+```bash
+/vorbit:implement:implement ABC-123 --loop
+```
+
+**How it works:**
+1. Fetches Linear issue acceptance criteria
+2. Runs implementation (TDD workflow)
+3. On completion attempt, checks if all criteria met
+4. If not done → automatically starts next iteration
+5. If done → outputs completion signal and exits
+
+**Customize completion signal:**
+```bash
+/vorbit:implement:implement ABC-123 --loop --completion-signal "🎉 DONE"
+```
+
+**Cancel active loop:**
+```bash
+/vorbit:implement:implement ABC-123 --cancel
+```
+
+**Default limits:**
+- Max iterations: 50
+- Completion signal: "✅ All acceptance criteria met"
+
+**Best for:**
+- Complex features requiring multiple refinement passes
+- TDD workflows where tests guide development
+- Autonomous implementation when requirements are clear
+
 ## Skills
 
 | Skill | Purpose | Key Rules |
