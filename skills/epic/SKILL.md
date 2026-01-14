@@ -114,12 +114,4 @@ setup-database-schema         ← Must complete first (no [P])
 3. Run P3 sub-issues (parallel if marked [P])
 ```
 
-## Before Creating Issues
-
-Detect team's existing patterns:
-1. `list_teams` - Get team ID
-2. `list_issue_statuses` - Get actual state names
-3. `list_issue_labels` - Get existing labels
-4. `list_projects` - Get project structure
-
 Adapt to team's conventions. Don't impose new patterns.

@@ -111,12 +111,6 @@ Content goes in page body as markdown.
 | body | Full PRD content | markdown format |
 | type_key | "page" | or custom type if available |
 
-Use `API-create-object` with:
-- `space_id`: from `API-list-spaces`
-- `type_key`: "page"
-- `name`: feature name
-- `body`: full PRD markdown content
-
 ## Common Mistakes
 
 | Wrong | Right | Why |

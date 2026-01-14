@@ -1,10 +1,17 @@
 ---
 description: Execute tasks from Linear or implement from description
-argument-hint: [Linear issue ID or feature description]
+argument-hint: [Linear issue ID or feature description] [--loop] [--cancel]
 allowed-tools: Read, Write, Edit, Bash, Grep, Glob, Task, mcp__plugin_Notion_notion__*, mcp__anytype__*, mcp__plugin_linear_linear__*
 ---
 
 Implement: $ARGUMENTS
+
+## Handle Loop Mode
+
+**If `--loop` or `--cancel` in arguments:**
+Use the **implement-loop** skill for loop state management and sub-issue tracking.
+
+**If no loop flags:** Continue with normal implementation below.
 
 ## Step 0: Detect Platform & Verify Connection (if PRD needed)
 
@@ -58,13 +65,13 @@ For Linear issues:
 
 This ensures code matches team's style and is easy to review.
 
-## Check for Parallel Tasks
+## Check for Sub-issues
 
 **For parent issues (epics):**
 
 1. Use `list_issues` with `parentId: [issue ID]` to fetch all sub-issues
-2. Filter sub-issues where title starts with `[P]` (parallel marker from epic command)
-3. Group `[P]` sub-issues by shared dependencies (e.g., same module, same API)
+2. Filter sub-issues where title starts with `[P]` (parallel marker)
+3. Group `[P]` sub-issues by shared dependencies
 4. For each parallel group:
    - Use Task tool to spawn one agent per sub-issue
    - Each agent follows TDD approach below
@@ -75,7 +82,7 @@ This ensures code matches team's style and is easy to review.
 
 **RULE: Task is NOT done until tests pass.**
 
-For each sub-task:
+For each task:
 
 ### 1. Write Test First
 - Create test that validates acceptance criteria
@@ -100,14 +107,14 @@ For each sub-task:
 - [ ] No regressions in existing tests
 - [ ] No mock data remains (check for `MOCK_`, mock imports, `.json` test data)
 
-## On Sub-task Completion
+## On Task Completion
 
 - Update Linear status to "Done" or "In Review"
 - Add comment: what was done, files changed
 
 ## On Feature Completion
 
-**After ALL sub-tasks done, create memory.md:**
+**After ALL tasks done, create memory.md:**
 
 ```markdown
 # Feature: [Name]
@@ -124,7 +131,6 @@ For each sub-task:
 ## Code Patterns
 [Reference README.md or CLAUDE.md if patterns documented there, otherwise note new patterns discovered]
 ```
-
 
 ## Report
 

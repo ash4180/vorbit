@@ -9,7 +9,7 @@ description: Create a Product Requirements Document. No fluff, just what needs b
 - User mentions "Notion" → use Notion
 - Anytype URL or object ID → use Anytype
 - User mentions "Anytype" → use Anytype
-- Otherwise → ask at save time (Step 4)
+- Otherwise → ask at save time (Step 5)
 
 **Only verify the detected platform (don't test both):**
 
@@ -59,7 +59,7 @@ Keep asking until ALL requirements are clear. Don't guess.
 
 ## Step 3: Generate PRD
 
-Use the **prd-schema** rule template. Include:
+Include:
 * Name (3-8 words, no jargon)
 * Problem (max 3 sentences, no tech)
 * Users
@@ -69,7 +69,15 @@ Use the **prd-schema** rule template. Include:
 * Out of Scope
 * Success Criteria (with numbers)
 
-## Step 4: Save Document
+## Step 4: Draft in Chat
+
+**Show the complete PRD in chat for review.**
+
+After showing draft, ask: "Does this PRD look good? Ready to save?"
+
+**Only proceed after user confirms.**
+
+## Step 5: Save Document
 
 **If platform was detected in Step 0:** use that platform directly (don't ask again).
 
