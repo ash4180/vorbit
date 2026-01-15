@@ -1,4 +1,5 @@
 ---
+name: verify
 description: Validate implementation against acceptance criteria.
 ---
 

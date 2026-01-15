@@ -1,37 +1,30 @@
 # Vorbit
 
-Product development workflows for AI coding agents. Notion-first, Linear-integrated.
+Universal product development workflows for AI coding agents. TDD-first, Linear-integrated.
 
-**Works with:** Claude Code, Google Antigravity (Gemini)
+**Works with:** Claude Code, Google Antigravity, GPT Codex
 
 **Jump in at any step.** No strict prerequisites.
 
 ## Installation
 
-```bash
-git clone https://github.com/ash4180/vorbit.git
+### Claude Code (Marketplace)
 ```
-
-### Claude Code
-Run with plugin directory flag:
-```bash
-claude --plugin-dir /path/to/vorbit
-```
-
-Or add to your shell config for permanent use:
-```bash
-alias claude='claude --plugin-dir /path/to/vorbit'
+/install-plugin vorbit
 ```
 
 ### Google Antigravity
-Copy `.agent/` folder to your project root:
-```bash
-cp -r vorbit/.agent your-project/
+Skills auto-discovered from `.agent/skills/` when you open the project.
+
+### GPT Codex (GitHub Copilot)
+```
+$skill-installer vorbit
 ```
 
-Or symlink for updates:
+### Manual Installation
 ```bash
-ln -s /path/to/vorbit/.agent your-project/.agent
+git clone https://github.com/ash4180/vorbit.git
+claude --plugin-dir /path/to/vorbit
 ```
 
 ## Architecture
@@ -54,7 +47,7 @@ skills/               # Pure schemas (no process instructions)
 ### Antigravity (Gemini)
 ```
 .agent/
-└──workflows/        # On-demand commands (triggered via /)
+└── skills/          # Full process instructions (auto-discovered)
     ├── explore.md
     ├── prd.md
     ├── journey.md
@@ -65,23 +58,31 @@ skills/               # Pure schemas (no process instructions)
     └── review.md
 ```
 
+### GPT Codex
+```
+.codex/
+└── skills/          # Symlink to .agent/skills/ (shares same content)
+```
+
 **Notion** = Source of truth (PRDs, explorations, flows)
 **Linear** = Issue tracking (epics + sub-issues)
 **Code** = Prototypes and implementation
 
 ## Commands
 
-| Purpose | Claude Code | Antigravity |
-|---------|-------------|-------------|
-| Explore ideas | `/vorbit:design:explore [topic]` | `/explore [topic]` |
-| Create PRD | `/vorbit:design:prd [feature]` | `/prd [feature]` |
-| User flow diagram | `/vorbit:design:journey [feature]` | `/journey [feature]` |
-| UI prototype | `/vorbit:design:prototype [feature]` | `/prototype [feature]` |
-| Webflow development | `/vorbit:design:webflow [figma-url or description]` | - |
-| Create issues | `/vorbit:implement:epic [feature]` | `/epic [feature]` |
-| Implement | `/vorbit:implement:implement [issue]` | `/implement [issue]` |
-| Verify | `/vorbit:implement:verify [issue]` | `/verify [issue]` |
-| Code review | `/vorbit:implement:review [file]` | `/review [file]` |
+| Purpose | Claude Code | Antigravity | GPT Codex |
+|---------|-------------|-------------|-----------|
+| Explore ideas | `/vorbit:design:explore [topic]` | Auto | `$explore` |
+| Create PRD | `/vorbit:design:prd [feature]` | Auto | `$prd` |
+| User flow diagram | `/vorbit:design:journey [feature]` | Auto | `$journey` |
+| UI prototype | `/vorbit:design:prototype [feature]` | Auto | `$prototype` |
+| Webflow development | `/vorbit:design:webflow [figma-url]` | - | - |
+| Create issues | `/vorbit:implement:epic [feature]` | Auto | `$epic` |
+| Implement | `/vorbit:implement:implement [issue]` | Auto | `$implement` |
+| Verify | `/vorbit:implement:verify [issue]` | Auto | `$verify` |
+| Code review | `/vorbit:implement:review [file]` | Auto | `$review` |
+
+**Antigravity "Auto"**: Skills trigger automatically when your task matches the description.
 
 ## Loop Mode (Ralph Wiggum Pattern)
 
@@ -142,6 +143,20 @@ skills/               # Pure schemas (no process instructions)
 - Notion MCP
 - Linear MCP
 - Figma MCP
+
+### GPT Codex
+- GitHub Copilot with Codex
+- Notion MCP
+- Linear MCP
+- Figma MCP
+
+## Platform Support
+
+| Platform | Skills | Commands | Hooks | Install |
+|----------|--------|----------|-------|---------|
+| Claude Code | ✅ | ✅ | ✅ | `/install-plugin vorbit` |
+| Antigravity | ✅ | Auto | ❌ | Auto-discovered |
+| GPT Codex | ✅ | `$skill` | ❌ | `$skill-installer vorbit` |
 
 ## License
 

@@ -1,4 +1,5 @@
 ---
+name: prd
 description: Create a Product Requirements Document. No fluff, just what needs building.
 ---
 

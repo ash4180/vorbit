@@ -70,13 +70,13 @@ This ensures code matches team's style and is easy to review.
 **For parent issues (epics):**
 
 1. Use `list_issues` with `parentId: [issue ID]` to fetch all sub-issues
-2. Filter sub-issues where title starts with `[P]` (parallel marker)
-3. Group `[P]` sub-issues by shared dependencies
+2. Filter sub-issues that have the **Parallel** label
+3. Group parallel sub-issues by shared dependencies
 4. For each parallel group:
    - Use Task tool to spawn one agent per sub-issue
    - Each agent follows TDD approach below
    - Wait for all agents in group to complete before next group
-5. Process non-`[P]` sub-issues sequentially after all parallel groups
+5. Process non-parallel sub-issues sequentially after all parallel groups
 
 ## TDD Implementation
 

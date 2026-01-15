@@ -1,4 +1,5 @@
 ---
+name: journey
 description: Create user journey diagrams (Mermaid), update PRD with diagram
 ---
 

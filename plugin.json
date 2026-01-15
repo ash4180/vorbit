@@ -1,7 +1,13 @@
 {
   "name": "vorbit",
-  "version": "1.1.0",
-  "description": "Product development workflows for AI coding agents. Notion-first, Linear-integrated. Now with Ralph-style iteration loops.",
+  "version": "1.2.0",
+  "description": "Universal product development workflows for AI coding agents. TDD-first, Linear-integrated, works with Claude, Antigravity, and Codex.",
+  "author": {
+    "name": "Ash"
+  },
+  "keywords": ["tdd", "linear", "notion", "workflows", "product-development"],
+  "repository": "https://github.com/ash4180/vorbit",
+  "platforms": ["claude-code", "antigravity", "codex"],
   "commands": "commands",
   "skills": "skills",
   "hooks": "hooks/hooks.json"

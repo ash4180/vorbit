@@ -1,4 +1,5 @@
 ---
+name: prototype
 description: Generate UI prototype fast. Creates page/feature with mock data.
 ---
 
