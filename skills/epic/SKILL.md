@@ -1,125 +1,119 @@
 ---
 name: epic
-description: Linear issue schema. Use when creating epics + sub-issues from PRD user stories.
+description: Linear issue schema and planning workflow. Use when converting PRD user stories into executable EPICS and Issues.
 ---
 
-# Epic Schema
+# Epic Planning Skill
 
-Structure for creating Linear issues from PRD user stories.
+This skill handles the transformation of User Stories (from PRD) into executable Engineering Tasks (Epics/Issues).
 
-## Core Mapping
+## Workflow Instructions
 
-```
-PRD User Story → Epic (Linear parent issue)
-                      ↓
-               Sub-issues (Linear children)
-```
+### Step 1: Context & Platform
+1.  **Analyze Request**: Identify the source PRD (Notion/Anytype) or feature description.
+2.  **Verify Connections**:
+    -   If Notion: Run `notion-find` to verify access.
+    -   If Anytype: Run `API-list-spaces` to verify access.
+    -   *If connection fails, stop and notify user.*
 
-**1 User Story = 1 Epic** with optional sub-issues for complex features.
+### Step 2: PRD Analysis
+1.  **Extract User Stories**: Read the PRD.
+2.  **Breakdown**:
+    -   **1 User Story = 1 Epic** (Parent Issue).
+    -   Complex stories? Break into **Sub-issues**.
+3.  **Check Existing**: Search Linear for duplicates before creating.
 
-## Title: User Story → Branch-Friendly
+### Step 3: Technical Planning (The "How")
+Before creating issues, draft a loose plan:
+-   **Style Check**: `grep` for similar existing features.
+-   **Data Model**: What needs to change?
+-   **Dependencies**: What must happen first? (Mark as `[Blocker]`).
 
-**Transform the user story goal into a kebab-case title for GitHub branches.**
+### Step 4: Execution (Create Issues)
+**Rule**: Get User Approval on the plan before creating 10+ issues.
+
+1.  **Create Parent Issue (Epic)**:
+    -   Title: `add-[feature-name]` (Branch-friendly kebab-case).
+    -   Description: PRD Link + Acceptance Criteria.
+2.  **Create Sub-issues**:
+    -   Link to Parent `parentId`.
+    -   Apply **Parallel** label for independent tasks (see criteria below).
+
+---
+
+# Epic Schema & Standards
+
+## Title Format
+**Transform the User Story Goal into a kebab-case title.**
 
 | User Story | Epic Title |
-|------------|------------|
+| :--- | :--- |
 | "As a user, I want to **login**..." | `add-user-login` |
 | "As an admin, I want to **manage users**..." | `add-admin-user-management` |
-| "As a customer, I want to **reset my password**..." | `add-password-reset` |
-| "As a seller, I want to **list products**..." | `add-product-listing` |
 
-Rules:
-- Extract the **goal** from user story
-- Prefix with action verb: `add-`, `implement-`, `fix-`, `update-`, `remove-`
-- kebab-case: lowercase, hyphens, no special chars
-- Max 50 chars
-- Must work as Git branch name: `git checkout -b add-user-login`
+**Rules**:
+-   Action verbs: `add-`, `implement-`, `fix-`, `update-`.
+-   Lowercase, hyphens, no special chars.
+-   Match Git branch conventions.
 
-## Issue Fields
+## Issue Structure
 
-| Field | Required | Rules |
-|-------|----------|-------|
-| `title` | Yes | Branch-friendly from user story goal |
-| `description` | Yes | Has Summary + Acceptance Criteria sections |
-| `team` | Yes | Team name or ID |
-| `parentId` | Sub-issues | Parent issue ID |
-| `priority` | No | 1=Urgent, 2=High, 3=Normal, 4=Low |
-| `labels` | No | Use team's existing labels |
-| `project` | No | Use team's existing project |
+### Epic (Parent)
+-   **Description**:
+    ```markdown
+    ## User Story
+    US-XXX: As a [user], I want [goal]...
 
-## Validation Rules
+    ## Acceptance Criteria
+    - [ ] Criterion 1
+    - [ ] Criterion 2
 
-- **Title**: Derived from user story, kebab-case, max 50 chars, branch-friendly
-- **Description**: Contains `## User Story`, `## Acceptance Criteria` sections
-- **Sub-issues**: Must have `parentId` and acceptance criteria
-- **Testable**: Every issue has clear pass/fail criteria
+    ## Test Criteria (TDD - write tests FIRST)
+    - [ ] Unit test: [component behavior]
+    - [ ] Integration test: [user flow]
 
-## Epic Description Template
+    ## PRD Reference
+    [Link]
+    ```
 
-```markdown
-## User Story
-US-XXX: As a [user], I want [goal], so that [benefit]
+### Sub-issue (Child)
+-   **Title**: `component-name` or `step-name` (use **Parallel** label, not prefix).
+-   **Description**:
+    ```markdown
+    ## Summary
+    [Technical task description]
 
-## Acceptance Criteria
-- [ ] Criterion 1 (from PRD)
-- [ ] Criterion 2
-- [ ] Criterion 3
+    ## Acceptance Criteria
+    - [ ] Criterion 1
+    - [ ] Criterion 2
 
-## Test Criteria
-- [ ] Unit tests for [component]
-- [ ] Integration test for [flow]
+    ## Test Criteria (TDD - write tests FIRST)
+    - [ ] Unit test: [specific behavior]
+    - [ ] Unit test: [edge case]
+    ```
+-   **Priority Mapping**:
+    -   P1 (Urgent): Core / Blocker.
+    -   P2 (High): Important.
+    -   P3 (Normal): Standard.
 
-## PRD Reference
-[Notion link]
-```
+---
 
-## Sub-issue Description Template
+## TDD Requirement
 
-```markdown
-## Summary
-[Technical task description]
+**CRITICAL: All implementation follows Test-Driven Development.**
 
-## Acceptance Criteria
-- [ ] Criterion 1
-- [ ] Criterion 2
+Every issue (epic and sub-issue) MUST include `## Test Criteria` section:
+- Tests are written FIRST before implementation code
+- Implementation is only "done" when all tests pass
+- No issue is complete without corresponding tests
 
-## Dependencies
-- Blocked by: [issues or "None"]
-```
+---
 
-## Sub-issue Title Format
+## Parallel Label Criteria
 
-```
-[P] implement-auth-api        ← Can run in parallel
-[P] create-login-form         ← Can run in parallel
-setup-database-schema         ← Must complete first (no [P])
-```
+**Apply Parallel label ONLY when ALL are true:**
+1. Sub-issue has NO dependencies on other sub-issues
+2. Sub-issue does NOT block other sub-issues
+3. Works on separate files/components (no merge conflicts)
 
-- `[P]` prefix = can run in parallel with other `[P]` at same priority
-- No `[P]` = sequential, must complete before next
-
-## Priority Mapping
-
-| Priority | Linear Value | Meaning |
-|----------|--------------|---------|
-| P1 | 1 (Urgent) | Core functionality, blocks others |
-| P2 | 2 (High) | Important, can start after P1 |
-| P3 | 3 (Normal) | No dependencies, can run anytime |
-
-## Execution Order
-
-```
-1. Run P1 sub-issues first (sequential - they block others)
-2. Run P2 sub-issues (parallel if marked [P])
-3. Run P3 sub-issues (parallel if marked [P])
-```
-
-## Before Creating Issues
-
-Detect team's existing patterns:
-1. `list_teams` - Get team ID
-2. `list_issue_statuses` - Get actual state names
-3. `list_issue_labels` - Get existing labels
-4. `list_projects` - Get project structure
-
-Adapt to team's conventions. Don't impose new patterns.
+**Default: Sequential.** When in doubt, don't add Parallel label.
