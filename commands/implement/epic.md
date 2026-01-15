@@ -101,8 +101,12 @@ Present plan and ask:
 
 For each User Story, create:
 - **Title**: Transform user story goal → kebab-case (e.g., "I want to login" → `add-user-login`)
-- **Description**: User story + acceptance criteria + test criteria
-- **Sub-issues** (if complex): With `[P]` prefix for parallel tasks
+- **Description**: User story + acceptance criteria + **test criteria (REQUIRED for TDD)**
+- **Sub-issues** (if complex): Apply **Parallel** label only when truly independent (see epic skill for criteria)
+
+**TDD rule:** Every issue MUST include `## Test Criteria` section. Tests are written FIRST before implementation.
+
+**Parallel label rule:** Only apply when sub-issue has NO dependencies, does NOT block others, and works on separate files. Default to sequential when unsure.
 
 Title must be branch-friendly: `git checkout -b add-user-login`
 

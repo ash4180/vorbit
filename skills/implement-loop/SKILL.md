@@ -85,7 +85,7 @@ Create `.claude/.loop-state.json`:
   "issueId": "[issue ID]",
   "hasSubIssues": true,
   "subIssues": ["[sub-1-id]", "[sub-2-id]", "..."],
-  "parallelSubIssues": ["[ids with [P] prefix]"],
+  "parallelSubIssues": ["[ids with Parallel label]"],
   "currentSubIssueIndex": 0,
   "completedSubIssues": []
 }
@@ -139,11 +139,11 @@ Read `.claude/.loop-state.json` and determine current target:
 - Work on the main `issueId` directly
 - Check its acceptance criteria
 
-### Parallel [P] Sub-issues
+### Parallel Sub-issues
 
-Sub-issues with `[P]` in title can run in parallel:
+Sub-issues with the **"Parallel"** label in Linear can run in parallel:
 - Check if current sub-issue is in `parallelSubIssues`
-- If yes, can use Task tool to spawn agents for other `[P]` issues
+- If yes, can use Task tool to spawn agents for other parallel issues
 - Mark all parallel issues complete together
 
 ## Loop Completion

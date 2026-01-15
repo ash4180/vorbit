@@ -1,4 +1,5 @@
 ---
+name: explore
 description: Quick exploration of ideas before PRD creation
 ---
 
