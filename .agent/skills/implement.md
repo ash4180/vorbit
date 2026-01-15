@@ -1,4 +1,5 @@
 ---
+name: implement
 description: Execute tasks from issue tracker or implement from description.
 ---
 
@@ -37,10 +38,10 @@ This ensures code matches team's style and is easy to review.
 **For parent issues (epics):**
 
 1. Fetch all sub-issues
-2. Filter sub-issues where title starts with `[P]` (parallel marker)
-3. Group `[P]` sub-issues by shared dependencies
+2. Filter sub-issues that have the **Parallel** label
+3. Group parallel sub-issues by shared dependencies
 4. For each parallel group: work on tasks together
-5. Process non-`[P]` sub-issues sequentially after parallel groups
+5. Process non-parallel sub-issues sequentially after parallel groups
 
 ## TDD Implementation
 

@@ -1,4 +1,5 @@
 ---
+name: epic
 description: Create parent issue + sub-issues from PRD user stories.
 ---
 
@@ -95,10 +96,40 @@ Present plan and ask:
 
 For each User Story, create:
 * **Title**: Transform user story goal → kebab-case (e.g., "I want to login" → `add-user-login`)
-* **Description**: User story + acceptance criteria + test criteria
-* **Sub-issues** (if complex): With `[P]` prefix for parallel tasks
+* **Description**: User story + acceptance criteria + **test criteria (REQUIRED)**
+* **Sub-issues** (if complex): With **Parallel** label only when appropriate
+
+### TDD Requirement
+
+**CRITICAL: Every issue MUST include `## Test Criteria` section.**
+
+```markdown
+## Test Criteria (TDD - write tests FIRST)
+- [ ] Unit test: [specific behavior]
+- [ ] Unit test: [edge case]
+```
+
+* Tests are written FIRST before implementation
+* Implementation is only "done" when tests pass
+* No issue is complete without corresponding tests
 
 Title must be branch-friendly: `git checkout -b add-user-login`
+
+### When to Apply "Parallel" Label
+
+**Apply Parallel label ONLY when ALL conditions are true:**
+1. Sub-issue has NO dependencies on other sub-issues
+2. Sub-issue does NOT block other sub-issues
+3. Sub-issue works on separate files/components
+4. Multiple agents can work simultaneously without coordination
+
+**Do NOT apply Parallel label when:**
+* Sub-issue must complete before another can start
+* Sub-issue modifies shared code that others depend on
+* Sub-issue creates interfaces/types that others consume
+* Order matters for the feature to work
+
+**Default: Sequential.** When in doubt, don't add Parallel label.
 
 ## Step 7: Create Issues
 

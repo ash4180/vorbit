@@ -9,3 +9,6 @@ node_modules/
 
 # Vorbit working state
 .vorbit/
+
+# Loop state (runtime only, not committed)
+.claude/.loop-state.json

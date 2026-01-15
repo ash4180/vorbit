@@ -1,4 +1,5 @@
 ---
+name: review
 description: Code review. Brutal honesty. User approves before edits.
 ---
 
