@@ -56,6 +56,7 @@
 9. NO OVER-ENGINEERING - boring > clever. No academic BS.
 10. SEPARATE CONCERNS properly
 11. NO RESOURCE LEAKS
+12. NEVER modify files you haven't read. Always Read or Grep first.
 
 ---
 Note: Project-specific CLAUDE.md files should EXTEND these principles, not contradict them.

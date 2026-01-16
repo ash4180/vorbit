@@ -128,6 +128,13 @@ skills/               # Pure schemas (no process instructions)
 | **epic** | Linear issue structure | Title from user story → kebab-case |
 | **prototype** | Page/feature patterns | Mocks under feature folder |
 | **webflow** | Webflow development | Figma optional, templates with page slots |
+| **react-best-practices** | React/Next.js performance | 40+ rules, 8 priority categories |
+
+### Third-Party Skills
+
+| Skill | Source | License |
+|-------|--------|---------|
+| **react-best-practices** | [Vercel Labs](https://github.com/vercel-labs/agent-skills/tree/react-best-practices/skills/react-best-practices) | MIT |
 
 ## Requirements
 
