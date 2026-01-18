@@ -1,13 +1,12 @@
 {
   "name": "vorbit",
   "version": "1.2.0",
-  "description": "Universal product development workflows for AI coding agents. TDD-first, Linear-integrated, works with Claude, Antigravity, and Codex.",
+  "description": "TDD-first product development workflows for Claude Code. Linear and Notion integrated.",
   "author": {
     "name": "Ash"
   },
   "keywords": ["tdd", "linear", "notion", "workflows", "product-development"],
   "repository": "https://github.com/ash4180/vorbit",
-  "platforms": ["claude-code", "antigravity", "codex"],
   "commands": "commands",
   "skills": "skills",
   "hooks": "hooks/hooks.json"
