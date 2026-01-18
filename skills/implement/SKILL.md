@@ -19,6 +19,8 @@ A disciplined, Test-Driven Development (TDD) workflow for implementing features 
 ### Phase 2: TDD Cycle (Strict)
 **Rule**: The task is NOT done until tests pass.
 
+**Rule**: If you implement backend API changes, also implement the corresponding frontend site API integration. Use explicit `TODO:` markers only for temporary placeholders so they are easy to find, replace, and remove during cleanup.
+
 1.  **Red (Write Test)**:
     -   Create a new test file or add a case to an existing one.
     -   Assert the specific acceptance criteria.
