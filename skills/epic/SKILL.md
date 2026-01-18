@@ -1,12 +1,19 @@
 ---
 name: epic
-version: 1.1.0
+version: 1.2.0
 description: Use when user says "create issues", "break down PRD", "set up epic", "create Linear tasks", "plan sprint", "convert to issues", or wants to transform PRD user stories into Linear epics and sub-issues.
 ---
 
 # Epic Planning Skill
 
 Transform User Stories (from PRD) into executable Engineering Tasks (Epics/Issues) in Linear.
+
+**Key Features:**
+- Sub-issues include plain-language "Why" for non-engineers
+- Each sub-issue references parent epic's acceptance criteria
+- File paths are specified with exact locations
+- Existing code patterns and constants are identified for reuse
+- UI components reference the ui-patterns skill
 
 ## Step 1: Detect Platform & Verify Connection
 
@@ -60,17 +67,48 @@ Use Linear MCP:
 
 Ask user if unclear: "Which team/project?"
 
-## Step 4: Learn Codebase Style
+## Step 4: Learn Codebase Style & Discover Reusables
 
-Before planning:
-1. Grep for similar features, note naming conventions
-2. Check file structure
-3. Find test patterns
-4. Check for mock data from prototype (`mocks/` folders)
+Before planning, analyze the codebase thoroughly:
 
+### 4.1 Find Similar Features
+```bash
+# Search for similar patterns
+grep -r "similar-feature" --include="*.tsx" --include="*.ts"
+```
+- Note file structure patterns
+- Identify naming conventions
+- Find test patterns
+
+### 4.2 Discover Reusable Code
+**Find existing utilities:**
+- Search `src/utils/`, `src/lib/`, `src/helpers/`
+- List functions that can be reused
+- Note: "Use X, don't recreate"
+
+**Find existing components:**
+- Search `src/components/ui/`, `src/components/common/`
+- List UI primitives available
+- Note component library in use (Radix, Base UI, etc.)
+
+### 4.3 Discover Constants (NO MAGIC NUMBERS)
+```bash
+# Find constant files
+find . -name "constants*" -o -name "config*" | head -20
+```
+- List relevant constants for this feature
+- Identify where new constants should go
+- **Rule:** Every hardcoded value must reference a constant
+
+### 4.4 Check for Mock Data
 If prototype exists with mock data:
-- List all mock locations
+- List all mock locations (`mocks/` folders)
 - Include "Swap mock to real API" as sub-issue
+
+### 4.5 Detect UI Work
+If feature includes UI components:
+- Note: "Reference `/vorbit:design:ui-patterns` skill"
+- Identify existing UI patterns to follow
 
 ## Step 5: Create Technical Plan (SDD)
 
@@ -105,6 +143,26 @@ For each User Story, create:
 - **Sub-issues** (if complex): Apply **Parallel** label only when truly independent
 
 **TDD rule:** Every issue MUST include `## Test Criteria` section. Tests are written FIRST before implementation.
+
+### Sub-issue Creation Checklist
+
+For EACH sub-issue, include all these sections:
+
+| Section | Required | Purpose |
+|---------|----------|---------|
+| **Why This Is Needed** | ✅ | Plain language for non-engineers |
+| **Related Epic AC** | ✅ | Copy relevant ACs from parent epic |
+| **Reuse & Patterns** | ✅ | Existing code, utilities, constants |
+| **File Changes** | ✅ | Exact file paths with action (CREATE/MODIFY) |
+| **Acceptance Criteria** | ✅ | Sub-issue specific criteria |
+| **Test Criteria** | ✅ | TDD requirements |
+
+### Mapping Epic AC to Sub-issues
+
+1. List all Epic Acceptance Criteria (numbered)
+2. For each sub-issue, identify which Epic ACs it satisfies
+3. Copy those specific ACs into "Related Epic AC" section
+4. **Rule:** Every Epic AC must be covered by at least one sub-issue
 
 ## Step 8: Create in Linear
 
@@ -168,10 +226,52 @@ US-XXX: As a [user], I want [goal]...
 
 **Description template:**
 ```markdown
-## Summary
-[Technical task description]
+## Why This Is Needed
+> Written for anyone - no engineering knowledge required
 
-## Acceptance Criteria
+**What this does:** [Simple 1-sentence explanation of what this creates/changes]
+
+**Why it matters:** [Business/user impact in plain language - what breaks without this?]
+
+## Related Epic Acceptance Criteria
+> This sub-issue must satisfy these goals from the parent epic:
+- [ ] [Epic AC #1 that this sub-issue addresses]
+- [ ] [Epic AC #2 that this sub-issue addresses]
+
+⚠️ **Before marking done:** Verify ALL checked items above are satisfied.
+
+## Reuse & Patterns
+> Existing code to reference - DO NOT recreate, NO magic numbers
+
+**Similar features to follow:**
+| Reference | Location | What to copy |
+|-----------|----------|--------------|
+| [Feature] | `src/path/file.tsx` | [Pattern to follow] |
+
+**Utilities to use (don't recreate):**
+| Function | Location | Use for |
+|----------|----------|---------|
+| `validateEmail()` | `src/utils/validation.ts` | Email validation |
+
+**Constants (NO magic numbers):**
+| Instead of | Use | Location |
+|------------|-----|----------|
+| `5` | `MAX_ATTEMPTS` | `src/constants/auth.ts` |
+| `"error"` | `MESSAGES.ERROR` | `src/constants/messages.ts` |
+
+⚠️ **New constants:** Add to `src/constants/[category].ts`, don't hardcode.
+
+**UI Patterns (if applicable):**
+Run `/vorbit:design:ui-patterns` before implementing UI components.
+
+## File Changes
+| Action | File Path | Purpose |
+|--------|-----------|---------|
+| CREATE | `src/components/feature/Component.tsx` | Main component |
+| MODIFY | `src/api/routes.ts` | Add endpoint |
+| CREATE | `src/tests/feature/component.test.ts` | Unit tests |
+
+## Acceptance Criteria (Sub-issue specific)
 - [ ] Criterion 1
 - [ ] Criterion 2
 

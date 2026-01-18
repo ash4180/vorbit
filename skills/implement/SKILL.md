@@ -1,6 +1,6 @@
 ---
 name: implement
-version: 1.1.0
+version: 1.2.0
 description: Use when user says "implement this", "build feature", "fix this bug", "code this", "work on issue", "start coding", or asks to implement from a Linear issue or description. Standard TDD workflow for coding tasks.
 ---
 
@@ -55,6 +55,36 @@ For Linear issues:
 - Check linked PRD if available:
   - **Notion PRD**: Use `notion-find` to fetch
   - **Anytype PRD**: Use `API-get-object` to fetch
+
+## Step 3.5: Parse Enhanced Issue Format
+
+**CRITICAL: If issue contains these sections, use them:**
+
+### Check "Related Epic Acceptance Criteria"
+If present:
+1. Read the parent epic's ACs listed in the issue
+2. These are your PRIMARY success criteria
+3. **Rule:** Task is NOT done until ALL listed epic ACs are satisfied
+
+### Check "Reuse & Patterns"
+If present:
+1. **Similar features** → Open and study these files FIRST
+2. **Utilities** → Use these, DO NOT recreate
+3. **Constants** → Use these, NO magic numbers allowed
+4. **UI Patterns** → If present, invoke `/vorbit:design:ui-patterns`
+
+### Check "File Changes"
+If present:
+1. This is your implementation plan
+2. CREATE files at exact paths listed
+3. MODIFY files at exact paths listed
+4. **Rule:** Don't deviate without updating the issue
+
+### Detect UI Work
+If issue involves UI components:
+- Check for ui-patterns reference in issue
+- If UI work detected, use ui-patterns skill for constraints
+- Follow: Tailwind, motion/react, accessibility primitives
 
 ## Step 4: Learn Codebase Style
 
@@ -111,6 +141,9 @@ For each task:
 - [ ] Code matches team's style
 - [ ] No regressions in existing tests
 - [ ] No mock data remains (check for `MOCK_`, mock imports, `.json` test data)
+- [ ] **All "Related Epic Acceptance Criteria" satisfied** (if present in issue)
+- [ ] **File changes match planned paths** (if "File Changes" section exists)
+- [ ] **Used utilities/constants from "Reuse & Patterns"** (no magic numbers, no recreated functions)
 
 ## Step 7: On Task Completion
 
@@ -158,3 +191,8 @@ Before finishing, ask yourself:
 - "Did I delete any dead code I created?"
 - "Did I leave any TODOs?"
 - "Did I break any existing tests?"
+- "Did I satisfy ALL Related Epic Acceptance Criteria?"
+- "Did I use the utilities/constants from Reuse & Patterns?"
+- "Did I use any magic numbers instead of constants?"
+- "Did I recreate any function that already exists?"
+- "Did I follow the File Changes plan?"
