@@ -1,6 +1,7 @@
 ---
 name: webflow
-description: This skill should be used when the user asks to "build in Webflow", "create Webflow page", "develop Webflow template", "Figma to Webflow", "create Webflow component", "add page slots", "create static page template", "build directly in Webflow", "develop from Figma design", or wants to develop layouts and components in Webflow. Supports pages, templates with page slots, and reusable components - with or without Figma designs.
+version: 1.1.0
+description: Use when user says "build in Webflow", "create Webflow page", "develop Webflow template", "Figma to Webflow", "create Webflow component", "add page slots", "create static page template", "build directly in Webflow", "develop from Figma design", or wants to develop layouts and components in Webflow. Supports pages, templates with page slots, and reusable components - with or without Figma designs.
 ---
 
 # Webflow Development Skill

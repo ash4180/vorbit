@@ -1,11 +1,118 @@
 ---
 name: journey
-description: User flow diagram schema for FigJam. Use when creating user journeys via generate_diagram MCP tool.
+version: 1.1.0
+description: Use when user says "create user flow", "user journey", "flow diagram", "map user steps", "FigJam diagram", or wants to visualize user flows. Creates Mermaid diagrams in FigJam.
 ---
 
-# User Flow Schema
+# Journey Skill
 
-User journey diagrams created in FigJam via Mermaid syntax.
+Create user journey diagrams in FigJam using Mermaid syntax.
+
+## Step 1: Verify Notion Connection (if Notion needed)
+
+**IF user provides a Notion URL OR wants to update PRD in Notion:**
+1. Run a lightweight test: use `notion-find` to search for "test"
+2. **IF the call fails (auth error, token expired, connection refused):**
+   - Tell the user: "Notion connection has expired. Please run `/mcp` and reconnect the Notion server, then run this command again."
+   - **STOP HERE** - do not proceed
+3. **IF the call succeeds:** proceed
+
+## Step 2: Gather Context
+
+1. IF Notion PRD URL provided, fetch the PRD
+2. IF feature name provided, search Notion for existing PRD
+3. Extract user stories and acceptance criteria if available
+
+## Step 3: Confirm Flow Details
+
+**RULE: If ANY requirement is unclear, use AskUserQuestion.**
+
+Ask about:
+1. **Entry point** - "Where does the user start?"
+2. **Primary goal** - "What is the user trying to accomplish?"
+3. **Key decisions** - "What choices will the user make?"
+4. **Error scenarios** - "What can go wrong? How to handle?"
+5. **Exit points** - "Where can the user complete or leave?"
+
+## Step 4: Draft Flow in Chat
+
+**Show the flow as a text outline for review:**
+
+```
+User Flow: [Feature Name]
+
+1. [Entry] User lands on...
+   ↓
+2. [Action] User clicks...
+   ↓
+3. [Decision] Is valid?
+   → Yes: Continue to step 4
+   → No: Show error → End
+   ↓
+4. [Action] System processes...
+   ↓
+5. [Success] User sees confirmation → End
+```
+
+**After showing draft, ask:** "Does this flow look correct? Ready to create in FigJam?"
+
+## Step 5: Create User Flow in FigJam
+
+**Only proceed after user confirms the draft.**
+
+**CRITICAL: Max 15 nodes total. Split complex flows.**
+
+Use `mcp__plugin_figma_figma__generate_diagram` with:
+- `name`: Descriptive title (e.g., "User Login Flow")
+- `mermaidSyntax`: Flowchart using LR direction, all text in quotes
+- `userIntent`: Brief description of what user is accomplishing
+
+### Mermaid Syntax Rules for FigJam
+
+```mermaid
+flowchart LR
+    A(["Entry"]):::startend --> B["Action"]:::action
+    B --> C{"Decision?"}:::decision
+    C -->|"Yes"| D["Continue"]:::action
+    C -->|"No"| E["Error"]:::negative
+    D --> F(["Success"]):::positive
+
+    classDef startend fill:#CBD5E1,color:#334155,stroke:#94A3B8
+    classDef action fill:#BAE6FD,color:#0c4a6e,stroke:#7DD3FC
+    classDef condition fill:#C4B5FD,color:#4c1d95,stroke:#A78BFA
+    classDef decision fill:#FED7AA,color:#7c2d12,stroke:#FDBA74
+    classDef positive fill:#A7F3D0,color:#14532d,stroke:#6EE7B7
+    classDef negative fill:#FECDD3,color:#881337,stroke:#FB7185
+```
+
+Note: Error state `E` is terminal. User sees the error and retries implicitly - no back-loop needed.
+
+**IMPORTANT**:
+- Use `LR` direction (left-to-right)
+- Put ALL text in quotes (`["text"]`, `{"text?"}`, `-->|"label"|`)
+- Apply color classes to ALL nodes using `:::className` syntax
+- No emojis in Mermaid code
+- No `\n` for newlines
+
+## Step 6: Update PRD in Notion
+
+If PRD exists from Step 2:
+1. Fetch the PRD page
+2. Add FigJam URL under "User Flow" section
+3. Include the Mermaid source code as backup
+
+**IMPORTANT**: After calling generate_diagram, show the returned URL as a markdown link so user can view and edit.
+
+## Step 7: Report
+
+- FigJam flow created: Yes (with URL)
+- PRD updated: Yes/No (with URL)
+- Node count: X nodes, Y decisions, Z error paths
+- Next: `/vorbit:design:prototype` or `/vorbit:implement:epic`
+
+---
+
+# Journey Schema & Validation
 
 ## FigJam Integration
 
@@ -37,19 +144,6 @@ If your flow needs more than 15 nodes:
 2. **Abstract sub-flows** - Replace detailed steps with `["See Sub-flow X"]`
 3. **Focus on primary path** - Detail the happy path, simplify alternatives
 
-## Mermaid Syntax for FigJam
-
-**IMPORTANT**: FigJam requires all text in quotes. No back-loops.
-
-```mermaid
-flowchart LR
-    A(["Entry: User lands"]):::startend --> B["User takes action"]:::action
-    B --> C{"Decision?"}:::decision
-    C -->|"Yes"| D["Continue"]:::action
-    C -->|"No"| E["Error state"]:::negative
-    D --> F(["Success"]):::startend
-```
-
 ## Node Types
 
 | Type | Syntax | Use For |
@@ -65,15 +159,6 @@ flowchart LR
 ## Color Palette (Required)
 
 Apply these styles to ALL diagrams:
-
-```mermaid
-classDef startend fill:#CBD5E1,color:#334155,stroke:#94A3B8
-classDef action fill:#BAE6FD,color:#0c4a6e,stroke:#7DD3FC
-classDef condition fill:#C4B5FD,color:#4c1d95,stroke:#A78BFA
-classDef decision fill:#FED7AA,color:#7c2d12,stroke:#FDBA74
-classDef positive fill:#A7F3D0,color:#14532d,stroke:#6EE7B7
-classDef negative fill:#FECDD3,color:#881337,stroke:#FB7185
-```
 
 | Node Type | Fill | Stroke | Use For |
 |-----------|------|--------|---------|
@@ -102,7 +187,7 @@ C -->|"No"| D["Error shown"]  // Terminal - user retries implicitly
 C -->|"Yes"| E["Continue"]
 ```
 
-**Error states should be terminal nodes.** The user's retry action is implicit - they see the error and correct their input. This keeps the diagram clean and strictly left-to-right.
+**Error states should be terminal nodes.** The user's retry action is implicit.
 
 ## Validation Rules
 
@@ -139,8 +224,6 @@ Node count: 5/15
 ## FigJam URL
 [Generated URL from tool]
 ```
-
-Note: Error state `D` is terminal. User sees the error and retries - no back-loop needed.
 
 ## Common Mistakes
 

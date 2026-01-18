@@ -1,8 +1,0 @@
-{
-  "Stop": [
-    {
-      "type": "command",
-      "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/loop-controller.sh"
-    }
-  ]
-}

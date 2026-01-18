@@ -4,8 +4,11 @@
 
 set -euo pipefail
 
-# Path to loop state file
-STATE_FILE=".claude/.loop-state.json"
+# Find project root (git root or current directory)
+PROJECT_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+
+# Path to loop state file (absolute path)
+STATE_FILE="$PROJECT_ROOT/.claude/.loop-state.json"
 
 # If no state file exists, allow exit (normal mode)
 if [[ ! -f "$STATE_FILE" ]]; then
