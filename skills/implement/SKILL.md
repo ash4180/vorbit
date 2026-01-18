@@ -44,7 +44,9 @@ Use the **implement-loop** skill for loop state management and sub-issue trackin
 3. **IF no args, check conversation**: Look for Linear issue URLs from recent `/vorbit:implement:epic` output
    - If found: "I see you just created [issue title]. Work on this one?" (Yes/No)
 4. **IF nothing found**: Use `list_issues` with `assignee: "me"` to show assigned issues, ask which to work on
-5. **IF description only**: Work directly on what user describes (no Linear tracking)
+5. **IF description only**:
+   - If requirements are clear → Work directly on what user describes
+   - If requirements unclear or edge cases undefined → **>>> USE THE `ux` SKILL <<<** to clarify before implementing
 
 ## Step 3: Before Starting
 
@@ -97,6 +99,32 @@ If issue involves UI components:
 
 **Rule**: Consistency > Novelty. This ensures code matches team's style.
 
+## Step 4.5: Detect Tech Stack & Required Skills
+
+**Check package.json to detect tech stack:**
+
+```bash
+cat package.json | grep -E '"react"|"next"'
+```
+
+### Required Skills by Tech Stack
+
+| Tech Stack | Required Skill | Detection |
+|------------|----------------|-----------|
+| **React / Next.js** | `react-best-practices` | `"react"` or `"next"` in package.json |
+
+### If React/Next.js Detected:
+
+**>>> USE THE `react-best-practices` SKILL - MANDATORY <<<**
+
+This skill MUST be used for ALL React/Next.js implementations. Contains:
+- Waterfall elimination patterns (CRITICAL)
+- Bundle size optimization (CRITICAL)
+- Server-side performance (HIGH)
+- Re-render optimization (MEDIUM)
+
+**Non-negotiable.** Every React component must follow these patterns.
+
 ## Step 5: Check for Sub-issues
 
 **For parent issues (epics):**
@@ -147,8 +175,8 @@ For each task:
 
 ## Step 7: On Task Completion
 
-- Update Linear status to "Done" or "In Review"
-- Add comment: what was done, files changed
+- Update Linear status to "In Review"
+- Add comment in Linear: what was done, files changed
 
 ## Step 8: On Feature Completion
 
@@ -175,7 +203,6 @@ For each task:
 - What was implemented
 - Files changed
 - Tests added/updated
-- memory.md location
 - Next: `/vorbit:implement:verify` to verify
 
 ## Quick Mode
@@ -183,7 +210,6 @@ For each task:
 For simple tasks (< 30 lines):
 - Just implement it
 - Run existing tests
-- Skip memory.md
 
 ## Validation Checklist
 
@@ -196,3 +222,4 @@ Before finishing, ask yourself:
 - "Did I use any magic numbers instead of constants?"
 - "Did I recreate any function that already exists?"
 - "Did I follow the File Changes plan?"
+- "**If React/Next.js:** Did I follow react-best-practices patterns?"

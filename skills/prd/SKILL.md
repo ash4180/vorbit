@@ -1,23 +1,27 @@
 ---
 name: prd
-version: 1.1.0
-description: Use when user says "write PRD", "create requirements", "define feature", "document requirements", "product spec", or wants to create a Product Requirements Document. Outputs to Notion or Anytype.
+version: 2.0.0
+description: This skill should be used when the user asks to "write PRD", "create requirements", "define feature", "document requirements", "product spec", "clarify user flow", "UX analysis", "edge case analysis", "analyze user stories", "find edge cases", "user journey", "flow diagram", or wants to create a complete Product Requirements Document with user stories built through exhaustive questioning.
 ---
 
 # PRD Skill
 
-Create Product Requirements Documents with proper structure. No fluff, just what needs building.
+Create complete Product Requirements Documents through exhaustive questioning. User stories are built with UX detail - each answer becomes an acceptance criterion.
+
+**Key Principle:** Ask questions, capture answers, answers become acceptance criteria. Never assume.
+
+---
 
 ## Step 1: Detect Platform & Verify Connection
 
 **Auto-detect platform from user input:**
-- Notion URL (contains `notion.so` or `notion.site`) → use Notion
+- Notion URL → use Notion
 - User mentions "Notion" → use Notion
 - Anytype URL or object ID → use Anytype
 - User mentions "Anytype" → use Anytype
-- Otherwise → ask at save time (Step 5)
+- Otherwise → ask at save time (Step 7)
 
-**Only verify the detected platform (don't test both):**
+**Only verify the detected platform:**
 
 ### If Notion detected:
 1. Run `notion-find` to search for "test"
@@ -29,197 +33,241 @@ Create Product Requirements Documents with proper structure. No fluff, just what
 2. **IF fails:** "Anytype connection expired. Run `/mcp` to reconnect, then retry." → **STOP**
 3. **IF succeeds:** proceed
 
-### If no platform detected: proceed (ask later)
+---
 
-## Step 2: Gather Context
+## Step 2: Problem & Users (Quick Context)
 
-**IF Notion URL provided:**
-1. Use `notion-find` with page title from URL
-2. If content retrieval fails, ask user to paste relevant sections
-3. Proceed to Step 4 (restructure mode)
+Use `AskUserQuestion` to clarify:
 
-**IF Anytype URL or object ID provided:**
-1. Use `API-get-object` to retrieve content
-2. If content retrieval fails, ask user to paste relevant sections
-3. Proceed to Step 4 (restructure mode)
+1. **Problem** - "What problem does this solve? (1-2 sentences)"
+2. **Users** - "Who has this problem?"
+3. **Scope** - "What are the main things users need to do?" (This seeds user stories)
 
-**IF existing context (explore doc, conversation):**
-1. Use that context as input
-2. Proceed to Step 3 for gaps
+Keep this fast - detailed work happens per user story.
 
-**IF starting fresh:**
-1. Proceed to Step 3
+---
 
-## Step 3: Clarify Requirements
+## Step 3: Identify User Stories
 
-**RULE: If ANY requirement is unclear, use AskUserQuestion.**
+From Step 2 scope answer, identify distinct user stories:
 
-Ask about:
-1. **Problem** - "What problem does this solve?"
-2. **Users** - "Who has this problem?" (options: Internal team, End users, Admins, etc.)
-3. **Priority** - "How urgent?" (Critical, High, Medium, Low)
-4. **Scope** - For ambiguous requirements, ask with options
-5. **Constraints** - Budget, timeline, compliance
+```
+Based on your scope, I see these user stories:
+- US-001: [Goal 1]
+- US-002: [Goal 2]
+- US-003: [Goal 3]
 
-Keep asking until ALL requirements are clear. Don't guess.
+Does this capture everything? Any to add/remove?
+```
 
-## Step 4: Generate PRD
+Get user confirmation before proceeding.
 
-Use the template below. Include:
-- Name (3-8 words, no jargon)
-- Problem (max 3 sentences, no tech)
-- Users
-- User Stories with acceptance criteria
-- User Flow: `[To be added via /vorbit:design:journey]`
-- Constraints
-- Out of Scope
-- Success Criteria (with numbers)
+---
 
-**Show the complete PRD in chat for review:**
+## Step 4: Build Each User Story (Invoke UX Skill)
+
+**For EACH user story, invoke the UX skill for exhaustive questioning.**
+
+### 4.1 Announce the User Story
+```
+Building US-XXX: [Title]
+As a [user], I want [goal]...
+```
+
+### 4.2 Invoke UX Skill
+
+**>>> USE THE `ux` SKILL NOW <<<**
+
+Pass to UX skill:
+- User Story statement
+- Any context already known
+
+The UX skill will:
+1. Ask exhaustive questions (8 categories)
+2. Cross-check edge cases
+3. Resolve UX trade-offs
+4. Return structured acceptance criteria
+
+**Wait for UX skill to return before proceeding.**
+
+### 4.3 Create Flow Diagram
+
+After UX skill returns, create FigJam diagram for the user story:
+
+Use `mcp__plugin_figma_figma__generate_diagram` with:
+- `name`: "US-XXX: [Title] Flow"
+- `mermaidSyntax`: Flowchart LR direction, all text in quotes
+- `userIntent`: User story goal
+
+**Max 15 nodes. Rules:**
+```mermaid
+flowchart LR
+    A(["Entry"]):::startend --> B["Action"]:::action
+    B --> C{"Decision?"}:::decision
+    C -->|"Yes"| D["Success"]:::positive
+    C -->|"No"| E["Error"]:::negative
+
+    classDef startend fill:#CBD5E1,color:#334155,stroke:#94A3B8
+    classDef action fill:#BAE6FD,color:#0c4a6e,stroke:#7DD3FC
+    classDef decision fill:#FED7AA,color:#7c2d12,stroke:#FDBA74
+    classDef positive fill:#A7F3D0,color:#14532d,stroke:#6EE7B7
+    classDef negative fill:#FECDD3,color:#881337,stroke:#FB7185
+```
+
+### 4.4 Compile User Story
+
+**>>> READ `references/output-templates.md` NOW <<<**
+
+Use the "Enhanced User Story Template" from the templates file. Format:
+
+```markdown
+### US-XXX: [Title]
+
+As a [user], I want [goal], so that [benefit].
+
+**UX Expectation:**
+[Answer from Category 1 - user's exact words]
+
+**User Flow:**
+[FigJam link from Step 4.6]
+
+**Acceptance Criteria:**
+
+Happy Path:
+- [ ] [User's answer: step 1]
+- [ ] [User's answer: step 2]
+- [ ] [User's answer: success confirmation]
+
+Validation:
+- [ ] When [field] is [invalid], show "[user's error message]"
+
+Errors:
+- [ ] When API fails, [user's answer]
+- [ ] When offline, [user's answer]
+
+States:
+- [ ] Loading: [user's answer]
+- [ ] Empty: [user's answer]
+
+Permissions:
+- [ ] When unauthorized, [user's answer]
+
+Accessibility:
+- [ ] [user's answer: keyboard]
+- [ ] [user's answer: mobile]
+
+Edge Cases:
+- [ ] [user's answer from UX skill questioning]
+- [ ] [any gaps found from UX skill edge-case cross-check]
+```
+
+**>>> REPEAT Step 4 for EACH user story <<<**
+
+---
+
+## Step 5: Constraints & Success Criteria
+
+After all user stories are built:
+
+Use `AskUserQuestion`:
+- "Any constraints? (Budget, timeline, compliance, tech stack)"
+- "What's explicitly out of scope?"
+- "How do we measure success? (Include specific numbers)"
+
+---
+
+## Step 6: Review Complete PRD
+
+**>>> READ `references/output-templates.md` for "PRD Template" <<<**
+
+Show the complete PRD to user:
 
 ```markdown
 # [Feature Name]
 
 ## Problem
-[Max 3 sentences, no tech details]
+[From Step 2 - max 3 sentences]
 
 ## Users
-[Who has this problem]
+[From Step 2]
 
 ## User Stories
 
-### US1: [Title]
-As a [user], I want [goal], so that [benefit].
-
-**Acceptance Criteria:**
-- [ ] ...
-- [ ] ...
-
-### US2: [Title]
-...
-
-## User Flow
-[To be added via /vorbit:design:journey]
+[All compiled user stories from Step 4]
 
 ## Constraints
-- ...
+[From Step 5]
 
 ## Out of Scope
-- ...
+[From Step 5]
 
 ## Success Criteria
-- [Measurable metric with number]
-- ...
+[From Step 5 - with numbers]
 ```
 
-**After showing draft, ask:** "Does this PRD look good? Ready to save?"
+Ask: "Here's the complete PRD with X user stories and Y acceptance criteria. Ready to save?"
 
-## Step 5: Save Document
+---
 
-**Only proceed after user confirms the draft.**
+## Step 7: Save Document
 
-**If platform was detected in Step 1:** use that platform directly (don't ask again).
-
-**If no platform detected:** Use AskUserQuestion: "Where should I save this PRD?"
-- Options: Notion, Anytype, Other
+**If platform was detected in Step 1:** use that platform directly.
+**If no platform detected:** Ask "Where should I save this?" (Notion/Anytype)
 
 ### If Notion:
 1. Ask for database name or page URL
-2. Use `notion-find` to locate target database
+2. Use `notion-find` to locate target
 3. Create with Name = feature name, full PRD in body
 4. If database has `Type` property, set to `["PRD"]`
 
 ### If Anytype:
-1. Use `API-list-spaces` to show available spaces
-2. Ask user which space to save to
-3. Use `API-create-object` with:
-   - `type_key`: "page" (or appropriate type)
-   - `name`: feature name
-   - `body`: full PRD content as markdown
-
-## Step 6: Report
-
-- URL or object ID (if saved)
-- Platform used (Notion/Anytype)
-- Summary: X user stories, Y success criteria
-- Next: `/vorbit:design:journey` or `/vorbit:implement:epic`
+1. Use `API-list-spaces` to show spaces
+2. Ask which space
+3. Use `API-create-object` with type_key "page", name = feature name, body = full PRD
 
 ---
 
-# PRD Schema & Validation
-
-## Required Sections
-
-| Section | Required | Rules |
-|---------|----------|-------|
-| Name | Yes | 3-8 words, no jargon |
-| Description | Yes | Max 100 chars |
-| Problem | Yes | Max 3 sentences, no tech details |
-| Users | Yes | Who has the problem |
-| User Stories | Yes | "As a [user]..." with acceptance criteria |
-| User Flow | Placeholder | `[To be added via /vorbit:design:journey]` |
-| Success Criteria | Yes | Measurable with numbers |
-| Constraints | No | Budget, timeline, compliance |
-| Out of Scope | No | What we're NOT building |
-
-## Validation Rules
-
-- **Name**: 3-8 words, no technical jargon
-- **Problem**: Max 3 sentences, describes user pain not technical gap
-- **User Stories**: Format "As a [user], I want [goal], so that [benefit]"
-- **User Flow**: Placeholder text until journey command fills it
-- **Success Criteria**: Contains measurable numbers (percentages, times, counts)
-- **No placeholders**: No `[UNCLEAR]`, `[TBD]`, or empty sections (except User Flow)
-
-## User Story Format
+## Step 8: Report
 
 ```
-US-001: As a [user type], I want [goal], so that [benefit]
-  Acceptance:
-  - [Specific testable criterion]
-  - [Another criterion]
+## PRD Complete
+
+**Document:** [URL or object ID]
+**Platform:** Notion/Anytype
+
+### Summary
+- User stories: X
+- Total acceptance criteria: Y
+- Flow diagrams: Z
+
+### User Stories
+| Story | ACs | Flow |
+|-------|-----|------|
+| US-001: [title] | X | [link] |
+| US-002: [title] | Y | [link] |
+
+### Next Steps
+Run `/vorbit:implement:epic` to create Linear issues.
+Each acceptance criterion becomes a testable requirement.
 ```
 
-Rules:
-- One goal per story
-- Each story has acceptance criteria
-- Stories map to Linear issues (via /vorbit:implement:epic)
+---
 
-## Success Criteria Format
+## Reference Files & Skills
 
-```
-- 95% of signups complete successfully
-- Page loads in under 2 seconds
-- Error rate below 0.1%
-```
+| Resource | When to Use | Purpose |
+|----------|-------------|---------|
+| **`ux` skill** | Step 4.2 | Exhaustive UX questioning (has question matrix, edge cases, philosophy) |
+| `references/output-templates.md` | Step 4.4, 6 | Exact format for PRD and user story outputs |
 
-Rules:
-- Include numbers
-- Must be verifiable (yes/no answer)
-- Business outcomes, not tech metrics
+---
 
-## Notion Mapping
+## Key Principle: User Answers = Acceptance Criteria
 
-| Notion Field | PRD Field | Notes |
-|--------------|-----------|-------|
-| Name | Feature name | title property |
-| Description | One-line summary | text, max 100 chars |
-| Type | `["PRD"]` | multi_select, if exists |
+| Question | User Answer | Becomes |
+|----------|-------------|---------|
+| "What if email empty?" | "Show 'Email required'" | `- [ ] When email empty, show "Email required"` |
+| "What during loading?" | "Spinner with text" | `- [ ] Loading: Show spinner with text` |
+| "What if API fails?" | "Retry button, keep data" | `- [ ] When API fails, show retry, preserve data` |
 
-Content goes in page body as markdown.
-
-## Anytype Mapping
-
-| Anytype Field | PRD Field | Notes |
-|---------------|-----------|-------|
-| name | Feature name | object name |
-| body | Full PRD content | markdown format |
-| type_key | "page" | or custom type if available |
-
-## Common Mistakes
-
-| Wrong | Right | Why |
-|-------|-------|-----|
-| "We need OAuth2 for authentication" | "Users cannot access personalized features without accounts" | Problem describes user pain, not technical solution |
-| "Users should be happy with login" | "90% of users complete login in under 10 seconds" | Success criteria must have numbers |
-| "OAuth2 JWT Token Auth Implementation" | "User Login and Signup" | Name avoids jargon |
+**Never interpret.** Use user's exact words in acceptance criteria.

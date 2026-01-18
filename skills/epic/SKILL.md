@@ -13,7 +13,7 @@ Transform User Stories (from PRD) into executable Engineering Tasks (Epics/Issue
 - Each sub-issue references parent epic's acceptance criteria
 - File paths are specified with exact locations
 - Existing code patterns and constants are identified for reuse
-- UI components reference the ui-patterns skill
+- UI sub-issues include reminder for implementer to use ui-patterns skill
 - Visual dependency tree shows implementation order by phase
 
 ## Step 1: Detect Platform & Verify Connection
@@ -54,7 +54,9 @@ Transform User Stories (from PRD) into executable Engineering Tasks (Epics/Issue
 2. Extract user stories and acceptance criteria
 
 **IF no PRD exists:**
-1. Gather requirements via conversation
+1. **>>> USE THE `ux` SKILL <<<** to gather requirements through exhaustive questioning
+2. For each user story identified, UX skill will return structured acceptance criteria
+3. Use those acceptance criteria to create epics (proceed to Step 3)
 
 ## Step 3: Detect Team's Linear Setup
 
@@ -108,7 +110,7 @@ If prototype exists with mock data:
 
 ### 4.5 Detect UI Work
 If feature includes UI components:
-- Note: "Reference `/vorbit:design:ui-patterns` skill"
+- Add note in sub-issue: "⚠️ Implementer: Use `/vorbit:design:ui-patterns` skill"
 - Identify existing UI patterns to follow
 
 ## Step 5: Create Technical Plan (SDD)
@@ -283,7 +285,7 @@ US-XXX: As a [user], I want [goal]...
 ⚠️ **New constants:** Add to `src/constants/[category].ts`, don't hardcode.
 
 **UI Patterns (if applicable):**
-Run `/vorbit:design:ui-patterns` before implementing UI components.
+⚠️ Implementer: Use `/vorbit:design:ui-patterns` skill when implementing.
 
 ## File Changes
 | Action | File Path | Purpose |
