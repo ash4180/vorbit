@@ -1,5 +1,7 @@
 ---
-description: Loop state management for iterative implementation. Use when user adds --loop flag to implement command.
+name: implement-loop
+version: 1.0.0
+description: Use when user says "implement --loop", "loop mode", "iterate on issues", "auto-continue", or adds --loop flag to implement. Manages autonomous iteration through sub-issues until completion.
 ---
 
 # Implement Loop Skill
