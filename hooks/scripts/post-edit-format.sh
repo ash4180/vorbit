@@ -29,8 +29,6 @@ if compgen -G "$PROJECT_ROOT/.prettierrc*" >/dev/null 2>&1 || \
   [[ "${DRY_RUN:-}" == "1" ]] && echo "[DRY_RUN] Would run: prettier --write $FILE_PATH" && exit 0
   if command -v prettier &>/dev/null; then
     prettier --write "$FILE_PATH" 2>&1 || true
-  elif command -v npx &>/dev/null; then
-    npx prettier --write "$FILE_PATH" 2>&1 || true
   fi
   exit 0
 fi
