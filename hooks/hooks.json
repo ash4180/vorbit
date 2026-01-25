@@ -1,4 +1,11 @@
 {
+  "PostToolUse": [
+    {
+      "matcher": "Edit",
+      "type": "command",
+      "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/post-edit-format.sh"
+    }
+  ],
   "Stop": [
     {
       "type": "command",
