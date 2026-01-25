@@ -142,26 +142,7 @@ test_detects_prettier_in_package_json() {
 }
 
 # -----------------------------------------------------------------------------
-# Test: Detects deno.json with fmt config
-# -----------------------------------------------------------------------------
-test_detects_deno_json() {
-  setup_test_project "$TEST_PROJECT"
-  echo '{"fmt": {"indentWidth": 2}}' > "$TEST_PROJECT/deno.json"
-  touch "$TEST_PROJECT/test.ts"
-
-  export TOOL_INPUT='{"file_path": "'"$TEST_PROJECT/test.ts"'"}'
-
-  output=$(cd "$TEST_PROJECT" && DRY_RUN=1 bash "$HOOK_SCRIPT" 2>&1) || true
-  exit_code=$?
-
-  assert_output_contains "deno" "$output" "Detects deno.json with fmt config"
-  assert_exit_code 0 $exit_code "Deno detection exits 0"
-
-  teardown_test_project "$TEST_PROJECT"
-}
-
-# -----------------------------------------------------------------------------
-# Test: Priority order (biome > prettier > deno)
+# Test: Priority order (biome > prettier)
 # -----------------------------------------------------------------------------
 test_priority_biome_over_prettier() {
   setup_test_project "$TEST_PROJECT"
@@ -225,7 +206,6 @@ test_formatter_failure_exits_zero() {
 test_detects_biome_json
 test_detects_prettierrc
 test_detects_prettier_in_package_json
-test_detects_deno_json
 test_priority_biome_over_prettier
 test_no_formatter_silent_skip
 test_formatter_failure_exits_zero
