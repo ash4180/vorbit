@@ -1,6 +1,6 @@
 ---
 name: epic
-version: 1.2.0
+version: 1.3.0
 description: Use when user says "create issues", "break down PRD", "set up epic", "create Linear tasks", "plan sprint", "convert to issues", or wants to transform PRD user stories into Linear epics and sub-issues.
 ---
 
@@ -9,11 +9,12 @@ description: Use when user says "create issues", "break down PRD", "set up epic"
 Transform User Stories (from PRD) into executable Engineering Tasks (Epics/Issues) in Linear.
 
 **Key Features:**
-- Sub-issues include plain-language "Why" for non-engineers
+- Sub-issues include plain-language "Why" section
 - Each sub-issue references parent epic's acceptance criteria
 - File paths are specified with exact locations
 - Existing code patterns and constants are identified for reuse
 - UI components reference the ui-patterns skill
+- Visual dependency tree shows implementation order by phase
 
 ## Step 1: Detect Platform & Verify Connection
 
@@ -150,7 +151,7 @@ For EACH sub-issue, include all these sections:
 
 | Section | Required | Purpose |
 |---------|----------|---------|
-| **Why This Is Needed** | ✅ | Plain language for non-engineers |
+| **Why This Is Needed** | ✅ | What it does + why it matters |
 | **Related Epic AC** | ✅ | Copy relevant ACs from parent epic |
 | **Reuse & Patterns** | ✅ | Existing code, utilities, constants |
 | **File Changes** | ✅ | Exact file paths with action (CREATE/MODIFY) |
@@ -173,13 +174,36 @@ Using plan from Step 7:
 
 ## Step 9: Report
 
-- Parent issue URL
-- Sub-issue count: X total (P1: Y, P2: Z, P3: W)
-- PRD link (URL or object ID)
-- Platform used (Notion/Anytype)
-- SDD summary
+Present the following:
 
-Next: `/vorbit:implement:implement ABC-123`
+1. **Parent issue URL**
+2. **Sub-issue count:** X total (P1: Y, P2: Z, P3: W)
+3. **PRD link** (URL or object ID)
+4. **Implementation Order** (dependency tree)
+
+### Implementation Order Format
+
+Implementation order based on dependencies:
+
+  Phase 1 (Parallel - no dependencies)
+  - ABC-101: [Issue title]
+  - ABC-102: [Issue title]
+  - ABC-103: [Issue title]
+
+  Phase 2 (depends on Phase 1)
+  - ABC-104: [Issue title]
+
+  Phase 3 (depends on Phase 2)
+  - ABC-105: [Issue title]
+  - ABC-106: [Issue title]
+
+**Rules for dependency tree:**
+- Phase 1 = issues with no dependencies (can run in parallel)
+- Each subsequent phase depends on previous phase completing
+- Show `blocked by:` for each issue with dependencies
+- Group parallel work within same phase
+
+Next: Start with Phase 1 issues using `/vorbit:implement:implement ABC-101`
 
 ---
 
@@ -227,11 +251,8 @@ US-XXX: As a [user], I want [goal]...
 **Description template:**
 ```markdown
 ## Why This Is Needed
-> Written for anyone - no engineering knowledge required
-
-**What this does:** [Simple 1-sentence explanation of what this creates/changes]
-
-**Why it matters:** [Business/user impact in plain language - what breaks without this?]
+**What this does:** [Simple 1-sentence explanation]
+**Why it matters:** [Business/user impact - what breaks without this?]
 
 ## Related Epic Acceptance Criteria
 > This sub-issue must satisfy these goals from the parent epic:

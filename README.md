@@ -116,6 +116,33 @@ Based on [ui-skills.com](https://ui-skills.com). Enforces:
 
 Auto-triggered when implementing UI components.
 
+## Defensive Hooks
+
+Automatic code quality enforcement via Claude Code hooks.
+
+| Hook | Event | Behavior |
+|------|-------|----------|
+| **Auto-Format** | PostToolUse:Edit | Runs Biome or Prettier after file edits |
+| **Auto-Validate** | PostToolUse:Edit | Runs tsc/mypy/pyright/go build (blocks on errors) |
+| **Console.log Audit** | Stop | Warns about debug statements at session end |
+| **Push Warning** | PreToolUse:Bash | Reminds to review before `git push` |
+
+**Formatter Priority:** Biome > Prettier (detects from project config)
+
+**Validator Detection:**
+- TypeScript: `tsconfig.json` → `tsc --noEmit`
+- Python: `pyproject.toml` with `[tool.mypy]` or `[tool.pyright]` → mypy/pyright
+- Go: `go.mod` → `go build ./...`
+
+**Test the hooks:**
+```bash
+cd hooks/tests
+./test-post-edit-format.sh
+./test-post-edit-validate.sh
+./test-stop-console-log-audit.sh
+./test-pre-push-warning.sh
+```
+
 ## Loop Mode (Ralph Wiggum Pattern)
 
 Automatically iterate until task complete. Named after Ralph - keeps going until it gets it right.
