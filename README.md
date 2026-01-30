@@ -24,11 +24,12 @@ skills/               # Full workflow content (auto-triggered)
 ├── explore/          # Idea exploration
 ├── prd/              # PRD creation
 ├── journey/          # User flow diagrams
-├── prototype/        # UI prototypes
+├── prototype/        # UI prototypes (registers mocks)
 ├── webflow/          # Webflow development
 ├── ui-patterns/      # UI constraints (accessibility, performance)
 ├── epic/             # Linear issue creation (enhanced)
-├── implement/        # TDD implementation (enhanced)
+├── implement/        # TDD implementation (registers mocks)
+├── implement-cleanup-mocks/  # Mock cleanup & API contracts
 ├── verify/           # Acceptance verification
 └── review/           # Linus-style code review
 ```
@@ -51,6 +52,7 @@ skills/               # Full workflow content (auto-triggered)
 | Implement | `/vorbit:implement:implement [issue]` |
 | Verify | `/vorbit:implement:verify [issue]` |
 | Code review | `/vorbit:implement:review [file]` |
+| Cleanup mocks | `/vorbit:implement:cleanup-mocks [feature]` |
 
 ## Enhanced Epic/Implement Workflow (v1.2.0)
 
@@ -102,6 +104,71 @@ The implement skill now verifies:
 - Used utilities/constants from Reuse & Patterns
 - No magic numbers
 - No recreated functions
+
+## Mock Cleanup Workflow (v1.3.0)
+
+Clean handover from frontend prototyping to backend implementation.
+
+### The Problem
+
+During prototyping, mock data accumulates:
+- Mock JSON files in `mocks/` folders
+- Hardcoded `useState` with fake data
+- Zustand/Redux stores with mock initial state
+
+This confuses backend developers and pollutes the codebase.
+
+### The Solution
+
+**1. Mock Registry** - Prototype/implement skills now register all mocks:
+```
+.claude/mock-registry.json
+```
+
+**2. Cleanup Command** - When ready for backend:
+```bash
+/vorbit:implement:cleanup-mocks user-profile
+```
+
+**What it does:**
+| Step | Action |
+|------|--------|
+| 1 | Load mocks from registry (or scan codebase) |
+| 2 | Generate API contract from mock data shapes |
+| 3 | Save contract to Notion PRD |
+| 4 | Delete mock files and reset state |
+| 5 | Leave TODO comments for backend connection |
+
+### API Contract Output
+
+```markdown
+### GET /api/users/:id
+
+**Response Shape:**
+{
+  "id": "string",
+  "name": "string",
+  "email": "string"
+}
+
+**Used by:** src/pages/UserProfile/index.tsx
+```
+
+### Mock Registry Format
+
+```json
+{
+  "mocks": [
+    {
+      "feature": "user-profile",
+      "type": "file",
+      "path": "src/pages/UserProfile/mocks/user.json",
+      "endpoint": "GET /api/users/:id",
+      "createdBy": "prototype"
+    }
+  ]
+}
+```
 
 ## UI Patterns Skill
 
@@ -173,11 +240,12 @@ Original technique: [ghuntley.com/ralph](https://ghuntley.com/ralph/)
 | explore | 1.1.0 | 10+ questions before options |
 | prd | 1.1.0 | 3-8 word name, numbered success criteria |
 | journey | 1.1.0 | Max 15 nodes, FigJam diagrams |
-| prototype | 1.1.0 | Mocks under feature folder |
+| prototype | 1.1.0 | Mocks under feature folder, registers to registry |
 | webflow | 1.1.0 | Figma optional, templates with page slots |
 | ui-patterns | 1.0.0 | Tailwind, Radix, motion/react constraints |
 | epic | 1.2.0 | Enhanced sub-issues with full context |
-| implement | 1.2.0 | Verifies against epic ACs |
+| implement | 1.3.0 | Verifies against epic ACs, registers mocks |
+| implement-cleanup-mocks | 1.0.0 | API contract generation, mock cleanup |
 | verify | 1.1.0 | Acceptance criteria validation |
 | review | 1.1.0 | Linus-style brutal honesty |
 
