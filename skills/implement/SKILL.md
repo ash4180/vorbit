@@ -195,12 +195,45 @@ For each task:
 - Check coverage on new code
 - Ensure no regressions
 
+### If Creating Mock Data During Implementation
+**Register mock in `.claude/mock-registry.json`:**
+
+**For mock files:**
+```json
+{
+  "feature": "[Feature name]",
+  "type": "file",
+  "path": "src/path/to/mock.json",
+  "endpoint": "GET /api/[resource]",
+  "createdBy": "implement",
+  "createdAt": "[ISO timestamp]",
+  "components": ["src/path/to/component.tsx"]
+}
+```
+
+**For mock state (useState, stores, context):**
+```json
+{
+  "feature": "[Feature name]",
+  "type": "state",
+  "path": "src/path/to/component.tsx",
+  "location": "useState:items (line 23)",
+  "endpoint": "GET /api/[resource]",
+  "stateType": "useState | zustand | redux | context",
+  "createdBy": "implement",
+  "createdAt": "[ISO timestamp]",
+  "components": ["src/path/to/component.tsx"]
+}
+```
+- Append to existing mocks array
+- This enables cleanup before backend handover
+
 ### Task Complete Criteria
 **ONLY mark done when:**
 - [ ] Unit test exists and passes
 - [ ] Code matches team's style
 - [ ] No regressions in existing tests
-- [ ] No mock data remains (check for `MOCK_`, mock imports, `.json` test data)
+- [ ] No mock data remains (check for `MOCK_`, mock imports, `.json` test data) **OR mocks registered in `.claude/mock-registry.json`**
 - [ ] **All "Related Epic Acceptance Criteria" satisfied** (if present in issue)
 - [ ] **File changes match planned paths** (if "File Changes" section exists)
 - [ ] **Used utilities/constants from "Reuse & Patterns"** (no magic numbers, no recreated functions)
