@@ -136,13 +136,45 @@ Create reusable UI prototypes that become production code. Frontend devs swap mo
    - Show exact fields the UI needs (API contract)
    - If multiple components need SAME data, share the mock
 
-4. **MANDATORY**: Every mock import MUST have TODO comment:
+4. **MANDATORY**: Register mocks in `.claude/mock-registry.json`:
+
+   **For mock files:**
+   ```json
+   {
+     "feature": "[Feature name]",
+     "type": "file",
+     "path": "src/pages/Feature/mocks/data.json",
+     "endpoint": "GET /api/[resource]",
+     "createdBy": "prototype",
+     "createdAt": "[ISO timestamp]",
+     "components": ["src/pages/Feature/index.tsx"]
+   }
+   ```
+
+   **For mock state (useState, stores, context):**
+   ```json
+   {
+     "feature": "[Feature name]",
+     "type": "state",
+     "path": "src/pages/Feature/index.tsx",
+     "location": "useState:users (line 15)",
+     "endpoint": "GET /api/[resource]",
+     "stateType": "useState",
+     "createdBy": "prototype",
+     "createdAt": "[ISO timestamp]",
+     "components": ["src/pages/Feature/index.tsx"]
+   }
+   ```
+   - Create registry file if doesn't exist
+   - Append to existing mocks array if file exists
+
+5. **MANDATORY**: Every mock (file or state) MUST have TODO comment:
    ```tsx
    import mockData from './mocks/data.json';
    // TODO: Replace with real API
    ```
 
-5. Update todos as each component is completed
+6. Update todos as each component is completed
 
 **Mock Data Rules:**
 - Show only fields the UI actually uses
@@ -174,13 +206,16 @@ Create reusable UI prototypes that become production code. Frontend devs swap mo
    - src/pages/Feature/components/...
    - src/pages/Feature/mocks/...
 
-   Mock data (delete mocks/ when implementing real API):
+   Mock data registered in .claude/mock-registry.json:
    - mocks/data.json → GET /api/...
 
    Used existing components:
    - Layout, Card, Button, Input
 
-   Next: Review with team, then /vorbit:implement:epic
+   Next steps:
+   - Review with team
+   - /vorbit:implement:epic to create issues
+   - /vorbit:implement:cleanup-mocks [feature] before backend handover
    ```
 
 3. Mark all todos complete
@@ -238,6 +273,7 @@ src/
 - [ ] Mock shows only fields UI actually uses
 - [ ] **Every mock import has `// TODO: Replace with real API` comment**
 - [ ] Components needing same data share the same mock file
+- [ ] **Mock registered in `.claude/mock-registry.json`**
 
 **Final:**
 - [ ] Page is navigable/renderable

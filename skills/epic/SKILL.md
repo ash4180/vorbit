@@ -155,6 +155,7 @@ For EACH sub-issue, include all these sections:
 | **Related Epic AC** | ✅ | Copy relevant ACs from parent epic |
 | **Reuse & Patterns** | ✅ | Existing code, utilities, constants |
 | **File Changes** | ✅ | Exact file paths with action (CREATE/MODIFY) |
+| **Mock Data** | If UI work | Expected mocks and cleanup note |
 | **Acceptance Criteria** | ✅ | Sub-issue specific criteria |
 | **Test Criteria** | ✅ | TDD requirements |
 
@@ -291,6 +292,15 @@ Run `/vorbit:design:ui-patterns` before implementing UI components.
 | CREATE | `src/components/feature/Component.tsx` | Main component |
 | MODIFY | `src/api/routes.ts` | Add endpoint |
 | CREATE | `src/tests/feature/component.test.ts` | Unit tests |
+
+## Mock Data (if UI work)
+| Mock File | Endpoint | Status |
+|-----------|----------|--------|
+| `src/pages/Feature/mocks/data.json` | `GET /api/resource` | Will create |
+| None expected | - | N/A |
+
+> **Handover note:** Run `/vorbit:implement:cleanup-mocks [feature]` before backend takes over.
+> Mocks will be registered in `.claude/mock-registry.json` for tracking.
 
 ## Acceptance Criteria (Sub-issue specific)
 - [ ] Criterion 1
