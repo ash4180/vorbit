@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xargs:*)",
+      "Bash(find:*)",
+      "Skill(vorbit:design:explore)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:www.vibekanban.com)",
+      "WebFetch(domain:vibekanban.com)",
+      "WebFetch(domain:www.gend.co)",
+      "WebFetch(domain:www.anthropic.com)",
+      "mcp__anytype__API-update-object",
+      "mcp__anytype__API-create-object",
+      "mcp__anytype__API-delete-object",
+      "mcp__anytype__API-search-space",
+      "mcp__notion__notion-update-page",
+      "mcp__anytype__API-get-object",
+      "WebSearch",
+      "Skill(vorbit:design:prd)",
+      "mcp__notion__notion-fetch",
+      "WebFetch(domain:docs.coderabbit.ai)",
+      "WebFetch(domain:www.coderabbit.ai)",
+      "Bash(chmod:*)"
+    ]
+  }
+}

@@ -25,6 +25,10 @@
     },
     {
       "type": "command",
+      "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/stop-learn-reflect.sh"
+    },
+    {
+      "type": "command",
       "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/stop-console-log-audit.sh"
     }
   ]
