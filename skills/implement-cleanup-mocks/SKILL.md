@@ -12,26 +12,13 @@ Clean up mock data created during prototyping/implementation and generate API co
 
 When frontend development is ready for backend handover:
 1. Generate API contract doc from mock data shapes
-2. Update PRD in Notion with API requirements
+2. Update PRD in Notion or Anytype with API requirements
 3. Delete mock files and state
 4. Leave clean branch for backend
 
 ## Step 1: Detect Platform & Verify Connection
 
-**Auto-detect platform from user input:**
-- Notion URL (contains `notion.so` or `notion.site`) → use Notion
-- User mentions "Notion" or PRD → use Notion
-
-**Only verify Notion (API contracts go to PRD):**
-
-### If Notion detected:
-1. Run `notion-find` to search for "test"
-2. **IF fails:** "Notion connection expired. Run `/mcp` to reconnect, then retry." → **STOP**
-3. **IF succeeds:** proceed
-
-### If no Notion:
-- Generate API contract as local markdown file
-- Ask where to save it
+Read and follow the platform detection steps in `_shared/platform-detection.md` (glob for `**/skills/_shared/platform-detection.md`). Pass the detected platform to subsequent steps.
 
 ## Step 2: Load Mock Registry
 
@@ -137,17 +124,22 @@ Generated from frontend mock data for backend implementation.
 
 **Wait for confirmation before proceeding.**
 
-## Step 5: Save API Contract to Notion PRD
+## Step 5: Save API Contract to PRD
 
-**IF user confirmed and Notion PRD URL/ID provided:**
-
+### If Notion PRD:
 1. Use `notion-fetch` to get current PRD content
 2. Use `notion-update-page` to append API Contract section:
    - Command: `insert_content_after`
    - Find appropriate location (after User Stories or at end)
    - Insert the API contract markdown
 
-**IF no Notion:**
+### If Anytype PRD:
+1. Use `API-get-object` to fetch current PRD content
+2. Use `API-update-object` to append API Contract section to the PRD body
+   - Find appropriate location (after User Stories or at end)
+   - Insert the API contract markdown
+
+### If no platform detected:
 1. Create local file: `docs/api-contracts/[feature-name].md`
 2. Report file location
 
@@ -223,7 +215,7 @@ Generated from frontend mock data for backend implementation.
 ## Mock Cleanup Complete
 
 ### API Contract
-- Saved to: [Notion PRD URL or local file path]
+- Saved to: [Notion PRD URL / Anytype object ID / local file path]
 - Endpoints documented: [count]
 
 ### Files Removed

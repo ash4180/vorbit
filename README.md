@@ -29,9 +29,12 @@ skills/               # Full workflow content (auto-triggered)
 ├── ui-patterns/      # UI constraints (accessibility, performance)
 ├── epic/             # Linear issue creation (enhanced)
 ├── implement/        # TDD implementation (registers mocks)
+├── implement-loop/   # Ralph Wiggum-style autonomous iteration
 ├── implement-cleanup-mocks/  # Mock cleanup & API contracts
 ├── verify/           # Acceptance verification
-└── review/           # Linus-style code review
+├── review/           # Code review (files or PR pipeline)
+├── learn/            # Real-time and session-end learning capture
+└── react-best-practices/  # React/Next.js performance optimization
 ```
 
 **Notion/Anytype** = PRDs, explorations, flows
@@ -51,8 +54,10 @@ skills/               # Full workflow content (auto-triggered)
 | Create issues | `/vorbit:implement:epic [feature]` |
 | Implement | `/vorbit:implement:implement [issue]` |
 | Verify | `/vorbit:implement:verify [issue]` |
-| Code review | `/vorbit:implement:review [file]` |
+| Code review | `/vorbit:implement:review [files or base-branch]` |
 | Cleanup mocks | `/vorbit:implement:cleanup-mocks [feature]` |
+| Review learnings | `/vorbit:learn:review` |
+| Backfill learnings | `/vorbit:learn:backfill [N]` |
 
 ## Enhanced Epic/Implement Workflow (v1.2.0)
 
@@ -245,9 +250,12 @@ Original technique: [ghuntley.com/ralph](https://ghuntley.com/ralph/)
 | ui-patterns | 1.0.0 | Tailwind, Radix, motion/react constraints |
 | epic | 1.2.0 | Enhanced sub-issues with full context |
 | implement | 1.3.0 | Verifies against epic ACs, registers mocks |
+| implement-loop | 1.0.0 | Ralph Wiggum-style autonomous iteration |
 | implement-cleanup-mocks | 1.0.0 | API contract generation, mock cleanup |
 | verify | 1.1.0 | Acceptance criteria validation |
-| review | 1.1.0 | Linus-style brutal honesty |
+| review | 2.0.0 | Code review — files or PR pipeline, Linus-style |
+| learn | 6.0.0 | Real-time and session-end learning capture |
+| react-best-practices | 1.0.0 | React/Next.js performance optimization |
 
 ## Requirements
 

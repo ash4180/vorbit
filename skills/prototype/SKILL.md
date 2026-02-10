@@ -14,7 +14,7 @@ Create reusable UI prototypes that become production code. Frontend devs swap mo
 - **Analyze codebase first**: Find existing patterns before writing any code.
 - **Props-driven**: Components receive data as props. Never hardcode data inside components.
 - **Single mock import**: Each component imports mock at top of file, with `// TODO: Replace with real API`.
-- **Use TodoWrite**: Track progress through all phases.
+- **Use TaskCreate/TaskUpdate**: Track progress through all phases.
 
 ## Phase 0: Verify External Connections
 
