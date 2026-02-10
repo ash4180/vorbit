@@ -10,26 +10,7 @@ Quick idea exploration before PRD creation. Supports saving to Notion or Anytype
 
 ## Step 1: Detect Platform & Verify Connection
 
-**Auto-detect platform from user input:**
-- Notion URL (contains `notion.so` or `notion.site`) → use Notion
-- User mentions "Notion" → use Notion
-- Anytype URL or object ID → use Anytype
-- User mentions "Anytype" → use Anytype
-- Otherwise → ask at save time (Step 4)
-
-**Only verify the detected platform (don't test both):**
-
-### If Notion detected:
-1. Run `notion-find` to search for "test"
-2. **IF fails:** "Notion connection expired. Run `/mcp` to reconnect, then retry." → **STOP**
-3. **IF succeeds:** proceed
-
-### If Anytype detected:
-1. Run `API-list-spaces` to verify connection
-2. **IF fails:** "Anytype connection expired. Run `/mcp` to reconnect, then retry." → **STOP**
-3. **IF succeeds:** proceed
-
-### If no platform detected: proceed (ask later)
+Read and follow the platform detection steps in `_shared/platform-detection.md` (glob for `**/skills/_shared/platform-detection.md`). Pass the detected platform to subsequent steps.
 
 ## Step 2: Ask 10+ Questions
 

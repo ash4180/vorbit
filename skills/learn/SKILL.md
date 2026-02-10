@@ -1,21 +1,82 @@
 ---
 name: learn
-version: 2.0.0
-description: Auto-captures session learnings and routes them after review. Triggered automatically at session end (capture mode) or manually via /vorbit:learn:review (review mode). Never blocks your primary task.
+version: 6.0.0
+description: Real-time and session-end learning capture. Correction capture triggers mid-session when the agent detects user corrections and finds a fix. Also supports session-end capture and manual review.
 ---
 
 # Learn Skill
 
-Two modes:
-- **Capture mode** — triggered by stop hook at session end. Reflects, writes to pending file.
+Three modes:
+- **Correction capture** — always-on during sessions. Triggers when user corrects the agent and the agent finds a fix.
+- **Capture mode** — triggered by stop hook at session end. Reflects, writes to pending file. Supports `--backfill N` to also mine past transcripts.
 - **Review mode** — triggered by `/vorbit:learn:review`. Presents pending items, routes approved ones.
+
+## References
+
+Detailed specs live in `references/` within this skill's directory. Glob for `**/skills/learn/references/` to resolve the path. Read them when instructed at specific steps below.
+
+| File | Contains |
+|---|---|
+| `references/format.md` | Classification table, pending.md format spec, examples |
+| `references/routing.md` | Routing table, Groups A-E, Cross-Reference Rule |
+| `references/consolidation.md` | Document consolidation rules for `.claude/rules/` files |
+| `references/scopes.md` | File scope table, plugin root resolution |
 
 ---
 
 ## Mode Detection
 
+- If your context contains "correction capture" from the rules file → run **Correction Capture**
 - If your context contains "capture mode" from the stop hook output → run **Capture Mode**
 - If invoked via `/vorbit:learn:review` → run **Review Mode**
+
+---
+
+## Correction Capture (Always-On)
+
+This mode runs continuously during every session via the injected rules file. NOT invoked manually.
+
+### Trigger Conditions
+
+**Signal 1: User correction keywords**
+User says: "no", "wrong", "that's not right", "error", "still error", "not working", "broken", "nope", "roll back", "revert", "that's broken", "why did you..."
+
+**Signal 2: Repeated failure**
+Same approach tried 2-3 times, still fails.
+
+**When BOTH signals are present**, start tracking. Continue working on the fix.
+
+### After Finding the Fix
+
+Once the problem is resolved (build passes, test passes, user confirms):
+
+**Step 1:** Use `AskUserQuestion`: "I just fixed an issue after some failed attempts. Want me to analyze the root cause?"
+- "Yes, analyze it" → Step 2
+- "No, move on" → stop, resume primary task
+
+**Step 2: Analyze root cause**
+
+| Root cause | Meaning |
+|---|---|
+| `claude-md` | CLAUDE.md is missing a rule that would have prevented the error |
+| `knowledge` | `.claude/rules/` is missing a fact about the codebase |
+| `skill` | A skill's SKILL.md has unclear or incomplete instructions |
+| `script` | A hook script has a bug or missing logic |
+| `general` | Agent reasoning error — no documentation fix needed |
+
+**Step 3:** Use `AskUserQuestion` to present: what went wrong, root cause category, proposed file + content.
+- "Approve" → write it
+- "Edit path" → user specifies a different file
+- "Skip" → don't write anything
+
+**Step 4: Write the learning**
+
+- **claude-md** → Read CLAUDE.md, find/create Learned Patterns or Error Patterns section, append
+- **knowledge** → Read `references/consolidation.md` first. Determine topic, read/create rules file, append
+- **skill** → Read `references/scopes.md` to resolve plugin path. Read skill file, add minimum needed
+- **script** → Read `references/scopes.md` to resolve plugin path. Read script, fix the bug
+
+**Step 5:** Resume primary task. Don't linger on the learning.
 
 ---
 
@@ -25,20 +86,10 @@ Fire-and-forget. Reflect on the session, write to pending, sync to Linear if thr
 
 ### Step 1: Read Existing State
 
-Read `$PROJECT_ROOT/.claude/learnings/pending.md` if it exists.
-
-Extract from the META comment line:
-- `ticket` — Linear issue ID (or NONE)
-- `count` — current item count
-- `last_synced` — last sync timestamp
-
-Parse existing items: titles, types, frequencies.
-
-If the file doesn't exist, start fresh.
+Read `$PROJECT_ROOT/.claude/learnings/pending.md` if it exists. Extract META: `ticket`, `count`, `last_synced`. Parse existing items. If file doesn't exist, start fresh.
 
 ### Step 2: Read Existing Rules
 
-Before reflecting, read what's already documented:
 1. Read `CLAUDE.md` — scan for "Learned Patterns" and "Error Patterns" sections
 2. Check `.claude/rules/` for any existing knowledge files
 3. These are already-approved learnings — do NOT re-capture them
@@ -51,6 +102,14 @@ Think about what happened:
 - What **conventions** did you learn about the codebase?
 - What **workflows** should be standardized?
 - What **improvements** would help future sessions?
+- What **skill/hook issues** did you hit? Did any skill instructions lead you astray, miss a case, or produce wrong behavior?
+- What **corrections** did the user make? (see below)
+
+**User corrections are high-priority learnings.** Scan the conversation for moments where the user:
+- Said something was wrong ("that's not right", "no", "actually it should be...")
+- Rejected an approach or suggestion
+- Corrected a misunderstanding about the codebase, domain, or workflow
+- Pushed back on a design decision
 
 **Filter ruthlessly:**
 - NOT general programming knowledge (everyone knows this)
@@ -58,99 +117,83 @@ Think about what happened:
 - IS specific to this project, codebase, or team
 - WOULD help a future agent working on this project
 
-If nothing worth capturing → output "Nothing new to capture this session." and stop.
+If nothing worth capturing from the current session AND no `--backfill` flag → output "Nothing new to capture this session." and stop.
+
+### Step 3b: Backfill Past Transcripts (optional)
+
+**Only runs if `$ARGUMENTS` contains `--backfill`.**  If not present, skip to Step 4.
+
+1. Determine project path slug: replace `/` with `-` in `$PROJECT_ROOT`
+2. List transcripts in `~/.claude/projects/{slug}/*.jsonl`, sort by modification date (newest first)
+3. If `$ARGUMENTS` contains a number N after `--backfill`, process last N sessions. Default: 10.
+4. If `$PROJECT_ROOT/.claude/learnings/backfill-state.md` exists, read it and skip already-processed transcripts.
+5. For each transcript, use the Task tool to dispatch a **general-purpose** agent that:
+   - Reads the JSONL file using Bash: `jq -r 'select(.role == "user" or .role == "assistant") | select(.content != null) | if (.content | type) == "array" then (.content[] | select(.type == "text") | .text) else .content end' <file> 2>/dev/null | head -500`
+   - If that fails, try: `jq -r '.message // empty' <file> 2>/dev/null | head -500`
+   - Extracts project-specific learnings (errors, patterns, user corrections, domain knowledge, workflows)
+   - Filters ruthlessly — only project-specific, not general knowledge
+   - Returns findings formatted as:
+     ```
+     ### [Title]
+     - **Type:** error | pattern | knowledge | workflow | review-rule
+     - **Context:** [what happened and why it matters]
+     ```
+6. **Dispatch up to 4 agents in parallel.** Wait for all to complete.
+7. Merge backfill findings with current-session findings. Continue to Step 4.
 
 ### Step 4: Classify Each Learning
 
-| Type | When to use | Default target |
-|---|---|---|
-| `pattern` | A reusable approach or convention | CLAUDE.md > Learned Patterns |
-| `knowledge` | A fact about the codebase or domain | `.claude/rules/{topic}.md` |
-| `workflow` | A multi-step process that should be repeatable | `.claude/rules/workflows.md` |
-| `error` | A failure mode and its fix | CLAUDE.md > Error Patterns |
-| `improvement` | Something that should be fixed/built | New Linear issue |
-| `insight` | A general observation | `.claude/rules/insights.md` |
-
-**Title format:** Concise imperative statement (like a commit message).
-- Good: "Use WAL mode for SQLite to prevent BUSY errors"
-- Bad: "I found a bug with SQLite"
+Read `references/format.md` for the classification table and type definitions. Classify each learning.
 
 ### Step 5: Deduplicate
 
-For each candidate learning:
 1. Compare title against existing pending items (fuzzy match — same concept counts)
 2. If substantially similar → bump `Frequency` +1, update `Last seen` date
 3. If genuinely new → add as new item
 
 ### Step 6: Enforce 20-Item Cap
 
-- Count total items after dedup
 - If count >= 20 → do NOT add new items
-- Output warning: "Pending at capacity (20 items). Run /vorbit:learn:review to clear."
+- Output: "Pending at capacity (20 items). Run /vorbit:learn:review to clear."
 
 ### Step 7: Write pending.md
 
-Write `$PROJECT_ROOT/.claude/learnings/pending.md` using this format:
+Read `references/format.md` for the pending.md format spec. Write `$PROJECT_ROOT/.claude/learnings/pending.md`.
 
-```markdown
-# Pending Learnings
-
-<!-- META: ticket=NONE count=3 last_synced=2026-02-07T12:00:00Z -->
-
-### 1. Use WAL mode for SQLite to prevent BUSY errors
-- **Type:** error
-- **Frequency:** 5
-- **First seen:** 2026-01-28
-- **Last seen:** 2026-02-07
-- **Context:** Concurrent writes cause BUSY errors. WAL mode fixes it.
-- **Target:** CLAUDE.md > Error Patterns
-
-### 2. Soft deletes on events table — never call .delete()
-- **Type:** knowledge
-- **Frequency:** 3
-- **First seen:** 2026-02-01
-- **Last seen:** 2026-02-06
-- **Context:** Events use soft deletes with deletedAt timestamp.
-- **Target:** .claude/rules/database.md
-
-### 3. Deploy requires running migrations before starting server
-- **Type:** workflow
-- **Frequency:** 1
-- **First seen:** 2026-02-07
-- **Last seen:** 2026-02-07
-- **Context:** Server crashes on startup if new migrations haven't run.
-- **Target:** .claude/rules/workflows.md
-```
-
-Rules:
-- Items are numbered sequentially (1, 2, 3...)
-- META line must be updated: count reflects total items, last_synced is current timestamp
-- Keep items sorted by frequency (highest first)
+Rules: items numbered sequentially, META updated, dates human-readable (`7 Feb 2026`), sorted by frequency (highest first).
 
 ### Step 8: Sync to Linear
 
-**If count >= 5 AND ticket is NONE:**
-1. Call `list_teams` to get team ID
-2. Call `create_issue` with:
-   - Title: `Review pending learnings ({count} items)`
-   - Description: Full table of all pending items
-   - Label: `learning-review` (create via `create_issue_label` if it doesn't exist)
-3. Update META in pending.md with the new ticket ID
+**If count >= 15 AND ticket is NONE:**
 
-**If count >= 5 AND ticket exists:**
-1. Call `create_comment` on the existing ticket with this session's new/updated items
-2. Call `update_issue` to update the description item count in the title
+Use `AskUserQuestion`: "{count} learnings are pending review. Want me to create a Linear ticket to track this?"
+- "Yes, assign to me" → create ticket assigned to current user
+- "Yes, assign to someone else" → follow up asking for assignee name
+- "No, I'll review later" → skip Linear
 
-**If count < 5:**
-- Skip Linear. Not enough signal yet.
+If approved:
+1. `list_teams` → get team ID
+2. `list_users` → find assignee
+3. `create_issue`: title=`Review pending learnings ({count} items)`, description=full table, label=`learning-review`, assignee=selection
+4. Update META with ticket ID
 
-**If Linear MCP tools fail:**
-- Log the error in output. Continue without Linear. The pending file is the primary store. Never fail because of Linear.
+**If count >= 15 AND ticket exists:**
+1. `create_comment` with this session's new/updated items
+2. `update_issue` to update count in title
+
+**If count < 15:** Skip. Pending file is sufficient.
+
+**If Linear MCP tools fail:** Log error, continue. Pending file is the primary store.
 
 ### Step 9: Output Summary
 
 ```
 Captured {N} learnings ({M} new, {K} updated). Total pending: {X}/20.
+```
+
+If `--backfill` was used, also include:
+```
+Backfill: processed {N} transcripts.
 ```
 
 Then stop. The stop hook will fire again and exit cleanly (state file exists → exit 0).
@@ -170,13 +213,8 @@ Interactive. Present pending items, user approves/rejects, route to correct file
 ### Step 2: Check Linear for Approvals
 
 If a ticket ID exists:
-1. Call `list_comments` on the ticket
-2. Parse comments for approval/rejection markers:
-   - `approve #1` or `approve 1` → approve item 1
-   - `reject #3` or `reject 3` → reject item 3
-   - `approve all` → approve everything
-   - `reject all` → reject everything
-   - `route #2 to CLAUDE.md` → override default target for item 2
+1. `list_comments` on the ticket
+2. Parse comments: `approve #1`, `reject #3`, `approve all`, `reject all`, `route #2 to CLAUDE.md`
 3. Pre-populate approval status for each item
 
 ### Step 3: Present Items
@@ -188,8 +226,6 @@ Display all pending items sorted by frequency (highest first):
 
 1. [error] "Use WAL mode for SQLite" (x5 sessions) → CLAUDE.md > Error Patterns
 2. [pattern] "Soft deletes on events table" (x3) → .claude/rules/database.md
-3. [workflow] "Deploy requires migrations" (x2) → .claude/rules/workflows.md
-4. [improvement] "Review skill needs cross-file check" (x1) → New Linear issue
 
 Approve all? Or specify: approve 1,2,3 / reject 4
 ```
@@ -198,46 +234,20 @@ Use `AskUserQuestion` to get user's decision.
 
 ### Step 4: Route Approved Items
 
-For each approved item, based on type and target:
+Read `references/routing.md` for the full routing table and group instructions. Follow them.
 
-**pattern → CLAUDE.md**
-- Read CLAUDE.md
-- Find or create "## Learned Patterns" section
-- Append: `- {title}: {context}`
+Also read `references/consolidation.md` before creating any new knowledge files.
 
-**knowledge → `.claude/rules/{topic}.md`**
-- Determine topic from context (e.g., "database", "auth", "api")
-- Read or create `.claude/rules/{topic}.md`
-- Append the learning under a clear heading
-
-**workflow → `.claude/rules/workflows.md`**
-- Read or create `.claude/rules/workflows.md`
-- Append the workflow steps
-
-**error → CLAUDE.md**
-- Read CLAUDE.md
-- Find or create "## Error Patterns" section
-- Append: `- {title}: {context}`
-
-**improvement → Linear issue**
-- Call `create_issue` with title and description from the learning
-- Report the issue URL
-
-**insight → `.claude/rules/insights.md`**
-- Read or create `.claude/rules/insights.md`
-- Append the insight
+If routing any `skill-fix` or `script-fix` items, read `references/scopes.md` to resolve the plugin path.
 
 ### Step 5: Clean Up
 
 1. Remove all processed items (approved + rejected) from pending.md
 2. Re-number remaining items sequentially
 3. Update META: count, last_synced
-4. If no items remain:
-   - Delete pending.md
-   - If Linear ticket exists: call `update_issue` to mark Done
-5. If items remain:
-   - Write updated pending.md
-   - If Linear ticket exists: call `create_comment` noting what was processed
+4. If no items remain → delete pending.md. If Linear ticket exists → `update_issue` to mark Done.
+5. If items remain → write updated pending.md. If Linear ticket exists → `create_comment` noting processed items.
+6. **Mark processed transcripts:** If any items originated from backfill, append processed transcript filenames to `$PROJECT_ROOT/.claude/learnings/backfill-state.md`. Never delete Claude Code's session files — they're user-scope.
 
 ### Step 6: Report
 
@@ -247,41 +257,4 @@ Routed {N} learnings:
 - {title} → .claude/rules/database.md
 Rejected {M} items.
 {R} items remaining in pending.
-```
-
----
-
-## Examples
-
-### Capture Example (session end)
-
-Session: Implemented user authentication, hit a CORS error, discovered the project uses a custom middleware pattern.
-
-Learnings captured:
-```
-### 1. CORS middleware must be registered before auth middleware
-- **Type:** error
-- **Frequency:** 1
-- **First seen:** 2026-02-07
-- **Last seen:** 2026-02-07
-- **Context:** Auth middleware returns 401 before CORS headers are set, causing opaque browser errors. Order matters in middleware chain.
-- **Target:** CLAUDE.md > Error Patterns
-```
-
-### Review Example
-
-```
-3 pending learnings to review:
-
-1. [error] "CORS middleware before auth middleware" (x3) → CLAUDE.md > Error Patterns
-2. [pattern] "Use /api/v2 prefix for all new endpoints" (x2) → .claude/rules/api.md
-3. [improvement] "Add API versioning to prototype skill" (x1) → New Linear issue
-
-> User: approve 1,2 / reject 3
-
-Routed 2 learnings:
-- "CORS middleware before auth middleware" → CLAUDE.md (Error Patterns)
-- "Use /api/v2 prefix for all new endpoints" → .claude/rules/api.md
-Rejected 1 item.
-0 items remaining. Pending cleared. Linear ticket marked Done.
 ```

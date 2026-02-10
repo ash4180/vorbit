@@ -3,6 +3,9 @@
 
 set -euo pipefail
 
+# Consume stdin (stop hook protocol)
+cat > /dev/null
+
 PROJECT_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 cd "$PROJECT_ROOT"
 
@@ -18,10 +21,10 @@ scan_files() {
   matches=$(echo "$TRACKED_FILES" | grep -E "$ext_pattern" | xargs grep -Hn -E "$debug_pattern" 2>/dev/null || true)
   if [[ -n "$matches" ]]; then
     if [[ $FOUND_ISSUES -eq 0 ]]; then
-      echo "⚠️  Debug statements found:"
+      echo "⚠️  Debug statements found:" >&2
       FOUND_ISSUES=1
     fi
-    echo "$matches" | sed 's/^/  /'
+    echo "$matches" | sed 's/^/  /' >&2
   fi
 }
 
