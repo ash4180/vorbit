@@ -20,7 +20,10 @@
       "mcp__notion__notion-fetch",
       "WebFetch(domain:docs.coderabbit.ai)",
       "WebFetch(domain:www.coderabbit.ai)",
-      "Bash(chmod:*)"
+      "Bash(chmod:*)",
+      "Bash(git ls-tree:*)",
+      "Bash(git checkout:*)",
+      "Bash(git commit:*)"
     ]
   }
 }
