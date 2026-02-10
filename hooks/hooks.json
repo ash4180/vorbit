@@ -1,5 +1,4 @@
 {
-  "description": "Vorbit development workflow hooks",
   "hooks": {
     "PostToolUse": [
       {

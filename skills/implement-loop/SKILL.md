@@ -282,6 +282,6 @@ Parameters:
 
 Before updating, get available states:
 ```
-Tool: list_workflow_states
+Tool: list_issue_statuses
 ```
 Find the state IDs for "In Progress" and "Done" from the response.

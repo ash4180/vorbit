@@ -8,20 +8,16 @@ description: Use when user says "create user flow", "user journey", "flow diagra
 
 Create user journey diagrams in FigJam using Mermaid syntax.
 
-## Step 1: Verify Notion Connection (if Notion needed)
+## Step 1: Detect Platform & Verify Connection
 
-**IF user provides a Notion URL OR wants to update PRD in Notion:**
-1. Run a lightweight test: use `notion-find` to search for "test"
-2. **IF the call fails (auth error, token expired, connection refused):**
-   - Tell the user: "Notion connection has expired. Please run `/mcp` and reconnect the Notion server, then run this command again."
-   - **STOP HERE** - do not proceed
-3. **IF the call succeeds:** proceed
+Read and follow the platform detection steps in `_shared/platform-detection.md` (glob for `**/skills/_shared/platform-detection.md`). Pass the detected platform to subsequent steps.
 
 ## Step 2: Gather Context
 
-1. IF Notion PRD URL provided, fetch the PRD
-2. IF feature name provided, search Notion for existing PRD
-3. Extract user stories and acceptance criteria if available
+1. IF Notion PRD URL provided, use `notion-find` to fetch the PRD
+2. IF Anytype PRD URL or object ID provided, use `API-get-object` to fetch the PRD
+3. IF feature name provided, search the detected platform for existing PRD
+4. Extract user stories and acceptance criteria if available
 
 ## Step 3: Confirm Flow Details
 
@@ -94,11 +90,18 @@ Note: Error state `E` is terminal. User sees the error and retries implicitly - 
 - No emojis in Mermaid code
 - No `\n` for newlines
 
-## Step 6: Update PRD in Notion
+## Step 6: Update PRD
 
 If PRD exists from Step 2:
-1. Fetch the PRD page
+
+### If Notion PRD:
+1. Use `notion-fetch` to get the PRD page
 2. Add FigJam URL under "User Flow" section
+3. Include the Mermaid source code as backup
+
+### If Anytype PRD:
+1. Use `API-get-object` to fetch the PRD
+2. Use `API-update-object` to add FigJam URL under "User Flow" section
 3. Include the Mermaid source code as backup
 
 **IMPORTANT**: After calling generate_diagram, show the returned URL as a markdown link so user can view and edit.

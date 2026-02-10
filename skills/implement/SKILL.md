@@ -17,23 +17,7 @@ Use the **implement-loop** skill for loop state management and sub-issue trackin
 
 ## Step 1: Detect Platform & Verify Connection
 
-**IF the issue links to a PRD, auto-detect platform:**
-- Notion URL (contains `notion.so` or `notion.site`) → use Notion
-- Anytype URL or object ID → use Anytype
-
-**Only verify the detected platform:**
-
-### If Notion detected:
-1. Run `notion-find` to search for "test"
-2. **IF fails:** "Notion connection expired. Run `/mcp` to reconnect, then retry." → **STOP**
-3. **IF succeeds:** proceed
-
-### If Anytype detected:
-1. Run `API-list-spaces` to verify connection
-2. **IF fails:** "Anytype connection expired. Run `/mcp` to reconnect, then retry." → **STOP**
-3. **IF succeeds:** proceed
-
-**IF no PRD is needed:** skip this step
+Read and follow the platform detection steps in `_shared/platform-detection.md` (glob for `**/skills/_shared/platform-detection.md`). Pass the detected platform to subsequent steps. If no PRD is needed, skip this step.
 
 ## Step 2: Determine Context
 
@@ -237,6 +221,7 @@ For each task:
 - [ ] **All "Related Epic Acceptance Criteria" satisfied** (if present in issue)
 - [ ] **File changes match planned paths** (if "File Changes" section exists)
 - [ ] **Used utilities/constants from "Reuse & Patterns"** (no magic numbers, no recreated functions)
+- [ ] **No dead code or leftover TODOs**
 - [ ] **i18n complete** (if project has localization): All user-facing strings use translation system, keys added to ALL locale files
 
 ## Step 7: On Task Completion
@@ -279,15 +264,3 @@ For simple tasks (< 30 lines):
 - Run existing tests
 - Skip memory.md
 
-## Validation Checklist
-
-Before finishing, ask yourself:
-- "Did I delete any dead code I created?"
-- "Did I leave any TODOs?"
-- "Did I break any existing tests?"
-- "Did I satisfy ALL Related Epic Acceptance Criteria?"
-- "Did I use the utilities/constants from Reuse & Patterns?"
-- "Did I use any magic numbers instead of constants?"
-- "Did I recreate any function that already exists?"
-- "Did I follow the File Changes plan?"
-- "**i18n:** If project has localization, did I use the translation system for all user-facing strings and add keys to ALL locale files?"

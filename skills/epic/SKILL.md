@@ -18,26 +18,7 @@ Transform User Stories (from PRD) into executable Engineering Tasks (Epics/Issue
 
 ## Step 1: Detect Platform & Verify Connection
 
-**Auto-detect platform from user input:**
-- Notion URL (contains `notion.so` or `notion.site`) → use Notion
-- User mentions "Notion" → use Notion
-- Anytype URL or object ID → use Anytype
-- User mentions "Anytype" → use Anytype
-- Otherwise → skip platform, gather requirements via conversation
-
-**Only verify the detected platform (don't test both):**
-
-### If Notion detected:
-1. Run `notion-find` to search for "test"
-2. **IF fails:** "Notion connection expired. Run `/mcp` to reconnect, then retry." → **STOP**
-3. **IF succeeds:** proceed
-
-### If Anytype detected:
-1. Run `API-list-spaces` to verify connection
-2. **IF fails:** "Anytype connection expired. Run `/mcp` to reconnect, then retry." → **STOP**
-3. **IF succeeds:** proceed
-
-### If no platform detected: proceed to next step
+Read and follow the platform detection steps in `_shared/platform-detection.md` (glob for `**/skills/_shared/platform-detection.md`). Pass the detected platform to subsequent steps.
 
 ## Step 2: Gather Context
 

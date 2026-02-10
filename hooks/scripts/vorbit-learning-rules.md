@@ -1,29 +1,3 @@
-#!/bin/bash
-# Stop hook - ensures the learning rules file is installed at ~/.claude/rules/
-# This enables mid-session correction capture (always-on).
-
-set -euo pipefail
-
-RULES_DIR="$HOME/.claude/rules"
-RULES_FILE="$RULES_DIR/vorbit-learning.md"
-PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-$(dirname "$(dirname "$(realpath "$0")")")}"
-RULES_SOURCE="$PLUGIN_ROOT/hooks/scripts/vorbit-learning-rules.md"
-RULES_MARKER="vorbit-learning-rules"
-
-# Consume stdin (stop hook protocol)
-cat > /dev/null
-
-# Already installed — nothing to do
-if grep -q "$RULES_MARKER" "$RULES_FILE" 2>/dev/null; then
-  exit 0
-fi
-
-# Install rules file
-mkdir -p "$RULES_DIR"
-if [[ -f "$RULES_SOURCE" ]]; then
-  cp "$RULES_SOURCE" "$RULES_FILE"
-else
-  cat > "$RULES_FILE" << 'RULES_EOF'
 # Vorbit: Real-Time Learning Triggers
 
 Watch for these patterns during every session. When detected, follow the learn skill's Correction Capture mode.
@@ -44,9 +18,3 @@ After fixing the problem:
 5. Resume the primary task
 
 Never skip user confirmation. Never write without asking. Always present the exact content you plan to write.
-RULES_EOF
-fi
-echo "" >> "$RULES_FILE"
-echo "<!-- $RULES_MARKER -->" >> "$RULES_FILE"
-
-exit 0
