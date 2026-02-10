@@ -10,23 +10,7 @@ Confirm that implementation meets Requirements, passes Tests, and maintains Qual
 
 ## Step 1: Detect Platform & Verify Connection
 
-**IF user provides a PRD reference, auto-detect platform:**
-- Notion URL (contains `notion.so` or `notion.site`) → use Notion
-- Anytype URL or object ID → use Anytype
-
-**Only verify the detected platform:**
-
-### If Notion detected:
-1. Run `notion-find` to search for "test"
-2. **IF fails:** "Notion connection expired. Run `/mcp` to reconnect, then retry." → **STOP**
-3. **IF succeeds:** proceed
-
-### If Anytype detected:
-1. Run `API-list-spaces` to verify connection
-2. **IF fails:** "Anytype connection expired. Run `/mcp` to reconnect, then retry." → **STOP**
-3. **IF succeeds:** proceed
-
-**IF no PRD is needed:** skip to Step 2
+Read and follow the platform detection steps in `_shared/platform-detection.md` (glob for `**/skills/_shared/platform-detection.md`). Pass the detected platform to subsequent steps. If no PRD is needed, skip to Step 2.
 
 ## Step 2: Determine Context
 
