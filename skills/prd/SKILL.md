@@ -33,16 +33,24 @@ Read and follow the platform detection steps in `_shared/platform-detection.md` 
 
 ## Step 3: Clarify Requirements
 
-**RULE: If ANY requirement is unclear, use AskUserQuestion.**
+**RULE: Be opinionated. Assume standard patterns. Only ask when wrong assumptions waste real effort.**
 
-Ask about:
-1. **Problem** - "What problem does this solve?"
-2. **Users** - "Who has this problem?" (options: Internal team, End users, Admins, etc.)
-3. **Priority** - "How urgent?" (Critical, High, Medium, Low)
-4. **Scope** - For ambiguous requirements, ask with options
-5. **Constraints** - Budget, timeline, compliance
+Ask a MAXIMUM of 2 rounds of questions. Focus on:
+1. **Problem** - "What problem does this solve?" (only if not obvious from context)
+2. **Users** - "Who has this problem?" (only if ambiguous — don't ask if context makes it clear)
+3. **Scope** - Only ask if the feature could reasonably be 2x or 0.5x what they described
 
-Keep asking until ALL requirements are clear. Don't guess.
+**Do NOT ask about:**
+- Priority (user will tell you if it matters)
+- Constraints (assume standard unless stated)
+- Edge cases (capture those as assumptions, not questions)
+
+**For anything uncertain:**
+1. Mark the requirement as `TBD` inline where it appears in the PRD
+2. Use `AskUserQuestion` to ask the user to clarify — batch unclear items together (max 3 rounds)
+3. Update the `TBD` markers with user's answers before showing the final draft
+
+Every `TBD` MUST have a corresponding question asked. No silent guessing.
 
 ## Step 4: Generate PRD
 
@@ -51,10 +59,18 @@ Use the template below. Include:
 - Problem (max 3 sentences, no tech)
 - Users
 - User Stories with acceptance criteria
-- User Flow: `[To be added via /vorbit:design:journey]`
+- Assumptions (from Step 3 — things you assumed instead of asking)
+- User Flows (multi-actor: User, UI, Agent, System across Pages/Components/Services)
 - Constraints
 - Out of Scope
 - Success Criteria (with numbers)
+
+**User Flow Rules:**
+- Every PRD needs at least ONE flow
+- Flows must show interactions between actors (User, UI, Agent, System)
+- Each step has: Actor (who), Surface (where), Action (what), Result (outcome)
+- If the feature has AI/agent involvement, the agent MUST appear as an actor in the flow
+- Multiple flows for different paths (happy path, error path, edge cases)
 
 **Show the complete PRD in chat for review:**
 
@@ -79,8 +95,26 @@ As a [user], I want [goal], so that [benefit].
 ### US2: [Title]
 ...
 
-## User Flow
-[To be added via /vorbit:design:journey]
+## Assumptions
+- [Reasonable assumption made during PRD creation]
+- [Another assumption — user corrects during review]
+
+## User Flows
+
+### Flow 1: [Primary Flow Name]
+**Entry:** [Page/Screen] → **Exit:** [Page/Screen]
+
+| Step | Actor | Surface | Action | Result |
+|------|-------|---------|--------|--------|
+| 1 | User | [Page] | [What user does] | [What happens] |
+| 2 | UI | [Component] | [UI response] | [What user sees] |
+| 3 | Agent | [Service] | [Processing] | [Output] |
+| 4 | UI | [Page] | [Shows result] | [End state] |
+
+### Flow 2: [Secondary Flow Name]
+...
+
+> Detailed journey diagram: `/vorbit:design:journey`
 
 ## Constraints
 - ...
@@ -99,24 +133,7 @@ As a [user], I want [goal], so that [benefit].
 
 **Only proceed after user confirms the draft.**
 
-**If platform was detected in Step 1:** use that platform directly (don't ask again).
-
-**If no platform detected:** Use AskUserQuestion: "Where should I save this PRD?"
-- Options: Notion, Anytype, Other
-
-### If Notion:
-1. Ask for database name or page URL
-2. Use `notion-find` to locate target database
-3. Create with Name = feature name, full PRD in body
-4. If database has `Type` property, set to `["PRD"]`
-
-### If Anytype:
-1. Use `API-list-spaces` to show available spaces
-2. Ask user which space to save to
-3. Use `API-create-object` with:
-   - `type_key`: "page" (or appropriate type)
-   - `name`: feature name
-   - `body`: full PRD content as markdown
+Save using the platform detected in Step 1. Read and follow the save steps in `_shared/platform-save.md` (glob for `**/skills/_shared/platform-save.md`). Pass `type: "PRD"` and the PRD content as markdown body.
 
 ## Step 6: Report
 
@@ -138,7 +155,8 @@ As a [user], I want [goal], so that [benefit].
 | Problem | Yes | Max 3 sentences, no tech details |
 | Users | Yes | Who has the problem |
 | User Stories | Yes | "As a [user]..." with acceptance criteria |
-| User Flow | Placeholder | `[To be added via /vorbit:design:journey]` |
+| Assumptions | Yes | Stated assumptions, user corrects during review |
+| User Flows | Yes | Multi-actor flows with Actor/Surface/Action/Result |
 | Success Criteria | Yes | Measurable with numbers |
 | Constraints | No | Budget, timeline, compliance |
 | Out of Scope | No | What we're NOT building |
@@ -148,9 +166,10 @@ As a [user], I want [goal], so that [benefit].
 - **Name**: 3-8 words, no technical jargon
 - **Problem**: Max 3 sentences, describes user pain not technical gap
 - **User Stories**: Format "As a [user], I want [goal], so that [benefit]"
-- **User Flow**: Placeholder text until journey command fills it
+- **Assumptions**: Reasonable defaults stated explicitly — user corrects during review
+- **User Flows**: At least one flow with Actor (User/UI/Agent/System), Surface (Page/Component/Service), Action, Result
 - **Success Criteria**: Contains measurable numbers (percentages, times, counts)
-- **No placeholders**: No `[UNCLEAR]`, `[TBD]`, or empty sections (except User Flow)
+- **TBD allowed selectively**: `TBD` is fine in Constraints, Success Criteria numbers, and User Flow steps that depend on design decisions. NOT allowed in Problem, Users, or User Stories — those must be concrete
 
 ## User Story Format
 
