@@ -17,7 +17,7 @@ Use the **implement-loop** skill for loop state management and sub-issue trackin
 
 ## Step 1: Detect Platform & Verify Connection
 
-Read and follow the platform detection steps in `_shared/platform-detection.md` (glob for `**/skills/_shared/platform-detection.md`). Pass the detected platform to subsequent steps. If no PRD is needed, skip this step.
+Read and follow `_shared/mcp-tool-routing.md` (glob for `**/skills/_shared/mcp-tool-routing.md`). Discover connected platforms, ask user which to use, and verify connection. If no PRD is needed, skip this step.
 
 ## Step 2: Determine Context
 

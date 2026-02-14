@@ -10,7 +10,7 @@ Create user journey diagrams in FigJam using Mermaid syntax.
 
 ## Step 1: Detect Platform & Verify Connection
 
-Read and follow the platform detection steps in `_shared/platform-detection.md` (glob for `**/skills/_shared/platform-detection.md`). Pass the detected platform to subsequent steps.
+Read and follow `_shared/mcp-tool-routing.md` (glob for `**/skills/_shared/mcp-tool-routing.md`). Discover connected platforms, ask user which to use, and verify connection.
 
 ## Step 2: Gather Context
 

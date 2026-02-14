@@ -1,6 +1,6 @@
 ---
 name: prd
-version: 1.1.0
+version: 1.2.2
 description: Use when user says "write PRD", "create requirements", "define feature", "document requirements", "product spec", or wants to create a Product Requirements Document. Outputs to Notion or Anytype.
 ---
 
@@ -8,58 +8,95 @@ description: Use when user says "write PRD", "create requirements", "define feat
 
 Create Product Requirements Documents with proper structure. No fluff, just what needs building.
 
-## Step 1: Detect Platform & Verify Connection
+## Step 1: Gather Context (Draft First)
 
-Read and follow the platform detection steps in `_shared/platform-detection.md` (glob for `**/skills/_shared/platform-detection.md`). Pass the detected platform to subsequent steps.
+Goal: produce a PRD draft first. Platform connection must not block drafting.
 
-## Step 2: Gather Context
+**IF URL or ID provided:**
+1. Try to fetch content using `_shared/mcp-tool-routing.md` (glob for `**/skills/_shared/mcp-tool-routing.md`)
+2. If MCP connection is missing or retrieval fails, ask user to paste relevant sections and continue
+3. Use restructure mode, then proceed to Step 2
 
-**IF Notion URL provided:**
-1. Use `notion-find` with page title from URL
-2. If content retrieval fails, ask user to paste relevant sections
-3. Proceed to Step 4 (restructure mode)
-
-**IF Anytype URL or object ID provided:**
-1. Use `API-get-object` to retrieve content
-2. If content retrieval fails, ask user to paste relevant sections
-3. Proceed to Step 4 (restructure mode)
+**Restructure mode definition:**
+- Transform existing source content into the PRD schema while preserving intent
+- Keep strong source details as-is; normalize structure and wording
+- Mark missing required fields as `TBD` and resolve through Step 2 questions
 
 **IF existing context (explore doc, conversation):**
 1. Use that context as input
-2. Proceed to Step 3 for gaps
+2. Proceed to Step 2 for gaps
 
 **IF starting fresh:**
-1. Proceed to Step 3
+1. Proceed to Step 2
 
-## Step 3: Clarify Requirements
+## Step 2: Clarify Requirements
 
-**RULE: If ANY requirement is unclear, use AskUserQuestion.**
+**RULE: Ask on every meaningful uncertainty. Do not silently assume unclear requirements.**
 
-Ask about:
-1. **Problem** - "What problem does this solve?"
-2. **Users** - "Who has this problem?" (options: Internal team, End users, Admins, etc.)
-3. **Priority** - "How urgent?" (Critical, High, Medium, Low)
-4. **Scope** - For ambiguous requirements, ask with options
-5. **Constraints** - Budget, timeline, compliance
+Ask a MAXIMUM of 3 rounds of questions using `AskUserQuestion` (batch related unknowns together). Focus on:
+1. **Problem** - user pain and why this matters
+2. **Users** - who is affected, primary vs secondary users
+3. **Scope** - what is explicitly in and out
+4. **Constraints** - compliance, timeline, platform, integration limits
+5. **Edge cases** - failure paths and unusual but realistic usage
+6. **Success metrics** - measurable target outcomes
 
-Keep asking until ALL requirements are clear. Don't guess.
+**For anything uncertain:**
+1. Mark the requirement as `TBD` inline where it appears in the PRD
+2. Ask the user to clarify using `AskUserQuestion` (batched, max 3 rounds)
+3. Update `TBD` markers with the user's answers before showing the final draft
+4. If still unanswered after 3 rounds, keep `TBD` and label it
 
-## Step 4: Generate PRD
+Every `TBD` MUST have a corresponding question asked. No silent guessing.
+
+## Step 3: Generate PRD Draft
 
 Use the template below. Include:
 - Name (3-8 words, no jargon)
+- Description (one line, max 100 chars)
 - Problem (max 3 sentences, no tech)
 - Users
-- User Stories with acceptance criteria
-- User Flow: `[To be added via /vorbit:design:journey]`
+- User Stories with acceptance criteria (ID each criterion as `AC-*`)
+- Assumptions (only explicit defaults accepted by the user, or explicit deferrals)
+- User Flows (Actor/Surface/Action/Result + Story/AC refs across Pages/Components/Services)
 - Constraints
 - Out of Scope
 - Success Criteria (with numbers)
+
+**User Flow Rules:**
+- Every PRD needs at least ONE flow
+- Each step has: Actor (who), Surface (where), Action (what), Result (outcome)
+- The primary flow MUST include User, UI, and System actors
+- Use `Agent` as an actor only when a model/agent performs a distinct journey step (for example: generates content, makes a recommendation/decision, classifies input, or executes tools)
+- Do NOT label normal backend/API processing as `Agent`; use `System` for standard deterministic service behavior
+- Add additional flows only for materially different paths (error, edge, alternate)
+- Every user story MUST map to at least one flow (or be explicitly marked `No user flow required` with a reason)
+- No strict 1:1 is required: one flow can cover multiple user stories
+
+**Core Flow Building Rules (Flow 1):**
+- Flow 1 is REQUIRED and represents the primary end-to-end happy path
+- Start at the user's first trigger and end at the user-visible completion state
+- Use stable step IDs: `F1-S1`, `F1-S2`, ...
+- Keep one state transition per step (no hidden jumps)
+- Each step MUST specify:
+  - Actor
+  - Surface (page/component/service)
+  - Action
+  - Result
+  - Story refs (`US-*`)
+  - AC refs (`AC-*`)
+- If a step calls an API/service, show the endpoint/service name in `Surface` or `Result`
+- If a step can fail, point to alternate flow coverage in `Result` (for example: `On failure -> Flow 2`)
+- Keep Flow 1 detailed enough for ticket derivation (typically 4-12 steps)
+- Every `AC-*` should map to at least one flow step, unless explicitly marked `Non-journey AC` with reason
 
 **Show the complete PRD in chat for review:**
 
 ```markdown
 # [Feature Name]
+
+## Description
+[One-line summary, max 100 chars]
 
 ## Problem
 [Max 3 sentences, no tech details]
@@ -73,14 +110,40 @@ Use the template below. Include:
 As a [user], I want [goal], so that [benefit].
 
 **Acceptance Criteria:**
-- [ ] ...
-- [ ] ...
+- [ ] AC-1 ...
+- [ ] AC-2 ...
 
 ### US2: [Title]
 ...
 
-## User Flow
-[To be added via /vorbit:design:journey]
+## Assumptions
+- [Explicit default accepted by user]
+- [Explicitly deferred decision with owner]
+
+## User Flows
+
+### Flow 1: [Primary Flow Name]
+**Entry:** [Page/Screen] → **Exit:** [Page/Screen]
+
+| Step ID | Actor | Surface | Action | Result | Story Refs | AC Refs |
+|---------|-------|---------|--------|--------|------------|---------|
+| F1-S1 | User | [Page] | [What user does] | [What happens] | US1 | AC-1 |
+| F1-S2 | UI | [Component] | [UI response] | [What user sees] | US1 | AC-1 |
+| F1-S3 | System | [Service/API] | [Processes request] | [Data/state updated] | US1 | AC-2 |
+| F1-S4 | UI | [Page] | [Shows result] | [End state] | US1 | AC-2 |
+
+### Flow 2: [Alternative/Error Flow] (optional)
+...
+
+> Add `Agent` rows only when the agent performs a distinct journey step; otherwise keep those steps as `System`.
+> Detailed journey diagram: `/vorbit:design:journey`
+
+## Story-to-Flow Mapping
+| User Story | Flow Coverage | AC Coverage | Notes |
+|------------|---------------|-------------|-------|
+| US1 | Flow 1 (F1-S1 to F1-S4) | AC-1, AC-2 | Primary journey |
+| US2 | Flow 2 (F2-S1 to F2-S3) | AC-3 | Error/alternate path |
+| US3 | No user flow required | AC-4 | Internal technical migration only |
 
 ## Constraints
 - ...
@@ -95,31 +158,25 @@ As a [user], I want [goal], so that [benefit].
 
 **After showing draft, ask:** "Does this PRD look good? Ready to save?"
 
-## Step 5: Save Document
+## Step 4: Confirm Draft
 
 **Only proceed after user confirms the draft.**
 
-**If platform was detected in Step 1:** use that platform directly (don't ask again).
+## Step 5: Save Document (Optional)
 
-**If no platform detected:** Use AskUserQuestion: "Where should I save this PRD?"
-- Options: Notion, Anytype, Other
-
-### If Notion:
-1. Ask for database name or page URL
-2. Use `notion-find` to locate target database
-3. Create with Name = feature name, full PRD in body
-4. If database has `Type` property, set to `["PRD"]`
-
-### If Anytype:
-1. Use `API-list-spaces` to show available spaces
-2. Ask user which space to save to
-3. Use `API-create-object` with:
-   - `type_key`: "page" (or appropriate type)
+If user confirms saving:
+1. If a platform was already identified earlier, reuse it unless user asks to switch
+2. Otherwise follow `_shared/mcp-tool-routing.md` to discover connected platforms, ask user which one to use, and verify connection
+3. Save with the selected platform's MCP tools:
+   - `type`: `"PRD"`
    - `name`: feature name
-   - `body`: full PRD content as markdown
+   - `body`: full PRD markdown
+
+If user does not want to save, skip Step 5 and continue to Step 6.
 
 ## Step 6: Report
 
+- Draft status: confirmed (and whether it was saved)
 - URL or object ID (if saved)
 - Platform used (Notion/Anytype)
 - Summary: X user stories, Y success criteria
@@ -138,7 +195,9 @@ As a [user], I want [goal], so that [benefit].
 | Problem | Yes | Max 3 sentences, no tech details |
 | Users | Yes | Who has the problem |
 | User Stories | Yes | "As a [user]..." with acceptance criteria |
-| User Flow | Placeholder | `[To be added via /vorbit:design:journey]` |
+| Assumptions | Yes | Explicit defaults accepted by user, or explicit deferrals |
+| User Flows | Yes | Actor/Surface/Action/Result + Story/AC refs; primary flow includes User/UI/System, Agent when applicable |
+| Story-to-Flow Mapping | Yes | Every story maps to flow(s) and AC coverage, or marked "No user flow required" with reason |
 | Success Criteria | Yes | Measurable with numbers |
 | Constraints | No | Budget, timeline, compliance |
 | Out of Scope | No | What we're NOT building |
@@ -146,19 +205,25 @@ As a [user], I want [goal], so that [benefit].
 ## Validation Rules
 
 - **Name**: 3-8 words, no technical jargon
+- **Description**: one line, max 100 chars
 - **Problem**: Max 3 sentences, describes user pain not technical gap
-- **User Stories**: Format "As a [user], I want [goal], so that [benefit]"
-- **User Flow**: Placeholder text until journey command fills it
+- **User Stories**: Format "As a [user], I want [goal], so that [benefit]"; each criterion should be IDed as `AC-*`
+- **Assumptions**: Only explicit defaults accepted by user, or explicit deferrals
+- **User Flows**: At least one flow with Actor/Surface/Action/Result/Story refs/AC refs. Primary flow must include User, UI, and System. Use `Agent` only for explicit agent/model steps; keep normal service/API logic under `System`
+- **Flow 1 quality bar**: includes start/end, stable step IDs, explicit API/service touchpoints, and 4-12 state-transition steps
+- **Story-to-Flow Mapping**: every user story must map to at least one flow, or be explicitly marked `No user flow required` with reason
+- **AC-to-Flow coverage**: every `AC-*` maps to one or more flow steps, or is marked `Non-journey AC` with reason
 - **Success Criteria**: Contains measurable numbers (percentages, times, counts)
-- **No placeholders**: No `[UNCLEAR]`, `[TBD]`, or empty sections (except User Flow)
+- **TBD allowed selectively**: `TBD` is fine in Constraints, Success Criteria numbers, and User Flow steps that depend on design decisions. NOT allowed in Problem, Users, or User Stories — those must be concrete
+- **TBD question rule**: every `TBD` must have a corresponding `AskUserQuestion` attempt
 
 ## User Story Format
 
 ```
 US-001: As a [user type], I want [goal], so that [benefit]
   Acceptance:
-  - [Specific testable criterion]
-  - [Another criterion]
+  - AC-1 [Specific testable criterion]
+  - AC-2 [Another criterion]
 ```
 
 Rules:

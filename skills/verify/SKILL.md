@@ -10,7 +10,7 @@ Confirm that implementation meets Requirements, passes Tests, and maintains Qual
 
 ## Step 1: Detect Platform & Verify Connection
 
-Read and follow the platform detection steps in `_shared/platform-detection.md` (glob for `**/skills/_shared/platform-detection.md`). Pass the detected platform to subsequent steps. If no PRD is needed, skip to Step 2.
+Read and follow `_shared/mcp-tool-routing.md` (glob for `**/skills/_shared/mcp-tool-routing.md`). Discover connected platforms, ask user which to use, and verify connection. If no PRD is needed, skip to Step 2.
 
 ## Step 2: Determine Context
 
