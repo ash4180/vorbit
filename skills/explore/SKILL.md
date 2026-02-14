@@ -10,7 +10,7 @@ Quick idea exploration before PRD creation. Supports saving to Notion or Anytype
 
 ## Step 1: Detect Platform & Verify Connection
 
-Read and follow the platform detection steps in `_shared/platform-detection.md` (glob for `**/skills/_shared/platform-detection.md`). Pass the detected platform to subsequent steps.
+Read and follow `_shared/mcp-tool-routing.md` (glob for `**/skills/_shared/mcp-tool-routing.md`). Discover connected platforms, ask user which to use, and verify connection.
 
 ## Step 2: Ask 10+ Questions
 
@@ -90,24 +90,7 @@ After gathering context:
 
 **Only proceed after user confirms the draft.**
 
-**If platform was detected in Step 1:** use that platform directly (don't ask again).
-
-**If no platform detected:** Use AskUserQuestion: "Where should I save this exploration?"
-- Options: Notion, Anytype, Other
-
-### If Notion:
-1. Ask for database name or page URL
-2. Use `notion-find` to locate target database
-3. Create document with Name = topic, full analysis in body
-4. If database has `Type` property, set to `["Exploration"]`
-
-### If Anytype:
-1. Use `API-list-spaces` to show available spaces
-2. Ask user which space to save to
-3. Use `API-create-object` with:
-   - `type_key`: "page" (or appropriate type)
-   - `name`: topic
-   - `body`: full exploration content as markdown
+Save using the platform selected in Step 1. Follow the "Save Content" section in `_shared/mcp-tool-routing.md`. Pass the exploration content as markdown body.
 
 ## Step 6: Report
 
