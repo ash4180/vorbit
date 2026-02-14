@@ -10,18 +10,13 @@ Create Product Requirements Documents with proper structure. No fluff, just what
 
 ## Step 1: Detect Platform & Verify Connection
 
-Read and follow the platform detection steps in `_shared/platform-detection.md` (glob for `**/skills/_shared/platform-detection.md`). Pass the detected platform to subsequent steps.
+Read and follow `_shared/mcp-tool-routing.md` (glob for `**/skills/_shared/mcp-tool-routing.md`). Discover connected platforms, ask user which to use, and verify connection.
 
 ## Step 2: Gather Context
 
-**IF Notion URL provided:**
-1. Use `notion-find` with page title from URL
-2. If content retrieval fails, ask user to paste relevant sections
-3. Proceed to Step 4 (restructure mode)
-
-**IF Anytype URL or object ID provided:**
-1. Use `API-get-object` to retrieve content
-2. If content retrieval fails, ask user to paste relevant sections
+**IF URL or ID provided:**
+1. Use the platform's MCP tools (discovered in Step 1) to fetch content
+2. If retrieval fails, ask user to paste relevant sections
 3. Proceed to Step 4 (restructure mode)
 
 **IF existing context (explore doc, conversation):**
@@ -35,7 +30,7 @@ Read and follow the platform detection steps in `_shared/platform-detection.md` 
 
 **RULE: Be opinionated. Assume standard patterns. Only ask when wrong assumptions waste real effort.**
 
-Ask a MAXIMUM of 2 rounds of questions. Focus on:
+Ask a MAXIMUM of 3 rounds of questions. Focus on:
 1. **Problem** - "What problem does this solve?" (only if not obvious from context)
 2. **Users** - "Who has this problem?" (only if ambiguous — don't ask if context makes it clear)
 3. **Scope** - Only ask if the feature could reasonably be 2x or 0.5x what they described
@@ -133,7 +128,7 @@ As a [user], I want [goal], so that [benefit].
 
 **Only proceed after user confirms the draft.**
 
-Save using the platform detected in Step 1. Read and follow the save steps in `_shared/platform-save.md` (glob for `**/skills/_shared/platform-save.md`). Pass `type: "PRD"` and the PRD content as markdown body.
+Save using the platform selected in Step 1. Follow the "Save Content" section in `_shared/mcp-tool-routing.md`. Pass the PRD content as markdown body.
 
 ## Step 6: Report
 
