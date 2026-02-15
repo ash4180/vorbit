@@ -4,8 +4,8 @@ The skill reads and writes across three scopes. Know which scope you're in befor
 
 | Scope | Root | What lives here | Writable? |
 |---|---|---|---|
-| **Project** | `$PROJECT_ROOT/` | CLAUDE.md, `.claude/rules/`, `.claude/learnings/pending.md`, `.claude/review-rules.md` | Yes — all modes |
-| **User** | `~/.claude/` | `settings.json` (prompt hook), `rules/vorbit-learning.md`, session transcripts | Read-only from skill. Stop hook manages writes via bootstrap. |
+| **Project** | `{origin_path}/` | CLAUDE.md, `.claude/rules/`, `.claude/review-rules.md` | Yes — all modes |
+| **User** | `~/.claude/` | `rules/vorbit-learning.md`, `rules/unprocessed-corrections.md`, `rules/{topic}.md` for universal learnings | Yes — digest processing writes universal learnings here, stop hook writes corrections digest |
 | **Plugin** | vorbit plugin dir | `skills/*/SKILL.md`, `hooks/scripts/*.sh` | Yes — only for `skill-fix` and `script-fix` |
 
 ## Resolving plugin root
@@ -21,7 +21,7 @@ Pick the result containing `vorbit`. The parent of `.claude-plugin/` is the plug
 
 ## Absolute paths for skill-fix and script-fix
 
-**For `skill-fix` and `script-fix` entries in pending.md**, always store the **full absolute path** in the Target field so the reviewing agent doesn't need to search:
+Always store the **full absolute path** in routing so the agent doesn't need to search:
 ```
 - **Target:** /Users/ash/Desktop/vorbit/skills/learn/SKILL.md
 ```
