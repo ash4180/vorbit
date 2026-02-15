@@ -7,7 +7,7 @@ set -euo pipefail
 RULES_DIR="$HOME/.claude/rules"
 RULES_FILE="$RULES_DIR/vorbit-learning.md"
 PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-$(dirname "$(dirname "$(dirname "$(realpath "$0")")")")}"
-RULES_SOURCE="$PLUGIN_ROOT/hooks/scripts/vorbit-learning-rules.md"
+RULES_SOURCE="$PLUGIN_ROOT/skills/learn/vorbit-learning-rules.md"
 RULES_MARKER="vorbit-learning-rules"
 OUTPUT_FILE="$RULES_DIR/unprocessed-corrections.md"
 PROJECT_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
