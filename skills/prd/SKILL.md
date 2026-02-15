@@ -125,6 +125,26 @@ As a [user], I want [goal], so that [benefit].
 - Summary: X user stories, Y success criteria
 - Next: `/vorbit:design:journey` or `/vorbit:implement:epic`
 
+## Coverage Review Mode
+
+When asked to review if tickets/issues fulfill a PRD:
+
+### Step 1: Fetch Both Sides
+- Read the PRD (from Notion, Anytype, or provided content)
+- Read all referenced tickets (from Linear or provided list)
+
+### Step 2: Map User Stories to Tickets
+For each user story + acceptance criteria in the PRD, find the ticket(s) that cover it. Present as a coverage matrix.
+
+### Step 3: Identify Gaps
+
+Only flag work as a gap if it **cannot be naturally bundled into an existing ticket**. If it's a side effect of implementing an existing ticket, it's not a gap — it's housekeeping that happens during implementation.
+
+### Step 4: Report
+- Coverage matrix: user story → ticket(s)
+- Gaps: work that cannot be bundled into existing tickets
+- Verdict: fully covered / has gaps
+
 ---
 
 # PRD Schema & Validation
