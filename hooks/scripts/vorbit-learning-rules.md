@@ -4,9 +4,10 @@ Watch for these patterns during every session. When detected, follow the learn s
 
 ## When to Trigger
 
-1. **User correction detected** — user says: "no", "wrong", "that's not right", "error", "still error", "not working", "broken", "nope", "roll back", "revert"
-2. **Repeated failure** — you tried the same approach 2-3 times and it still fails
-3. **Both conditions present** AND you then find a fix that works
+Any **single** correction keyword from the user is enough:
+"no", "wrong", "that's not right", "error", "still error", "not working", "broken", "nope", "roll back", "revert", "actually", "that's not how"
+
+Repeated failure is NOT required. One correction = one trigger.
 
 ## What to Do
 
@@ -18,3 +19,5 @@ After fixing the problem:
 5. Resume the primary task
 
 Never skip user confirmation. Never write without asking. Always present the exact content you plan to write.
+
+<!-- vorbit-learning-rules -->
