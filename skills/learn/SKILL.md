@@ -1,7 +1,7 @@
 ---
 name: learn
 version: 7.0.0
-description: Real-time and session-end learning capture. Correction capture triggers mid-session when the agent detects user corrections and finds a fix. Also supports session-end capture and manual review.
+description: Real-time correction capture and digest processing. Correction capture triggers mid-session on single keyword. Digest processing routes extracted corrections from stop hook to project rules files.
 ---
 
 # Learn Skill
