@@ -56,8 +56,7 @@ skills/               # Full workflow content (auto-triggered)
 | Verify | `/vorbit:implement:verify [issue]` |
 | Code review | `/vorbit:implement:review [files or base-branch]` |
 | Cleanup mocks | `/vorbit:implement:cleanup-mocks [feature]` |
-| Review learnings | `/vorbit:learn:review` |
-| Backfill learnings | `/vorbit:learn:backfill [N]` |
+| Process learnings | `/vorbit:learn:checkmemory` |
 
 ## Enhanced Epic/Implement Workflow (v1.2.0)
 
@@ -254,7 +253,7 @@ Original technique: [ghuntley.com/ralph](https://ghuntley.com/ralph/)
 | implement-cleanup-mocks | 1.0.0 | API contract generation, mock cleanup |
 | verify | 1.1.0 | Acceptance criteria validation |
 | review | 2.0.0 | Code review — files or PR pipeline, Linus-style |
-| learn | 6.0.0 | Real-time and session-end learning capture |
+| learn | 7.0.0 | Correction capture and digest processing |
 | react-best-practices | 1.0.0 | React/Next.js performance optimization |
 
 ## Requirements
