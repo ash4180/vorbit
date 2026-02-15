@@ -12,3 +12,4 @@ node_modules/
 
 # Loop state (runtime only, not committed)
 .claude/.loop-state.json
+settings.local.json
