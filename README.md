@@ -107,34 +107,108 @@ Mock runtime state:
 ## Repository Layout
 
 ```text
-.claude-plugin/plugin.json      # Plugin manifest
-commands/                       # Slash command entry points
-  design/
-  implement/
-  learn/
-skills/                         # Skill logic (SKILL.md)
-  _shared/                      # Shared platform detection blocks
-  explore/
-  prd/
-  journey/
-  prototype/
-  webflow/
-  ui-patterns/
-  epic/
-  implement/
-  implement-loop/
-  implement-cleanup-mocks/
-  verify/
-  review/
-  learn/
-  ux/
-  react-best-practices/
-hooks/
-  hooks.json                    # Hook wiring
-  scripts/                      # Hook scripts
-  tests/                        # Hook script tests
-CLAUDE.md                       # Project usage notes
-AGENT.md                        # Output and engineering guidelines
+vorbit/
+├── .claude-plugin/
+│   └── plugin.json                         # Plugin manifest (name, description, author)
+├── commands/                               # Slash commands (auto-discovered)
+│   ├── design/
+│   │   ├── explore.md
+│   │   ├── journey.md
+│   │   ├── prd.md
+│   │   ├── prototype.md
+│   │   ├── ui-patterns.md
+│   │   └── webflow.md
+│   ├── implement/
+│   │   ├── cleanup-mocks.md
+│   │   ├── code-review.md
+│   │   ├── epic.md
+│   │   ├── implement.md
+│   │   └── verify.md
+│   └── learn/
+│       └── checkmemory.md
+├── skills/                                 # Workflow logic (auto-discovered via SKILL.md)
+│   ├── _shared/
+│   │   └── mcp-tool-routing.md             # Shared MCP platform detection
+│   ├── epic/
+│   │   └── SKILL.md
+│   ├── explore/
+│   │   └── SKILL.md
+│   ├── implement/
+│   │   └── SKILL.md
+│   ├── implement-cleanup-mocks/
+│   │   └── SKILL.md
+│   ├── implement-loop/
+│   │   └── SKILL.md
+│   ├── journey/
+│   │   └── SKILL.md
+│   ├── learn/
+│   │   ├── SKILL.md
+│   │   ├── vorbit-learning-rules.md        # Symlinked → ~/.claude/rules/ by stop hook
+│   │   └── references/
+│   │       ├── consolidation.md
+│   │       ├── format.md
+│   │       ├── routing.md
+│   │       └── scopes.md
+│   ├── prd/
+│   │   └── SKILL.md
+│   ├── prototype/
+│   │   └── SKILL.md
+│   ├── react-best-practices/
+│   │   ├── SKILL.md
+│   │   └── references/
+│   │       ├── react-performance-guidelines.md
+│   │       └── rules/                      # 40+ categorized rule files
+│   ├── review/
+│   │   ├── SKILL.md
+│   │   └── references/
+│   │       └── pr-pipeline.md
+│   ├── ui-patterns/
+│   │   └── SKILL.md
+│   ├── ux/
+│   │   ├── SKILL.md
+│   │   └── references/
+│   │       ├── edge-case-catalog.md
+│   │       ├── question-matrix.md
+│   │       └── ux-philosophy.md
+│   ├── verify/
+│   │   └── SKILL.md
+│   └── webflow/
+│       ├── SKILL.md
+│       ├── examples/
+│       │   └── landing-page.md
+│       └── references/
+│           ├── component-mapping.md
+│           ├── mcp-tools.md
+│           └── templates.md
+├── hooks/
+│   ├── hooks.json                          # Hook event wiring
+│   ├── scripts/                            # Executable .sh files only
+│   │   ├── loop-controller.sh
+│   │   ├── post-edit-format.sh
+│   │   ├── post-edit-validate.sh
+│   │   ├── pre-push-warning.sh
+│   │   ├── stop-console-log-audit.sh
+│   │   └── stop-learn-reflect.sh
+│   └── tests/                              # Hook script test harnesses
+│       ├── test-post-edit-format.sh
+│       ├── test-post-edit-validate.sh
+│       ├── test-pre-push-warning.sh
+│       ├── test-stop-console-log-audit.sh
+│       └── test-stop-learn-reflect.sh
+├── ClaudeApp/                              # Claude.ai project skills (separate platform)
+│   ├── epic/
+│   │   └── SKILL.md
+│   ├── explore/
+│   │   └── SKILL.md
+│   ├── prd/
+│   │   ├── SKILL.md
+│   │   └── references/
+│   │       ├── output-templates.md
+│   │       └── question-matrix.md
+│   └── writing/
+│       └── SKILL.md
+├── AGENT.md                                # Output style and engineering guidelines
+└── README.md
 ```
 
 ## Requirements
