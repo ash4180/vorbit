@@ -94,6 +94,24 @@ Universal:
 
 ---
 
+## Voluntary Capture (Always-On)
+
+Triggers when the user explicitly asks to save something: "remember this", "save this", "note this", "keep this", "don't forget this", "log this".
+
+**Step 1:** Use `AskUserQuestion` to confirm what to save and classify it:
+- What is the learning? (summarize in one line if unclear)
+- Is it project-specific or universal (applies across all projects)?
+- Root cause category (same table as Correction Capture Step 2)
+
+**Step 2:** Propose file + content using `AskUserQuestion`:
+- "Approve" → write it
+- "Edit path" → user specifies a different file
+- "Skip" → don't write anything
+
+**Step 3:** Write using the same routing as Correction Capture Step 4. Resume primary task.
+
+---
+
 ## Digest Processing
 
 Processes `~/.claude/rules/unprocessed-corrections.md` — the digest of corrections extracted by the stop hook at session end.

@@ -4,10 +4,13 @@ Watch for these patterns during every session. When detected, follow the learn s
 
 ## When to Trigger
 
-Any **single** correction keyword from the user is enough:
+**Correction keywords** — any single word/phrase triggers Correction Capture:
 "no", "wrong", "that's not right", "error", "still error", "not working", "broken", "nope", "roll back", "revert", "actually", "that's not how"
 
 Repeated failure is NOT required. One correction = one trigger.
+
+**Voluntary capture keywords** — triggers Voluntary Capture:
+"remember this", "save this", "note this", "keep this", "don't forget this", "log this"
 
 ## What to Do
 
