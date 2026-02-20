@@ -64,24 +64,31 @@ fi
 claude plugin enable "$PLUGIN_NAME@$MARKETPLACE_NAME" 2>/dev/null || true
 echo "→ Enabled plugin"
 
-# 7. Replace cache copy with symlink to source (for live editing)
-# ${CLAUDE_PLUGIN_ROOT} resolves to the cache path, so this must be a symlink
+# 7. Create real cache directory with symlinked contents (for live editing)
+# The plugin system deletes symlinked version directories (detects as orphaned).
+# Fix: make the version directory REAL, but symlink each item inside it.
+# ${CLAUDE_PLUGIN_ROOT} resolves to the cache version dir, so paths like
+# ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/foo.sh follow the content symlinks to source.
 CACHE_DIR="$HOME/.claude/plugins/cache/$MARKETPLACE_NAME/$PLUGIN_NAME"
 VERSION=$(grep -o '"version": *"[^"]*"' "$PLUGIN_SOURCE/.claude-plugin/plugin.json" | head -1 | sed 's/.*": *"//;s/"//')
 CACHE_VERSION_DIR="$CACHE_DIR/$VERSION"
 
-if [ -L "$CACHE_VERSION_DIR" ]; then
-  echo "→ Cache symlink already exists"
-elif [ -d "$CACHE_VERSION_DIR" ]; then
+# Remove old cache (whether symlink or real copy)
+if [ -L "$CACHE_VERSION_DIR" ] || [ -d "$CACHE_VERSION_DIR" ]; then
   rm -rf "$CACHE_VERSION_DIR"
-  ln -s "$PLUGIN_SOURCE" "$CACHE_VERSION_DIR"
-  echo "→ Replaced cache copy with symlink"
-else
-  mkdir -p "$CACHE_DIR"
-  ln -s "$PLUGIN_SOURCE" "$CACHE_VERSION_DIR"
-  echo "→ Created cache symlink"
 fi
+
+# Create real directory and symlink each item from source
+mkdir -p "$CACHE_VERSION_DIR"
+for item in "$PLUGIN_SOURCE"/*  "$PLUGIN_SOURCE"/.[!.]* ; do
+  [ -e "$item" ] || continue
+  basename="$(basename "$item")"
+  # Skip .git to avoid confusing the plugin system
+  [ "$basename" = ".git" ] && continue
+  ln -s "$item" "$CACHE_VERSION_DIR/$basename"
+done
+echo "→ Created cache directory with symlinked contents"
 
 echo ""
 echo "Done! Restart Claude Code to load $PLUGIN_NAME."
-echo "\${CLAUDE_PLUGIN_ROOT} → $CACHE_VERSION_DIR → $PLUGIN_SOURCE"
+echo "\${CLAUDE_PLUGIN_ROOT} → $CACHE_VERSION_DIR (real dir, contents symlinked to $PLUGIN_SOURCE)"
