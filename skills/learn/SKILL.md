@@ -28,6 +28,9 @@ Detailed specs live in `references/` within this skill's directory. Glob for `**
 - If your context contains `unprocessed-corrections.md` content → run **Digest Processing**
 - If invoked via `/vorbit:learn:checkmemory` → run **Digest Processing**
 - If user correction detected mid-session → run **Correction Capture**
+- If user says "remember this", "save this", "note this", etc. → run **Voluntary Capture**
+
+**Priority rule:** If digest is in context AND a live trigger fires, the live trigger takes precedence. Handle Correction Capture or Voluntary Capture first, then run Digest Processing after.
 
 ---
 
