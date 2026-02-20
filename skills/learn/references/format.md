@@ -23,8 +23,8 @@
 | `agent-mistake` | universal | `~/.claude/rules/{topic}.md` | "Don't assume test failures mean code is wrong" |
 | `user-preference` | universal | `~/.claude/rules/{topic}.md` | "Always run tests before committing" |
 | `tool-behavior` | universal | `~/.claude/rules/{topic}.md` | "Anytype update-object cannot update body" |
-| `skill-fix` | project | Full absolute path (see `scopes.md`) | Skill SKILL.md had wrong instructions |
-| `script-fix` | project | Full absolute path (see `scopes.md`) | Hook script had a bug |
+| `skill-fix` | project | Full absolute path (see `routing.md` Group D) | Skill SKILL.md had wrong instructions |
+| `script-fix` | project | Full absolute path (see `routing.md` Group D) | Hook script had a bug |
 | `review-rule` | project | `{origin}/.claude/review-rules.md` | Recurring code review finding |
 
 ### Title Format

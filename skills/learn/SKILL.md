@@ -19,7 +19,7 @@ Detailed specs live in `references/` within this skill's directory. Glob for `**
 | `references/format.md` | Scope classification table, unprocessed-corrections.md format, examples |
 | `references/routing.md` | Routing table by scope, absolute path routing, Cross-Reference Rule |
 | `references/consolidation.md` | Document consolidation rules for `.claude/rules/` files |
-| `references/scopes.md` | File scope table, plugin root resolution |
+| `references/routing.md` | Routing table, step-by-step groups, plugin root resolution, Cross-Reference Rule |
 
 ---
 
@@ -69,8 +69,8 @@ Once the problem is resolved (build passes, test passes, user confirms):
 
 - **claude-md** → Read CLAUDE.md, find/create Learned Patterns or Error Patterns section, append
 - **knowledge** → Read `references/consolidation.md` first. Determine topic, read/create rules file, append. Then apply the Cross-Reference Rule from `references/routing.md` to add a link in the project's CLAUDE.md under `## Knowledge Base`.
-- **skill** → Read `references/scopes.md` to resolve plugin path. Read skill file, add minimum needed
-- **script** → Read `references/scopes.md` to resolve plugin path. Read script, fix the bug
+- **skill** → Read `references/routing.md` Group D to resolve plugin path. Read skill file, add minimum needed
+- **script** → Read `references/routing.md` Group D to resolve plugin path. Read script, fix the bug
 
 **Step 5:** Resume primary task. Don't linger on the learning.
 
@@ -134,7 +134,7 @@ Read `references/routing.md` for routing instructions. Read `references/consolid
 **Project-scoped learnings** use the absolute project path from the digest block header.
 **Universal learnings** route to `~/.claude/rules/{topic}.md`.
 
-If routing `skill-fix` or `script-fix` items, read `references/scopes.md` to resolve the plugin path.
+If routing `skill-fix` or `script-fix` items, read `references/routing.md` Group D to resolve the plugin path.
 
 ### Step 6: Clean Up
 
