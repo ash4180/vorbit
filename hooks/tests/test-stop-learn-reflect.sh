@@ -152,7 +152,7 @@ JSONL_EOF
   echo "$transcript"
 }
 
-# Create a mock JSONL transcript with NO correction keywords
+# Create a mock JSONL transcript with no correction keywords (normal conversation)
 create_transcript_no_corrections() {
   local sessions_dir="$1"
   local session_id="${2:-test-session-def456}"
@@ -162,6 +162,40 @@ create_transcript_no_corrections() {
 {"type":"user","message":{"role":"user","content":"Please fix the login page styling."},"sessionId":"test-session-def456","timestamp":"2026-02-15T10:00:00Z"}
 {"type":"assistant","message":{"role":"assistant","content":[{"type":"text","text":"I'll fix the login page styling now."}]},"sessionId":"test-session-def456","timestamp":"2026-02-15T10:01:00Z"}
 {"type":"user","message":{"role":"user","content":"Great, looks good."},"sessionId":"test-session-def456","timestamp":"2026-02-15T10:02:00Z"}
+JSONL_EOF
+
+  echo "$transcript"
+}
+
+# Create a transcript containing teammate messages (structural noise)
+create_transcript_with_teammate_messages() {
+  local sessions_dir="$1"
+  local session_id="${2:-test-session-team123}"
+  local transcript="$sessions_dir/$session_id.jsonl"
+
+  cat > "$transcript" << 'JSONL_EOF'
+{"type":"user","message":{"role":"user","content":"<teammate-message teammate_id=\"auditor\">## Audit Complete\n✓ No issues found. wrong broken never always should be must be.</teammate-message>"},"sessionId":"test-session-team123","timestamp":"2026-02-15T10:00:00Z"}
+{"type":"assistant","message":{"role":"assistant","content":[{"type":"text","text":"Got the audit results."}]},"sessionId":"test-session-team123","timestamp":"2026-02-15T10:01:00Z"}
+{"type":"user","message":{"role":"user","content":"Thanks, looks good."},"sessionId":"test-session-team123","timestamp":"2026-02-15T10:02:00Z"}
+JSONL_EOF
+
+  echo "$transcript"
+}
+
+# Create a transcript with a very long message (continuation summary)
+create_transcript_with_long_message() {
+  local sessions_dir="$1"
+  local session_id="${2:-test-session-long456}"
+  local transcript="$sessions_dir/$session_id.jsonl"
+
+  # Build a message > 500 chars
+  local long_text
+  long_text="This session is being continued from a previous conversation. Previously the user said 'wrong' and 'broken' and we fixed it. The user also mentioned 'not working' several times. This summary is very long and contains many correction keywords but should be excluded because it is a continuation summary that quotes past corrections rather than being a real correction itself. It goes on and on."
+
+  cat > "$transcript" << JSONL_EOF
+{"type":"user","message":{"role":"user","content":"${long_text}"},"sessionId":"test-session-long456","timestamp":"2026-02-15T10:00:00Z"}
+{"type":"assistant","message":{"role":"assistant","content":[{"type":"text","text":"Understood, continuing from before."}]},"sessionId":"test-session-long456","timestamp":"2026-02-15T10:01:00Z"}
+{"type":"user","message":{"role":"user","content":"Please continue with the task."},"sessionId":"test-session-long456","timestamp":"2026-02-15T10:02:00Z"}
 JSONL_EOF
 
   echo "$transcript"
@@ -243,9 +277,9 @@ test_extracts_with_corrections() {
 }
 
 # -----------------------------------------------------------------------------
-# Test 3: No output file when no corrections found
+# Test 3: Output file created even for clean sessions (agent decides what matters)
 # -----------------------------------------------------------------------------
-test_no_output_without_corrections() {
+test_outputs_all_messages() {
   local test_dir="$TEST_BASE/test3"
   local slug
   slug=$(setup_test_project "$test_dir")
@@ -258,8 +292,9 @@ test_no_output_without_corrections() {
   local exit_code=0
   echo "" | bash "$HOOK_SCRIPT" 2>/dev/null || exit_code=$?
 
-  assert_eq "0" "$exit_code" "No corrections: exits 0"
-  assert_file_not_exists "$ORIG_OUTPUT_FILE" "No corrections: no output file created"
+  assert_eq "0" "$exit_code" "Clean session: exits 0"
+  assert_file_exists "$ORIG_OUTPUT_FILE" "Clean session: output file created (agent filters)"
+  assert_file_contains "$ORIG_OUTPUT_FILE" "Session:" "Clean session: has session block"
 
   teardown_test_project "$test_dir"
 }
@@ -400,7 +435,7 @@ test_idempotent_setup() {
 
 test_skips_during_loop
 test_extracts_with_corrections
-test_no_output_without_corrections
+test_outputs_all_messages
 test_exits_without_transcript
 test_assistant_context_included
 test_multiple_sessions_append
