@@ -27,6 +27,21 @@
 | `script-fix` | project | Full absolute path (see `routing.md` Group D) | Hook script had a bug |
 | `review-rule` | project | `{origin}/.claude/review-rules.md` | Recurring code review finding |
 
+### Root Cause → Type Mapping
+
+Correction Capture uses root causes. Digest Processing uses types. They map to each other:
+
+| Correction Capture root cause | Digest Processing type | Notes |
+|---|---|---|
+| `claude-md` | `error` or `pattern` | error = something broke; pattern = a better way |
+| `knowledge` | `knowledge` or `workflow` | knowledge = codebase fact; workflow = process/sequence |
+| `skill` | `skill-fix` | |
+| `script` | `script-fix` | |
+| `general` | _(nothing written)_ | Agent reasoning error, no doc needed |
+| `agent-mistake` | `agent-mistake` | Same in both |
+| `user-preference` | `user-preference` | Same in both |
+| `tool-behavior` | `tool-behavior` | Same in both |
+
 ### Title Format
 
 Concise imperative statement (like a commit message).
