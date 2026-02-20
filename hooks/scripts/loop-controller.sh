@@ -41,8 +41,10 @@ if [[ $CURRENT_ITERATION -ge $MAX_ITERATIONS ]]; then
   exit 0
 fi
 
-# Increment iteration counter
+# Increment iteration counter and re-feed command to continue loop
+COMMAND=$(jq -r '.command // ""' "$STATE_FILE")
 NEXT_ITERATION=$((CURRENT_ITERATION + 1))
 jq ".iteration = $NEXT_ITERATION" "$STATE_FILE" > "$STATE_FILE.tmp" && mv "$STATE_FILE.tmp" "$STATE_FILE"
 
-exit 0
+echo "$COMMAND"
+exit 2

@@ -119,21 +119,24 @@ test_inactive_loop() {
 }
 
 # -----------------------------------------------------------------------------
-# Test 3: Active loop, no signal, under max → iteration incremented
+# Test 3: Active loop, no signal, under max → iteration incremented, exit 2, command echoed
 # -----------------------------------------------------------------------------
 test_increments_iteration() {
   local test_dir="$TEST_BASE/test3"
   setup_test_dir "$test_dir"
-  write_state "$test_dir" '{"active":true,"completionSignal":"LOOP_DONE","maxIterations":50,"iteration":3}'
+  local cmd="test-command-$RANDOM"
+  write_state "$test_dir" "{\"active\":true,\"command\":\"$cmd\",\"completionSignal\":\"LOOP_DONE\",\"maxIterations\":50,\"iteration\":3}"
 
   local exit_code=0
-  echo "some output without the signal" | bash "$HOOK_SCRIPT" 2>/dev/null || exit_code=$?
+  local stdout
+  stdout=$(echo "some output without the signal" | bash "$HOOK_SCRIPT" 2>/dev/null) || exit_code=$?
 
   local next_iteration
   next_iteration=$(jq -r '.iteration' "$test_dir/.claude/.loop-state.json")
 
-  assert_eq "0" "$exit_code" "Active loop: exits 0"
+  assert_eq "2" "$exit_code" "Active loop: exits 2 (continue signal)"
   assert_eq "4" "$next_iteration" "Active loop: iteration incremented from 3 to 4"
+  assert_eq "$cmd" "$stdout" "Active loop: command echoed to stdout"
   assert_file_exists "$test_dir/.claude/.loop-state.json" "Active loop: state file kept"
 
   cd /
@@ -174,16 +177,21 @@ test_max_iterations_stops_loop() {
 }
 
 # -----------------------------------------------------------------------------
-# Test 6: Completion signal not present → loop continues
+# Test 6: Completion signal not present → exits 2, command echoed
 # -----------------------------------------------------------------------------
 test_no_signal_continues_loop() {
   local test_dir="$TEST_BASE/test6"
   setup_test_dir "$test_dir"
-  write_state "$test_dir" '{"active":true,"completionSignal":"LOOP_COMPLETE","maxIterations":50,"iteration":1}'
+  local cmd="test-command-$RANDOM"
+  write_state "$test_dir" "{\"active\":true,\"command\":\"$cmd\",\"completionSignal\":\"LOOP_COMPLETE\",\"maxIterations\":50,\"iteration\":1}"
 
-  echo "output with no signal here" | bash "$HOOK_SCRIPT" 2>/dev/null
+  local exit_code=0
+  local stdout
+  stdout=$(echo "output with no signal here" | bash "$HOOK_SCRIPT" 2>/dev/null) || exit_code=$?
 
-  assert_file_exists "$test_dir/.claude/.loop-state.json" "No signal: state file kept, loop continues"
+  assert_eq "2" "$exit_code" "No signal: exits 2 (continue signal)"
+  assert_eq "$cmd" "$stdout" "No signal: command echoed to stdout"
+  assert_file_exists "$test_dir/.claude/.loop-state.json" "No signal: state file kept"
 
   cd /
 }

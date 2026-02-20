@@ -95,6 +95,11 @@ if [[ -z "$MESSAGES" ]]; then
   exit 0
 fi
 
+# --- Skip if session already recorded ---
+if grep -qF "## Session: ${SESSION_ID}" "$OUTPUT_FILE" 2>/dev/null; then
+  exit 0
+fi
+
 # --- Write output for agent ---
 if [[ ! -f "$OUTPUT_FILE" ]]; then
   cat > "$OUTPUT_FILE" << 'HEADER_EOF'
