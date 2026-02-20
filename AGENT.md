@@ -33,7 +33,7 @@
 
 ### Testing
 - Run tests using the project's test runner (via Bash).
-- Do not use mock services for anything ever.
+- Do not use mock services in tests — use real implementations or test databases instead. Mock *data* for prototypes is fine.
 - Do not move on to the next test until the current test is complete.
 - If the test fails, consider checking if the test is structured correctly before deciding we need to refactor the codebase.
 - Tests to be verbose so we can use them for debugging.

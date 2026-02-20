@@ -52,6 +52,10 @@ Once the problem is resolved (build passes, test passes, user confirms):
 
 **Step 2: Analyze root cause**
 
+First determine scope — does this learning apply only to this project, or to all projects?
+
+**Project-specific** (codebase facts, project rules, skill/script bugs):
+
 | Root cause | Meaning |
 |---|---|
 | `claude-md` | CLAUDE.md is missing a rule that would have prevented the error |
@@ -60,6 +64,14 @@ Once the problem is resolved (build passes, test passes, user confirms):
 | `script` | A hook script has a bug or missing logic |
 | `general` | Agent reasoning error — no documentation fix needed |
 
+**Universal** (agent behavior that applies across all projects):
+
+| Root cause | Meaning |
+|---|---|
+| `agent-mistake` | Agent made a reasoning error that would recur in any project |
+| `user-preference` | User has a workflow or communication preference |
+| `tool-behavior` | A tool or MCP service behaves unexpectedly |
+
 **Step 3:** Use `AskUserQuestion` to present: what went wrong, root cause category, proposed file + content.
 - "Approve" → write it
 - "Edit path" → user specifies a different file
@@ -67,10 +79,16 @@ Once the problem is resolved (build passes, test passes, user confirms):
 
 **Step 4: Write the learning**
 
+Project-specific:
 - **claude-md** → Read CLAUDE.md, find/create Learned Patterns or Error Patterns section, append
 - **knowledge** → Read `references/consolidation.md` first. Determine topic, read/create rules file, append. Then apply the Cross-Reference Rule from `references/routing.md` to add a link in the project's CLAUDE.md under `## Knowledge Base`.
 - **skill** → Read `references/routing.md` Group D to resolve plugin path. Read skill file, add minimum needed
 - **script** → Read `references/routing.md` Group D to resolve plugin path. Read script, fix the bug
+
+Universal:
+- **agent-mistake** → Read `references/consolidation.md` first. Read or create `~/.claude/rules/agent-behavior.md`, append
+- **user-preference** → Read `references/consolidation.md` first. Read or create `~/.claude/rules/user-preferences.md`, append
+- **tool-behavior** → Read `references/consolidation.md` first. Read or create `~/.claude/rules/tool-quirks.md`, append
 
 **Step 5:** Resume primary task. Don't linger on the learning.
 
