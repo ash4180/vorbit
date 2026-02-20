@@ -11,6 +11,8 @@ Repeated failure is NOT required. One correction = one trigger.
 
 ## What to Do
 
+> This flow is for **user-reported corrections only**. If the agent self-discovers an error, write directly to `~/.claude/rules/unprocessed-corrections.md` instead.
+
 After fixing the problem:
 1. Use `AskUserQuestion` to ask if user wants root cause analysis
 2. If yes: determine if the root cause is unclear CLAUDE.md, missing knowledge, skill gap, or script bug

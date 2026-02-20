@@ -68,7 +68,7 @@ Once the problem is resolved (build passes, test passes, user confirms):
 **Step 4: Write the learning**
 
 - **claude-md** → Read CLAUDE.md, find/create Learned Patterns or Error Patterns section, append
-- **knowledge** → Read `references/consolidation.md` first. Determine topic, read/create rules file, append
+- **knowledge** → Read `references/consolidation.md` first. Determine topic, read/create rules file, append. Then apply the Cross-Reference Rule from `references/routing.md` to add a link in the project's CLAUDE.md under `## Knowledge Base`.
 - **skill** → Read `references/scopes.md` to resolve plugin path. Read skill file, add minimum needed
 - **script** → Read `references/scopes.md` to resolve plugin path. Read script, fix the bug
 
