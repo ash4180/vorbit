@@ -1,5 +1,6 @@
 {
   "name": "vorbit",
+  "version": "0.0.1-dev",
   "description": "TDD-first product development workflows for Claude Code. Linear and Notion integrated.",
   "author": {
     "name": "Ash"
