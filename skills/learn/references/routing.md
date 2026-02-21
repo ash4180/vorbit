@@ -50,7 +50,11 @@ Use `/Users/ash/Desktop/myproject` as the `{origin}` for all project-scoped lear
 
 ## Group D: Self-Improvement (skill-fix, script-fix)
 
-1. Read `scopes.md` in this references directory to resolve the plugin path
+1. Resolve the plugin root — search for the vorbit plugin manifest:
+   ```bash
+   find ~ -path "*/.claude-plugin/plugin.json" -maxdepth 6 2>/dev/null | head -5
+   ```
+   Pick the result containing `vorbit`. The parent of `.claude-plugin/` is the plugin root.
 2. Read the target file using the absolute path
 3. Apply minimum change needed — add/clarify the missing instruction or fix the bug
 4. Do NOT rewrite surrounding content

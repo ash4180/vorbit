@@ -147,5 +147,5 @@ Run `/vorbit:implement:verify` when ready.
 - **No git changes (PR mode)** → "No changes detected." Stop.
 - **Linter not installed** → skip, note "Skipped (not installed)"
 - **Agent fails/times out** → note in that section, continue with remaining agents
-- **Blast radius > 30 files** → cap at 30, note excluded files
+- **Blast radius > 30 files** → cap at 30 total (all changed files + up to 20 importers), note excluded importers in the report
 - **No `.claude/review-rules.md`** → "No review rules file yet" (normal for first run)

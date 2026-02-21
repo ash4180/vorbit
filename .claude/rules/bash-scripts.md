@@ -16,6 +16,10 @@ Patterns learned from writing and testing hook scripts in this project.
 
 ## Keyword Extraction
 - **Session continuation summaries produce false positives** — when Claude Code continues a session, the continuation summary quotes past corrections ("User said 'wrong'..."). The keyword filter matches these quoted keywords. Filter out messages over ~500 characters or detect the `"This session is being continued"` pattern before keyword matching.
+- **Teammate messages produce false positives** — when using team agents, `<teammate-message>` blocks contain audit/analysis text with words like "wrong", "error", "broken" that trigger the keyword filter. Filter out messages containing `<teammate-message` tags before keyword matching.
+
+## Documentation vs Scripts
+- **Manual instructions must mirror script logic** — if `dev-setup.sh` resolves paths and versions dynamically (`$PLUGIN_SOURCE`, `$VERSION`), CLAUDE.md manual instructions must do the same. Never hardcode values that the script reads from config files (e.g., version from `plugin.json`).
 
 ## Git Workflow
 - **Unstaged changes are lost on branch switch** — switching branches discards uncommitted modifications. Commit or stash before switching. If lost, rewrite from the session transcript.

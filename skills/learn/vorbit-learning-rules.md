@@ -4,12 +4,17 @@ Watch for these patterns during every session. When detected, follow the learn s
 
 ## When to Trigger
 
-Any **single** correction keyword from the user is enough:
-"no", "wrong", "that's not right", "error", "still error", "not working", "broken", "nope", "roll back", "revert", "actually", "that's not how"
+**Correction keywords** — any single word/phrase triggers Correction Capture:
+"no", "nope", "wrong", "that's not right", "error", "still error", "not working", "broken", "nope", "roll back", "revert", "actually", "that's not how"
 
 Repeated failure is NOT required. One correction = one trigger.
 
+**Voluntary capture keywords** — triggers Voluntary Capture:
+"remember this", "save this", "note this", "keep this", "don't forget this", "log this"
+
 ## What to Do
+
+> This flow is for **user-reported corrections only**. If the agent self-discovers an error, write the labeled learning fields (see format below) in your response — the stop hook picks them up automatically.
 
 After fixing the problem:
 1. Use `AskUserQuestion` to ask if user wants root cause analysis
@@ -19,5 +24,11 @@ After fixing the problem:
 5. Resume the primary task
 
 Never skip user confirmation. Never write without asking. Always present the exact content you plan to write.
+
+## Self-Discovered Learning Format
+
+When the agent discovers and fixes an error without user prompting, write these labeled fields as plain lines in your response. The stop hook reads the field names below and assembles the output — the agent only provides the values.
+
+<!-- learning-fields: ROOT_CAUSE,RULE,DESTINATION -->
 
 <!-- vorbit-learning-rules -->

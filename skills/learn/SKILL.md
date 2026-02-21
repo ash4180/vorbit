@@ -19,7 +19,7 @@ Detailed specs live in `references/` within this skill's directory. Glob for `**
 | `references/format.md` | Scope classification table, unprocessed-corrections.md format, examples |
 | `references/routing.md` | Routing table by scope, absolute path routing, Cross-Reference Rule |
 | `references/consolidation.md` | Document consolidation rules for `.claude/rules/` files |
-| `references/scopes.md` | File scope table, plugin root resolution |
+| `references/routing.md` | Routing table, step-by-step groups, plugin root resolution, Cross-Reference Rule |
 
 ---
 
@@ -28,6 +28,9 @@ Detailed specs live in `references/` within this skill's directory. Glob for `**
 - If your context contains `unprocessed-corrections.md` content → run **Digest Processing**
 - If invoked via `/vorbit:learn:checkmemory` → run **Digest Processing**
 - If user correction detected mid-session → run **Correction Capture**
+- If user says "remember this", "save this", "note this", etc. → run **Voluntary Capture**
+
+**Priority rule:** If digest is in context AND a live trigger fires, the live trigger takes precedence. Handle Correction Capture or Voluntary Capture first, then run Digest Processing after.
 
 ---
 
@@ -52,6 +55,10 @@ Once the problem is resolved (build passes, test passes, user confirms):
 
 **Step 2: Analyze root cause**
 
+First determine scope — does this learning apply only to this project, or to all projects?
+
+**Project-specific** (codebase facts, project rules, skill/script bugs):
+
 | Root cause | Meaning |
 |---|---|
 | `claude-md` | CLAUDE.md is missing a rule that would have prevented the error |
@@ -60,6 +67,14 @@ Once the problem is resolved (build passes, test passes, user confirms):
 | `script` | A hook script has a bug or missing logic |
 | `general` | Agent reasoning error — no documentation fix needed |
 
+**Universal** (agent behavior that applies across all projects):
+
+| Root cause | Meaning |
+|---|---|
+| `agent-mistake` | Agent made a reasoning error that would recur in any project |
+| `user-preference` | User has a workflow or communication preference |
+| `tool-behavior` | A tool or MCP service behaves unexpectedly |
+
 **Step 3:** Use `AskUserQuestion` to present: what went wrong, root cause category, proposed file + content.
 - "Approve" → write it
 - "Edit path" → user specifies a different file
@@ -67,12 +82,36 @@ Once the problem is resolved (build passes, test passes, user confirms):
 
 **Step 4: Write the learning**
 
+Project-specific:
 - **claude-md** → Read CLAUDE.md, find/create Learned Patterns or Error Patterns section, append
-- **knowledge** → Read `references/consolidation.md` first. Determine topic, read/create rules file, append
-- **skill** → Read `references/scopes.md` to resolve plugin path. Read skill file, add minimum needed
-- **script** → Read `references/scopes.md` to resolve plugin path. Read script, fix the bug
+- **knowledge** → Read `references/consolidation.md` first. Determine topic, read/create rules file, append. Then apply the Cross-Reference Rule from `references/routing.md` to add a link in the project's CLAUDE.md under `## Knowledge Base`.
+- **skill** → Read `references/routing.md` Group D to resolve plugin path. Read skill file, add minimum needed
+- **script** → Read `references/routing.md` Group D to resolve plugin path. Read script, fix the bug
+
+Universal:
+- **agent-mistake** → Read `references/consolidation.md` first. Read or create `~/.claude/rules/agent-behavior.md`, append
+- **user-preference** → Read `references/consolidation.md` first. Read or create `~/.claude/rules/user-preferences.md`, append
+- **tool-behavior** → Read `references/consolidation.md` first. Read or create `~/.claude/rules/tool-quirks.md`, append
 
 **Step 5:** Resume primary task. Don't linger on the learning.
+
+---
+
+## Voluntary Capture (Always-On)
+
+Triggers when the user explicitly asks to save something: "remember this", "save this", "note this", "keep this", "don't forget this", "log this".
+
+**Step 1:** Use `AskUserQuestion` to confirm what to save and classify it:
+- What is the learning? (summarize in one line if unclear)
+- Is it project-specific or universal (applies across all projects)?
+- Root cause category (same table as Correction Capture Step 2)
+
+**Step 2:** Propose file + content using `AskUserQuestion`:
+- "Approve" → write it
+- "Edit path" → user specifies a different file
+- "Skip" → don't write anything
+
+**Step 3:** Write using the same routing as Correction Capture Step 4. Resume primary task.
 
 ---
 
@@ -134,7 +173,7 @@ Read `references/routing.md` for routing instructions. Read `references/consolid
 **Project-scoped learnings** use the absolute project path from the digest block header.
 **Universal learnings** route to `~/.claude/rules/{topic}.md`.
 
-If routing `skill-fix` or `script-fix` items, read `references/scopes.md` to resolve the plugin path.
+If routing `skill-fix` or `script-fix` items, read `references/routing.md` Group D to resolve the plugin path.
 
 ### Step 6: Clean Up
 
