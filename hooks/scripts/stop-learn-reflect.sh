@@ -1,7 +1,8 @@
 #!/bin/bash
-# Stop hook - dumps recent session messages for agent-driven learning classification.
-# Agent applies vorbit-learning-rules.md criteria to identify corrections.
-# Fires at every session end when vorbit plugin is loaded.
+# Stop hook - extracts self-discovered learnings from session transcript.
+# Agent writes labeled fields (ROOT_CAUSE, RULE, DESTINATION) in response.
+# Script reads field names from vorbit-learning-rules.md — nothing hardcoded.
+# Only triggers when labeled fields are found. Script controls output format.
 
 set -euo pipefail
 
@@ -33,6 +34,16 @@ if [[ -f "$LOOP_STATE" ]] && jq -e '.active == true' "$LOOP_STATE" > /dev/null 2
   exit 0
 fi
 
+# --- Read field names from rules file (not hardcoded) ---
+FIELDS_DEF=$(sed -n 's/.*<!-- learning-fields: \(.*\) -->.*/\1/p' "$RULES_SOURCE" | head -1)
+if [[ -z "$FIELDS_DEF" ]]; then
+  exit 0
+fi
+
+F1=$(echo "$FIELDS_DEF" | cut -d',' -f1)  # e.g. ROOT_CAUSE
+F2=$(echo "$FIELDS_DEF" | cut -d',' -f2)  # e.g. RULE
+F3=$(echo "$FIELDS_DEF" | cut -d',' -f3)  # e.g. DESTINATION
+
 # --- Locate transcript ---
 PROJECT_SLUG=$(echo "$PROJECT_ROOT" | sed 's|/|-|g')
 SESSIONS_DIR="$HOME/.claude/projects/$PROJECT_SLUG"
@@ -45,53 +56,13 @@ fi
 SESSION_ID=$(basename "$TRANSCRIPT" .jsonl)
 TIMESTAMP=$(date '+%d %b %Y')
 
-# --- Extract last 30 user messages with assistant context ---
-# No keyword filtering — agent applies learn skill criteria to decide what matters.
-# Structural noise removed: teammate messages and continuation summaries (>500 chars).
-MESSAGES=$(jq -rs '
-  [.[] | select(.type == "user" or .type == "assistant")] |
+# --- Quick check: any learning entries in this session? ---
+HAS_LEARNING=$(jq -rs --arg f1 "${F1}: " \
+  '[.[] | select(.type == "assistant") | .message.content[]? | select(.type == "text") | .text]
+  | map(select(contains($f1))) | length' \
+  "$TRANSCRIPT" 2>/dev/null || echo "0")
 
-  [.[] | {
-    type: .type,
-    text: (
-      if .type == "user" then
-        (.message.content |
-          if type == "string" then .
-          elif type == "array" then
-            [.[] | select(.type == "text") | .text] | join(" ")
-          else "" end)
-      else
-        ([.message.content[]? | select(.type == "text") | .text] | join(" ") | .[:200])
-      end
-    )
-  }] |
-
-  . as $msgs |
-  [range(length)] |
-  map(select($msgs[.].type == "user")) |
-  map(. as $i | {
-    user_text: $msgs[$i].text,
-    assistant_text: (
-      if $i > 0 and $msgs[$i-1].type == "assistant" then $msgs[$i-1].text
-      else "" end
-    )
-  }) |
-
-  # Remove structural noise (not user corrections)
-  map(select(.user_text | test("<teammate-message") | not)) |
-  map(select(.user_text | length < 500)) |
-
-  # Last 30 messages — agent decides which are corrections
-  .[-30:] |
-
-  map(
-    (if .assistant_text == "" then "" else "A: [\(.assistant_text)]\n" end) +
-    "USER: \(.user_text)"
-  ) |
-  join("\n\n")
-' "$TRANSCRIPT" 2>/dev/null || echo "")
-
-if [[ -z "$MESSAGES" ]]; then
+if [[ "$HAS_LEARNING" == "0" ]]; then
   exit 0
 fi
 
@@ -100,14 +71,41 @@ if grep -qF "## Session: ${SESSION_ID}" "$OUTPUT_FILE" 2>/dev/null; then
   exit 0
 fi
 
-# --- Write output for agent ---
+# --- Extract and format learning entries (script controls output format) ---
+LEARNINGS=$(jq -rs \
+  --arg f1 "${F1}: " \
+  --arg f2 "${F2}: " \
+  --arg f3 "${F3}: " '
+  [.[] | select(.type == "assistant")] |
+  [.[] | .message.content[]? | select(.type == "text") | .text] |
+  map(select(contains($f1) and contains($f2) and contains($f3))) |
+  map({
+    root_cause: (split($f1)[1] | split("\n")[0]),
+    rule:       (split($f2)[1] | split("\n")[0]),
+    dest:       (split($f3)[1] | split("\n")[0])
+  }) |
+  map(
+    "## " + (.root_cause | split(".")[0] | .[0:80]) + "\n" +
+    "**Root cause:** " + .root_cause + "\n" +
+    "**Rule:** " + .rule + "\n" +
+    "**Destination:** " + .dest
+  ) |
+  join("\n\n")
+' "$TRANSCRIPT" 2>/dev/null || echo "")
+
+if [[ -z "$LEARNINGS" ]]; then
+  exit 0
+fi
+
+# --- Write structured output ---
 if [[ ! -f "$OUTPUT_FILE" ]]; then
   cat > "$OUTPUT_FILE" << 'HEADER_EOF'
 # Unprocessed Session Corrections
 
-**Action required:** Read each session block. Apply vorbit-learning-rules.md criteria
-to identify corrections and learnings. Classify by scope and route to the correct file.
-Delete this file after processing.
+**Action required:** Route each entry to its destination file.
+Check existing rules files before writing — append to matching topic
+files, never create duplicates. Use the absolute project path in each
+block header for routing. Delete this file after processing.
 
 ---
 
@@ -117,7 +115,7 @@ fi
 cat >> "$OUTPUT_FILE" << SESSION_EOF
 ## Session: ${SESSION_ID} | Project: ${PROJECT_ROOT} | ${TIMESTAMP}
 
-${MESSAGES}
+${LEARNINGS}
 
 ---
 
