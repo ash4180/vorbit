@@ -2,7 +2,8 @@
 # Loop controller for vorbit implement command
 # Manages loop state: tracks iterations, checks completion signals.
 
-set -euo pipefail
+set -uo pipefail
+trap 'exit 0' ERR
 
 PROJECT_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 STATE_FILE="$PROJECT_ROOT/.claude/.loop-state.json"
@@ -14,7 +15,7 @@ if [[ ! -f "$STATE_FILE" ]]; then
 fi
 
 # Read loop state
-ACTIVE=$(jq -r '.active // false' "$STATE_FILE")
+ACTIVE=$(jq -r '.active // false' "$STATE_FILE" 2>/dev/null || echo "false")
 
 if [[ "$ACTIVE" != "true" ]]; then
   cat > /dev/null
@@ -22,9 +23,9 @@ if [[ "$ACTIVE" != "true" ]]; then
 fi
 
 # Read loop configuration
-COMPLETION_SIGNAL=$(jq -r '.completionSignal // ""' "$STATE_FILE")
-MAX_ITERATIONS=$(jq -r '.maxIterations // 50' "$STATE_FILE")
-CURRENT_ITERATION=$(jq -r '.iteration // 1' "$STATE_FILE")
+COMPLETION_SIGNAL=$(jq -r '.completionSignal // ""' "$STATE_FILE" 2>/dev/null || echo "")
+MAX_ITERATIONS=$(jq -r '.maxIterations // 50' "$STATE_FILE" 2>/dev/null || echo "50")
+CURRENT_ITERATION=$(jq -r '.iteration // 1' "$STATE_FILE" 2>/dev/null || echo "1")
 
 # Read Claude's last output
 CLAUDE_OUTPUT=$(cat)
@@ -42,7 +43,7 @@ if [[ $CURRENT_ITERATION -ge $MAX_ITERATIONS ]]; then
 fi
 
 # Increment iteration counter and re-feed command to continue loop
-COMMAND=$(jq -r '.command // ""' "$STATE_FILE")
+COMMAND=$(jq -r '.command // ""' "$STATE_FILE" 2>/dev/null || echo "")
 NEXT_ITERATION=$((CURRENT_ITERATION + 1))
 jq ".iteration = $NEXT_ITERATION" "$STATE_FILE" > "$STATE_FILE.tmp" && mv "$STATE_FILE.tmp" "$STATE_FILE"
 

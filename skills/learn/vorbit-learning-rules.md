@@ -5,14 +5,39 @@ Watch for these patterns during every session. When detected, follow the learn s
 ## When to Trigger
 
 **Correction keywords** — any single word/phrase triggers Correction Capture:
-"no", "nope", "wrong", "that's not right", "error", "still error", "not working", "broken", "nope", "roll back", "revert", "actually", "that's not how"
+"nope", "wrong", "that's not right", "still error", "not working", "broken", "roll back", "revert", "that's not how"
+
+<!-- correction-keywords: nope,wrong,that's not right,still error,not working,broken,roll back,revert,that's not how -->
 
 Repeated failure is NOT required. One correction = one trigger.
 
 **Voluntary capture keywords** — triggers Voluntary Capture:
-"remember this", "save this", "note this", "keep this", "don't forget this", "log this"
+"remember this", "save this", "note this", "keep this", "don't forget this", "log this", "learn this"
 
-## What to Do
+## Stop-Hook Correction Flow
+
+When you see a message starting with `[VORBIT:CORRECTION-CAPTURE]`, the stop hook has detected correction keywords and injected context from the just-ended session. Run this flow:
+
+**1. Read references**
+- Read `references/format.md` to classify the correction type (scope + type)
+- Read `references/routing.md` to determine the destination file
+
+**2. Consolidate**
+- If multiple corrections in the context are about the **same underlying error**, treat them as ONE learning
+- Derive a single root cause, rule, and destination covering all of them
+
+**3. Present via `AskUserQuestion`**
+Use `AskUserQuestion` with three fields:
+- **Root cause** — why this happened (classify using `format.md`: `claude-md`, `knowledge`, `skill`, `script`, `agent-mistake`, `user-preference`, `tool-behavior`, `general`)
+- **Rule** — the concise imperative rule to add (commit-message style, from `format.md` Title Format)
+- **Destination** — absolute path of the file to write to (resolved from `routing.md`)
+
+**4. On approve** — write a structured entry to `~/.claude/rules/unprocessed-corrections.md`
+**5. On reject** — do nothing, session ends
+
+Never skip `AskUserQuestion`. Never write without user confirmation. Always show the exact root cause, rule, and destination before writing.
+
+## Real-Time Correction Capture (mid-session)
 
 > This flow is for **user-reported corrections only**. If the agent self-discovers an error, write the labeled learning fields (see format below) in your response — the stop hook picks them up automatically.
 

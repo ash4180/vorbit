@@ -128,6 +128,25 @@ If feature includes UI components:
 - Note: "Reference `/vorbit:design:ui-patterns` skill"
 - Identify existing UI patterns to follow
 
+### 4.6 Map Coupled File Paths (Required)
+
+**Before creating any ticket, identify files that must change together.**
+
+A "coupled pair" is any two files where one file's output/format is consumed by the other. If one changes without the other, the system breaks.
+
+Examples of coupling:
+- Script output format ↔ agent recognition string in rules file
+- API response shape ↔ client parser
+- Config schema ↔ validator
+
+**For each coupled pair:**
+1. Identify the **shared contract** (exact string, format, field name, or value both sides depend on)
+2. Put both files in the **same sub-issue** — OR — add an explicit cross-reference in both tickets with the exact shared contract value
+
+**Rule:** Never split tightly coupled file changes across separate tickets without explicitly documenting the shared contract in both. Partial implementation of one ticket will break the system until the other is also done.
+
+**For large codebases:** If the dependency graph is unclear, spawn a team or use `/vorbit:review` to map it before planning tickets. Blast radius analysis — who imports what, what reads what — prevents silent coupling errors.
+
 ## Step 5: Create Technical Plan (SDD)
 
 **RULE: If ANY requirement is unclear, use AskUserQuestion.**
