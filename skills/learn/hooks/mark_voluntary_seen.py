@@ -14,9 +14,10 @@ import re
 import subprocess
 import sys
 from pathlib import Path
+from typing import Any
 
 
-def extract_text(content):
+def extract_text(content: Any) -> str:
     if isinstance(content, str):
         return content
     if isinstance(content, list):
@@ -46,11 +47,12 @@ def main():
     if not match:
         sys.exit(0)
 
+    assert match is not None  # narrowing for type checker; guarded by sys.exit above
     phrases = [p.strip() for p in match.group(1).split(",") if p.strip()]
     if not phrases:
         sys.exit(0)
 
-    voluntary_pattern = "|".join(re.escape(p) for p in phrases)
+    voluntary_pattern = r"\b(" + "|".join(re.escape(p) for p in phrases) + r")\b"
 
     # Get project root
     try:

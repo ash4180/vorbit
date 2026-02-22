@@ -18,7 +18,7 @@ from pathlib import Path
 from typing import Any
 
 
-def extract_text(content):
+def extract_text(content: Any) -> str:
     """Extract plain text from message content (string or array of blocks)."""
     if isinstance(content, str):
         return content
@@ -29,7 +29,7 @@ def extract_text(content):
     return ""
 
 
-def read_comment(rules_source_text, comment_name):
+def read_comment(rules_source_text: str, comment_name: str) -> str:
     """Read value from <!-- name: value --> comment in file text."""
     match = re.search(rf"<!--\s*{re.escape(comment_name)}:\s*(.*?)\s*-->", rules_source_text)
     return match.group(1) if match else ""
@@ -53,7 +53,7 @@ def load_transcript(transcript_path) -> list[dict[str, Any]]:
     return messages
 
 
-def load_seen(seen_file, session_id, flow):
+def load_seen(seen_file: Path, session_id: str, flow: str) -> set[int]:
     """Return set of message indices already captured for this session+flow."""
     seen = set()
     try:
@@ -70,7 +70,7 @@ def load_seen(seen_file, session_id, flow):
     return seen
 
 
-def mark_seen(seen_file, session_id, flow, indices):
+def mark_seen(seen_file: Path, session_id: str, flow: str, indices: list[int]) -> None:
     """Append new seen entries."""
     Path(seen_file).parent.mkdir(parents=True, exist_ok=True)
     with open(seen_file, "a") as f:
@@ -78,23 +78,32 @@ def mark_seen(seen_file, session_id, flow, indices):
             f.write(f"{session_id}\t{flow}\t{idx}\n")
 
 
-def build_context(messages, indices):
+def build_context(messages: list[dict[str, Any]], indices: list[int]) -> str:
     """Build context block: preceding assistant + user message + following assistant."""
-    lines = []
+    lines: list[str] = []
     for idx in indices:
-        if idx > 0 and messages[idx - 1].get("message", {}).get("role") == "assistant":
-            text = extract_text(messages[idx - 1].get("message", {}).get("content", ""))[:200]
-            lines.append(f"A: [{text}]")
-        text = extract_text(messages[idx].get("message", {}).get("content", ""))
+        # Search backward for nearest assistant message (skip progress/tool entries)
+        for i in range(idx - 1, -1, -1):
+            entry: dict[str, Any] = messages[i]
+            if entry.get("type") == "assistant":
+                full: str = extract_text(entry.get("message", {}).get("content", ""))
+                lines.append(f"A: [{full[:200]}]")
+                break
+        user_entry: dict[str, Any] = messages[idx]
+        text: str = extract_text(user_entry.get("message", {}).get("content", ""))
         lines.append(f"USER: {text}")
-        if idx + 1 < len(messages) and messages[idx + 1].get("message", {}).get("role") == "assistant":
-            text = extract_text(messages[idx + 1].get("message", {}).get("content", ""))[:200]
-            lines.append(f"A: [{text}]")
+        # Search forward for nearest assistant message (skip progress/tool entries)
+        for i in range(idx + 1, len(messages)):
+            entry = messages[i]
+            if entry.get("type") == "assistant":
+                full = extract_text(entry.get("message", {}).get("content", ""))
+                lines.append(f"A: [{full[:200]}]")
+                break
         lines.append("")
     return "\n".join(lines)
 
 
-def write_pending(pending_file, project_root, directive_tag, directive_msg, context):
+def write_pending(pending_file: Path, project_root: str, directive_tag: str, directive_msg: str, context: str) -> None:
     """Append a capture block to pending-capture.md for the next session to process."""
     p = Path(pending_file)
     p.parent.mkdir(parents=True, exist_ok=True)
@@ -203,7 +212,7 @@ def main():
         keywords = [k.strip() for k in keywords_csv.split(",") if k.strip()]
         keyword_pattern = r"\b(" + "|".join(re.escape(k) for k in keywords) + r")\b"
 
-        all_matching = []
+        all_matching: list[int] = []
         for idx, msg in enumerate(messages):
             if msg.get("type") != "user":
                 continue
@@ -236,9 +245,9 @@ def main():
     voluntary_csv = read_comment(rules_text, "voluntary-keywords")
     if voluntary_csv:
         phrases = [p.strip() for p in voluntary_csv.split(",") if p.strip()]
-        voluntary_pattern = "|".join(re.escape(p) for p in phrases)
+        voluntary_pattern = r"\b(" + "|".join(re.escape(p) for p in phrases) + r")\b"
 
-        all_voluntary = []
+        all_voluntary: list[int] = []
         for idx, msg in enumerate(messages):
             if msg.get("type") != "user":
                 continue
