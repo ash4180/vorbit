@@ -1,8 +1,8 @@
 """E2E tests for stop_learn_reflect.py — migrated from test-e2e-stop-learn-reflect.sh.
 
 Each test exercises the full hook lifecycle with a real git repo and JSONL transcripts.
-Tests verify observable output (files written, exit codes, stdout content) rather than
-just exit codes alone.
+Tests verify observable output (files written, exit codes, pending-capture.md content)
+rather than stdout content — the hook now always exits 0 and writes to pending-capture.md.
 
 HOME is overridden via env to tmp_home, so all ~/.claude/ I/O is isolated.
 """
@@ -36,6 +36,10 @@ def _output_file(project):
     return project["home"] / ".claude" / "rules" / "unprocessed-corrections.md"
 
 
+def _pending_file(project):
+    return project["home"] / ".claude" / "rules" / "pending-capture.md"
+
+
 def _seen_file(project):
     return project["home"] / ".claude" / "rules" / ".seen-correction-sessions"
 
@@ -63,12 +67,12 @@ def _asst(text, sid, ts):
 
 
 # ---------------------------------------------------------------------------
-# E2E-1: Wrong tech assumption → exit 2, directive + context in stdout
+# E2E-1: Wrong tech assumption → exit 0, directive + context in pending file
 # ---------------------------------------------------------------------------
 
 
 def test_e2e_wrong_tech_assumption(test_project, run_hook):
-    """Correction keyword triggers exit 2 with directive, context windows around correction."""
+    """Correction keyword triggers exit 0, writes directive and context windows to pending-capture.md."""
     sid = "e2e1-session"
     _write_jsonl(
         test_project["sessions_dir"] / f"{sid}.jsonl",
@@ -82,25 +86,30 @@ def test_e2e_wrong_tech_assumption(test_project, run_hook):
 
     exit_code, stdout, _ = _run_slr(run_hook, test_project)
 
-    assert exit_code == 2
-    assert stdout.splitlines()[0] == DIRECTIVE
-    assert "Wrong, this project uses SQLite not PostgreSQL" in stdout
-    assert "psycopg2" in stdout  # preceding assistant context
-    assert "sqlite3" in stdout  # following assistant context
-    assert "Add a PostgreSQL connection" not in stdout  # unrelated first message excluded
+    assert exit_code == 0
+    assert stdout.strip() == ""
+
+    pending = _pending_file(test_project)
+    assert pending.exists()
+    content = pending.read_text()
+    assert "[VORBIT:CORRECTION-CAPTURE]" in content
+    assert "Wrong, this project uses SQLite not PostgreSQL" in content
+    assert "psycopg2" in content  # preceding assistant context
+    assert "sqlite3" in content  # following assistant context
+    assert "Add a PostgreSQL connection" not in content  # unrelated first message excluded
 
     # Flow 1 must NOT write to unprocessed-corrections.md
-    content = _output_file(test_project).read_text() if _output_file(test_project).exists() else ""
-    assert "Session:" not in content
+    output_content = _output_file(test_project).read_text() if _output_file(test_project).exists() else ""
+    assert "Session:" not in output_content
 
 
 # ---------------------------------------------------------------------------
-# E2E-2: Nope keyword → exit 2, directive present
+# E2E-2: Nope keyword → exit 0, directive in pending file
 # ---------------------------------------------------------------------------
 
 
 def test_e2e_nope_keyword(test_project, run_hook):
-    """'Nope' triggers correction capture, exits 2 with directive as first line."""
+    """'Nope' triggers correction capture, exits 0 with directive written to pending file."""
     sid = "e2e2-session"
     _write_jsonl(
         test_project["sessions_dir"] / f"{sid}.jsonl",
@@ -113,17 +122,20 @@ def test_e2e_nope_keyword(test_project, run_hook):
 
     exit_code, stdout, _ = _run_slr(run_hook, test_project)
 
-    assert exit_code == 2
-    assert stdout.splitlines()[0] == DIRECTIVE
+    assert exit_code == 0
+    assert stdout.strip() == ""
+    pending = _pending_file(test_project)
+    assert pending.exists()
+    assert "[VORBIT:CORRECTION-CAPTURE]" in pending.read_text()
 
 
 # ---------------------------------------------------------------------------
-# E2E-3: Multiple corrections → all captured in stdout
+# E2E-3: Multiple corrections → all captured in pending file
 # ---------------------------------------------------------------------------
 
 
 def test_e2e_multiple_corrections(test_project, run_hook):
-    """Three correction keywords in one session: all appear in stdout, output file stays clean."""
+    """Three correction keywords in one session: all appear in pending file, output file stays clean."""
     sid = "e2e3-session"
     _write_jsonl(
         test_project["sessions_dir"] / f"{sid}.jsonl",
@@ -140,22 +152,24 @@ def test_e2e_multiple_corrections(test_project, run_hook):
 
     exit_code, stdout, _ = _run_slr(run_hook, test_project)
 
-    assert exit_code == 2
-    assert "Wrong, we use PostgreSQL" in stdout
-    assert "Still not working" in stdout
-    assert "Nope, the issue is in the cookie parser" in stdout
+    assert exit_code == 0
+    assert stdout.strip() == ""
+    content = _pending_file(test_project).read_text()
+    assert "Wrong, we use PostgreSQL" in content
+    assert "Still not working" in content
+    assert "Nope, the issue is in the cookie parser" in content
 
-    content = _output_file(test_project).read_text() if _output_file(test_project).exists() else ""
-    assert "Session:" not in content
+    output_content = _output_file(test_project).read_text() if _output_file(test_project).exists() else ""
+    assert "Session:" not in output_content
 
 
 # ---------------------------------------------------------------------------
-# E2E-4: Clean session → exit 0, no stdout
+# E2E-4: Clean session → exit 0, no stdout, no pending file
 # ---------------------------------------------------------------------------
 
 
 def test_e2e_clean_session(test_project, run_hook):
-    """Session with no correction or voluntary keywords: exits 0 with empty stdout."""
+    """Session with no correction or voluntary keywords: exits 0 with empty stdout, no pending file."""
     sid = "e2e4-session"
     _write_jsonl(
         test_project["sessions_dir"] / f"{sid}.jsonl",
@@ -170,6 +184,7 @@ def test_e2e_clean_session(test_project, run_hook):
 
     assert exit_code == 0
     assert stdout.strip() == ""
+    assert not _pending_file(test_project).exists()
 
 
 # ---------------------------------------------------------------------------
@@ -200,6 +215,7 @@ def test_e2e_long_message_filtered(test_project, run_hook):
     exit_code, _, _ = _run_slr(run_hook, test_project)
 
     assert exit_code == 0
+    assert not _pending_file(test_project).exists()
 
 
 # ---------------------------------------------------------------------------
@@ -226,6 +242,7 @@ def test_e2e_teammate_message_filtered(test_project, run_hook):
     exit_code, _, _ = _run_slr(run_hook, test_project)
 
     assert exit_code == 0
+    assert not _pending_file(test_project).exists()
 
 
 # ---------------------------------------------------------------------------
@@ -234,7 +251,7 @@ def test_e2e_teammate_message_filtered(test_project, run_hook):
 
 
 def test_e2e_custom_keyword_matches(test_project, tmp_path, run_hook):
-    """Custom rules file with 'oops' keyword triggers correction capture."""
+    """Custom rules file with 'oops' keyword triggers correction capture, exits 0."""
     custom_root = tmp_path / "custom_plugin"
     rules_dir = custom_root / "skills" / "learn"
     rules_dir.mkdir(parents=True)
@@ -257,7 +274,8 @@ def test_e2e_custom_keyword_matches(test_project, tmp_path, run_hook):
 
     exit_code, _, _ = _run_slr(run_hook, test_project, plugin_root=custom_root)
 
-    assert exit_code == 2
+    assert exit_code == 0
+    assert _pending_file(test_project).exists()
 
 
 # ---------------------------------------------------------------------------
@@ -291,6 +309,7 @@ def test_e2e_custom_keyword_swap(test_project, tmp_path, run_hook):
     exit_code, _, _ = _run_slr(run_hook, test_project, plugin_root=custom_root)
 
     assert exit_code == 0
+    assert not _pending_file(test_project).exists()
 
 
 # ---------------------------------------------------------------------------
@@ -317,15 +336,16 @@ def test_e2e_loop_active_skips(test_project, run_hook):
     exit_code, _, _ = _run_slr(run_hook, test_project)
 
     assert exit_code == 0
+    assert not _pending_file(test_project).exists()
 
 
 # ---------------------------------------------------------------------------
-# E2E-9: Per-learning dedup — second run on same correction exits 0
+# E2E-9: Per-learning dedup — second run on same correction exits 0, no new write
 # ---------------------------------------------------------------------------
 
 
 def test_e2e_session_dedup(test_project, run_hook):
-    """First run captures correction (exits 2); second run skips via seen file (exits 0)."""
+    """First run captures correction (exits 0, writes pending); second run skips via seen file."""
     sid = "e2e9-session"
     _write_jsonl(
         test_project["sessions_dir"] / f"{sid}.jsonl",
@@ -335,15 +355,19 @@ def test_e2e_session_dedup(test_project, run_hook):
         ],
     )
 
-    # First run → exits 2, output file NOT written
-    exit_code, _, _ = _run_slr(run_hook, test_project)
-    assert exit_code == 2
-    content = _output_file(test_project).read_text() if _output_file(test_project).exists() else ""
-    assert "Session:" not in content
-
-    # Second run — correction already in seen file → exits 0
+    # First run → exits 0, pending file written, unprocessed-corrections NOT written
     exit_code, _, _ = _run_slr(run_hook, test_project)
     assert exit_code == 0
+    pending = _pending_file(test_project)
+    assert pending.exists()
+    output_content = _output_file(test_project).read_text() if _output_file(test_project).exists() else ""
+    assert "Session:" not in output_content
+
+    # Second run — correction already in seen file → exits 0, pending file unchanged
+    content_before = pending.read_text()
+    exit_code, _, _ = _run_slr(run_hook, test_project)
+    assert exit_code == 0
+    assert pending.read_text() == content_before
 
 
 # ---------------------------------------------------------------------------
@@ -352,7 +376,7 @@ def test_e2e_session_dedup(test_project, run_hook):
 
 
 def test_e2e_multi_capture(test_project, run_hook):
-    """Per-learning dedup: second correction at new index is captured after first is seen."""
+    """Per-learning dedup: second correction at new index is appended to pending after first is seen."""
     sid = "e2e10-session"
     transcript = test_project["sessions_dir"] / f"{sid}.jsonl"
     _write_jsonl(
@@ -365,25 +389,32 @@ def test_e2e_multi_capture(test_project, run_hook):
         ],
     )
 
-    # First run: correction at idx 2 → exits 2
+    # First run: correction at idx 2 → exits 0, pending written
     exit_code, stdout, _ = _run_slr(run_hook, test_project)
-    assert exit_code == 2
-    assert "Wrong, we use PostgreSQL" in stdout
+    assert exit_code == 0
+    assert stdout.strip() == ""
+    pending = _pending_file(test_project)
+    assert "Wrong, we use PostgreSQL" in pending.read_text()
 
     # Append new correction at idx 4 (simulates continued session)
     with transcript.open("a") as f:
         f.write(json.dumps(_user("Nope, check the connection string.", sid, "2026-02-22T10:04:00Z")) + "\n")
         f.write(json.dumps(_asst("Fixed the connection string.", sid, "2026-02-22T10:05:00Z")) + "\n")
 
-    # Second run: idx 2 already captured, idx 4 is new → exits 2 for idx 4 only
+    # Second run: idx 2 already captured, idx 4 is new → exits 0, appended to pending
     exit_code, stdout, _ = _run_slr(run_hook, test_project)
-    assert exit_code == 2
-    assert "Nope, check the connection string" in stdout
-    assert "Wrong, we use PostgreSQL" not in stdout  # not re-captured
+    assert exit_code == 0
+    assert stdout.strip() == ""
+    content = pending.read_text()
+    assert "Nope, check the connection string" in content
+    # "Wrong" was in the first block and stays, but only one block header for it
+    assert content.count("Wrong, we use PostgreSQL") == 1  # only from first block
 
-    # Third run: all corrections captured → exits 0
+    # Third run: all corrections captured → exits 0, pending unchanged
+    content_before = pending.read_text()
     exit_code, _, _ = _run_slr(run_hook, test_project)
     assert exit_code == 0
+    assert pending.read_text() == content_before
 
 
 # ---------------------------------------------------------------------------
@@ -403,7 +434,8 @@ def test_e2e_seen_file_format(test_project, run_hook):
     )
 
     exit_code, _, _ = _run_slr(run_hook, test_project)
-    assert exit_code == 2
+    assert exit_code == 0
+    assert _pending_file(test_project).exists()
 
     seen = _seen_file(test_project)
     assert seen.exists()
@@ -437,9 +469,10 @@ def test_e2e_self_learning_after_correction(test_project, run_hook):
         ],
     )
 
-    # First run: correction at idx 2 → exits 2
+    # First run: correction at idx 2 → exits 0, pending written
     exit_code, _, _ = _run_slr(run_hook, test_project)
-    assert exit_code == 2
+    assert exit_code == 0
+    assert _pending_file(test_project).exists()
 
     # Second run: correction already seen (idx 2), self-learning at idx 5 is new
     # Flow 2 captures it → writes to output file → exits 0

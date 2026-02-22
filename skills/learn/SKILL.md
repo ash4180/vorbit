@@ -25,12 +25,15 @@ Detailed specs live in `references/` within this skill's directory. Glob for `**
 
 ## Mode Detection
 
+Both `pending-capture.md` and `unprocessed-corrections.md` live in `~/.claude/rules/`, which Claude Code auto-loads into every session. That's why their content appears in your context without the user doing anything — the stop hook writes to these files and the next session picks them up automatically.
+
+- If your context contains `pending-capture.md` content → run the **Stop-Hook Correction/Voluntary Flow** from `vorbit-learning-rules.md` for each block, then delete the file
 - If your context contains `unprocessed-corrections.md` content → run **Digest Processing**
 - If invoked via `/vorbit:learn:checkmemory` → run **Digest Processing**
 - If user correction detected mid-session → run **Correction Capture**
 - If user says "remember this", "save this", "note this", etc. → run **Voluntary Capture**
 
-**Priority rule:** If digest is in context AND a live trigger fires, the live trigger takes precedence. Handle Correction Capture or Voluntary Capture first, then run Digest Processing after.
+**Priority rule:** `pending-capture.md` processing runs first, before anything else. If digest is also in context, run Digest Processing after pending-capture.md is handled.
 
 ---
 
@@ -41,7 +44,7 @@ This mode runs continuously during every session via the injected rules file. NO
 ### Trigger Conditions
 
 Any **single** correction keyword from the user is enough:
-"no", "wrong", "that's not right", "error", "still error", "not working", "broken", "nope", "roll back", "revert", "actually", "that's not how"
+"nope", "wrong", "that's not right", "still error", "not working", "broken", "roll back", "revert", "that's not how"
 
 Repeated failure is NOT required. One correction = one trigger.
 
@@ -111,7 +114,9 @@ Triggers when the user explicitly asks to save something: "remember this", "save
 - "Edit path" → user specifies a different file
 - "Skip" → don't write anything
 
-**Step 3:** Write using the same routing as Correction Capture Step 4. Resume primary task.
+**Step 3:** Write using the same routing as Correction Capture Step 4.
+
+**Step 4:** Run `python3 ${CLAUDE_PLUGIN_ROOT}/skills/learn/hooks/mark_voluntary_seen.py` to mark this session's voluntary keyword messages as seen. This prevents the stop hook from re-prompting at session end for the same capture you just handled. Then resume primary task.
 
 ---
 
@@ -160,7 +165,7 @@ Approve all? Or specify: approve 1 / reject 2
 
 Read `references/consolidation.md` before writing to any file.
 
-Write each approved entry to its `**Destination:**` path using the absolute path from the entry. If the destination is a `skill-fix` or `script-fix` path, read `references/routing.md` Group D to resolve the plugin root first.
+Write each approved entry to its `**Destination:**` path using the absolute path from the entry. If the path is relative, resolve it against the project path from the block header. If the destination is a `skill-fix` or `script-fix` path, read `references/routing.md` Group D to resolve the plugin root first.
 
 ### Step 5: Clean Up
 

@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 """Stop hook - detects correction/voluntary keywords and extracts self-discovered learnings.
 
-Exit codes: 0 = end session normally, 2 = inject stdout and continue session.
+Exit codes: 0 = end session normally (always).
 Reads all config from vorbit-learning-rules.md — nothing hardcoded.
 Per-learning dedup: SEEN_FILE stores session_id TAB flow TAB msg_index.
+Flows 1 and 1b write context to pending-capture.md for the next session to process.
+Flow 2 writes classified learnings directly to unprocessed-corrections.md.
 """
 
 import json
@@ -92,6 +94,28 @@ def build_context(messages, indices):
     return "\n".join(lines)
 
 
+def write_pending(pending_file, project_root, directive_tag, directive_msg, context):
+    """Append a capture block to pending-capture.md for the next session to process."""
+    p = Path(pending_file)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    timestamp = datetime.now().strftime("%d %b %Y")
+    block = (
+        f"## [{directive_tag}] | Project: {project_root} | {timestamp}\n"
+        f"{directive_msg}\n\n"
+        f"{context}\n"
+        "---\n\n"
+    )
+    if not p.exists():
+        p.write_text(
+            "# Pending Captures\n\n"
+            "**Action required:** The stop hook wrote unprocessed captures below.\n"
+            "Run the appropriate learn skill flow for each block, then delete this file.\n\n"
+            "---\n\n"
+        )
+    with open(p, "a") as f:
+        f.write(block)
+
+
 def main():
     # Consume stdin (stop hook protocol)
     sys.stdin.read()
@@ -106,7 +130,7 @@ def main():
         plugin_root = str(Path(__file__).resolve().parent.parent.parent.parent)
 
     rules_source = Path(plugin_root) / "skills" / "learn" / "vorbit-learning-rules.md"
-    output_file = rules_dir / "unprocessed-corrections.md"
+    pending_file = rules_dir / "pending-capture.md"
     seen_file = rules_dir / ".seen-correction-sessions"
 
     if not rules_source.exists():
@@ -196,14 +220,16 @@ def main():
 
         if new_indices:
             context = build_context(messages, new_indices)
-            mark_seen(seen_file, session_id, "f1", new_indices)
-            print(
-                "[VORBIT:CORRECTION-CAPTURE] Stop hook found correction keywords. "
-                "Run the Stop-Hook Correction Flow from vorbit-learning-rules.md."
+            write_pending(
+                pending_file,
+                project_root,
+                "VORBIT:CORRECTION-CAPTURE",
+                "Stop hook found correction keywords. "
+                "Run the Stop-Hook Correction Flow from vorbit-learning-rules.md.",
+                context,
             )
-            print()
-            print(context, end="")
-            sys.exit(2)
+            mark_seen(seen_file, session_id, "f1", new_indices)
+            sys.exit(0)
 
     # --- FLOW 1b: Voluntary keyword detection ---
     # Per-learning dedup: session_id TAB fv TAB msg_index
@@ -229,14 +255,16 @@ def main():
 
         if new_voluntary:
             context = build_context(messages, new_voluntary)
-            mark_seen(seen_file, session_id, "fv", new_voluntary)
-            print(
-                "[VORBIT:VOLUNTARY-CAPTURE] Stop hook found voluntary capture keywords. "
-                "Run the Stop-Hook Voluntary Capture Flow from vorbit-learning-rules.md."
+            write_pending(
+                pending_file,
+                project_root,
+                "VORBIT:VOLUNTARY-CAPTURE",
+                "Stop hook found voluntary capture keywords. "
+                "Run the Stop-Hook Voluntary Capture Flow from vorbit-learning-rules.md.",
+                context,
             )
-            print()
-            print(context, end="")
-            sys.exit(2)
+            mark_seen(seen_file, session_id, "fv", new_voluntary)
+            sys.exit(0)
 
     # --- FLOW 2: Self-discovered learning extraction ---
     # Per-learning dedup: session_id TAB f2 TAB msg_index
@@ -280,6 +308,7 @@ def main():
     if not learnings:
         sys.exit(0)
 
+    output_file = rules_dir / "unprocessed-corrections.md"
     mark_seen(seen_file, session_id, "f2", [entry["idx"] for entry in learnings])
 
     learning_blocks = []

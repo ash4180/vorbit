@@ -33,6 +33,10 @@ def _output_file(project):
     return _rules_dir(project) / "unprocessed-corrections.md"
 
 
+def _pending_file(project):
+    return _rules_dir(project) / "pending-capture.md"
+
+
 def _seen_file(project):
     return _rules_dir(project) / ".seen-correction-sessions"
 
@@ -91,23 +95,23 @@ def test_empty_transcript_exits_0(test_project, run_hook):
     assert exit_code == 0
 
 
-def test_only_exits_0_or_2(test_project, run_hook, correction_transcript, clean_transcript):
-    """0d: Script NEVER exits with any code other than 0 or 2."""
+def test_only_exits_0(test_project, run_hook, correction_transcript, clean_transcript):
+    """0d: Script ALWAYS exits 0 — never any other code including 2."""
     # No transcript
     exit_code, _, _ = _run_slr(run_hook, test_project)
-    assert exit_code in (0, 2)
+    assert exit_code == 0
 
-    # With corrections
+    # With corrections — still exits 0 (writes pending file instead)
     correction_transcript(test_project["sessions_dir"])
     exit_code, _, _ = _run_slr(run_hook, test_project)
-    assert exit_code in (0, 2)
+    assert exit_code == 0
 
     # Clean session — different session id to avoid dedup
     for f in test_project["sessions_dir"].glob("*.jsonl"):
         f.unlink()
     clean_transcript(test_project["sessions_dir"])
     exit_code, _, _ = _run_slr(run_hook, test_project)
-    assert exit_code in (0, 2)
+    assert exit_code == 0
 
 
 # ============================================================================
@@ -115,26 +119,31 @@ def test_only_exits_0_or_2(test_project, run_hook, correction_transcript, clean_
 # ============================================================================
 
 def test_correction_keyword_wrong(test_project, run_hook, correction_transcript):
-    """1a: 'Wrong' keyword → exits 2, directive + correction context in output."""
+    """1a: 'Wrong' keyword → exits 0, directive + correction context written to pending file."""
     correction_transcript(test_project["sessions_dir"])
 
     exit_code, stdout, _ = _run_slr(run_hook, test_project)
 
-    assert exit_code == 2
-    assert "VORBIT:CORRECTION-CAPTURE" in stdout
-    assert "Wrong, this project uses SQLite" in stdout
-    assert "A: [" in stdout
-    assert "Add a PostgreSQL connection" not in stdout
+    assert exit_code == 0
+    assert stdout.strip() == ""
+    pending = _pending_file(test_project)
+    assert pending.exists()
+    content = pending.read_text()
+    assert "VORBIT:CORRECTION-CAPTURE" in content
+    assert "Wrong, this project uses SQLite" in content
+    assert "A: [" in content
+    assert "Add a PostgreSQL connection" not in content
 
 
 def test_clean_session_exits_0(test_project, run_hook, clean_transcript):
-    """1b: Clean session → exits 0, no stdout."""
+    """1b: Clean session → exits 0, no pending file."""
     clean_transcript(test_project["sessions_dir"])
 
     exit_code, stdout, _ = _run_slr(run_hook, test_project)
 
     assert exit_code == 0
     assert stdout.strip() == ""
+    assert not _pending_file(test_project).exists()
 
 
 def test_no_user_messages_exits_0(test_project, run_hook):
@@ -150,7 +159,7 @@ def test_no_user_messages_exits_0(test_project, run_hook):
 
 
 def test_nope_keyword(test_project, run_hook):
-    """1d: 'Nope' keyword → exits 2, directive present, correction in output."""
+    """1d: 'Nope' keyword → exits 0, directive + correction in pending file."""
     sid = "test-session-nope"
     _write_jsonl(test_project["sessions_dir"] / f"{sid}.jsonl", [
         _asst("I added the feature to line 42.", sid, "2026-02-15T10:00:00Z"),
@@ -160,13 +169,17 @@ def test_nope_keyword(test_project, run_hook):
 
     exit_code, stdout, _ = _run_slr(run_hook, test_project)
 
-    assert exit_code == 2
-    assert "VORBIT:CORRECTION-CAPTURE" in stdout
-    assert "Nope, line 12" in stdout
+    assert exit_code == 0
+    assert stdout.strip() == ""
+    pending = _pending_file(test_project)
+    assert pending.exists()
+    content = pending.read_text()
+    assert "VORBIT:CORRECTION-CAPTURE" in content
+    assert "Nope, line 12" in content
 
 
 def test_multiple_corrections(test_project, run_hook):
-    """1e: Three correction keywords → exits 2, all three captured in output."""
+    """1e: Three correction keywords → exits 0, all three captured in pending file."""
     sid = "test-session-multi789"
     _write_jsonl(test_project["sessions_dir"] / f"{sid}.jsonl", [
         _asst("I'll use MySQL for the database.", sid, "2026-02-15T10:00:00Z"),
@@ -180,10 +193,12 @@ def test_multiple_corrections(test_project, run_hook):
 
     exit_code, stdout, _ = _run_slr(run_hook, test_project)
 
-    assert exit_code == 2
-    assert "Wrong, we use PostgreSQL" in stdout
-    assert "Still not working" in stdout
-    assert "Nope, the issue is in the cookie parser" in stdout
+    assert exit_code == 0
+    assert stdout.strip() == ""
+    content = _pending_file(test_project).read_text()
+    assert "Wrong, we use PostgreSQL" in content
+    assert "Still not working" in content
+    assert "Nope, the issue is in the cookie parser" in content
 
 
 # ============================================================================
@@ -205,7 +220,7 @@ def test_teammate_message_filtered(test_project, run_hook, teammate_transcript):
 
 
 def test_real_short_correction_passes(test_project, run_hook):
-    """2c: Short 'wrong' correction → exits 2 (not filtered)."""
+    """2c: Short 'wrong' correction → exits 0, pending file written (not filtered)."""
     sid = "test-session-short"
     _write_jsonl(test_project["sessions_dir"] / f"{sid}.jsonl", [
         _asst("Using var for variable declarations.", sid, "2026-02-15T10:00:00Z"),
@@ -214,7 +229,8 @@ def test_real_short_correction_passes(test_project, run_hook):
     ])
 
     exit_code, _, _ = _run_slr(run_hook, test_project)
-    assert exit_code == 2
+    assert exit_code == 0
+    assert _pending_file(test_project).exists()
 
 
 def test_word_boundary_not_triggered(test_project, run_hook):
@@ -238,7 +254,7 @@ def test_word_boundary_not_triggered(test_project, run_hook):
 # ============================================================================
 
 def test_custom_keyword_from_rules(test_project, run_hook):
-    """3a: Custom keyword 'oops' in rules file → exits 2."""
+    """3a: Custom keyword 'oops' in rules file → exits 0, pending file written."""
     _make_custom_rules(test_project["path"], keyword="oops")
 
     sid = "test-session-custom"
@@ -249,11 +265,12 @@ def test_custom_keyword_from_rules(test_project, run_hook):
     ])
 
     exit_code, _, _ = _run_slr(run_hook, test_project, plugin_root=test_project["path"])
-    assert exit_code == 2
+    assert exit_code == 0
+    assert _pending_file(test_project).exists()
 
 
 def test_keyword_swap_no_longer_matches(test_project, run_hook):
-    """3a (swap): Keyword changed to 'broken', 'oops' transcript no longer matches → exits 0."""
+    """3a (swap): Keyword changed to 'broken', 'oops' transcript no longer matches → exits 0, no pending file."""
     _make_custom_rules(test_project["path"], keyword="broken")
 
     sid = "test-session-custom2"
@@ -265,6 +282,7 @@ def test_keyword_swap_no_longer_matches(test_project, run_hook):
 
     exit_code, _, _ = _run_slr(run_hook, test_project, plugin_root=test_project["path"])
     assert exit_code == 0
+    assert not _pending_file(test_project).exists()
 
 
 def test_missing_keywords_comment_exits_0(test_project, run_hook, correction_transcript):
@@ -293,7 +311,7 @@ def test_skips_during_active_loop(test_project, run_hook, correction_transcript)
 
 
 def test_per_learning_dedup_correction(test_project, run_hook, correction_transcript):
-    """4b: Correction index in seen file → exits 0 (per-learning dedup)."""
+    """4b: Correction index in seen file → exits 0 (per-learning dedup), no pending file."""
     correction_transcript(test_project["sessions_dir"])
 
     # "Wrong, this project uses SQLite" is at index 2 in the correction_transcript
@@ -305,21 +323,25 @@ def test_per_learning_dedup_correction(test_project, run_hook, correction_transc
 
     assert exit_code == 0
     assert not _output_file(test_project).exists()
+    assert not _pending_file(test_project).exists()
 
 
 def test_correction_retrigger_dedup(test_project, run_hook, correction_transcript):
-    """4c: First run exits 2, second run exits 0 (same correction deduped)."""
+    """4c: First run exits 0 + writes pending file; second run exits 0 (same correction deduped)."""
     correction_transcript(test_project["sessions_dir"])
 
-    # First run: keyword found → exits 2, seen file written
-    exit_code, _, _ = _run_slr(run_hook, test_project)
-    assert exit_code == 2
-    assert not _output_file(test_project).exists()
-    assert _seen_file(test_project).exists()
-
-    # Second run: same session, index already in seen file → exits 0
+    # First run: keyword found → exits 0, pending file written, seen file written
     exit_code, _, _ = _run_slr(run_hook, test_project)
     assert exit_code == 0
+    assert not _output_file(test_project).exists()
+    assert _seen_file(test_project).exists()
+    assert _pending_file(test_project).exists()
+
+    # Second run: same session, index already in seen file → exits 0, no new pending write
+    content_before = _pending_file(test_project).read_text()
+    exit_code, _, _ = _run_slr(run_hook, test_project)
+    assert exit_code == 0
+    assert _pending_file(test_project).read_text() == content_before
 
 
 def test_multi_capture_new_index(test_project, run_hook):
@@ -335,27 +357,35 @@ def test_multi_capture_new_index(test_project, run_hook):
         _asst("Fixed, using const.", sid, "2026-02-22T10:03:00Z"),
     ])
 
-    # First run: correction at index 2 → exits 2, seen file has tab-separated entry
+    # First run: correction at index 2 → exits 0, pending file written, seen file has tab-separated entry
     exit_code, _, _ = _run_slr(run_hook, test_project)
-    assert exit_code == 2
+    assert exit_code == 0
     seen = _seen_file(test_project)
     assert seen.exists()
     assert f"{sid}\tf1\t2" in seen.read_text()
+    pending = _pending_file(test_project)
+    assert pending.exists()
+    assert "Wrong, use const" in pending.read_text()
 
     # Append new correction at index 4
     with transcript.open("a") as f:
         f.write(json.dumps(_user("Nope, still broken.", sid, "2026-02-22T10:04:00Z")) + "\n")
         f.write(json.dumps(_asst("Fixing now.", sid, "2026-02-22T10:05:00Z")) + "\n")
 
-    # Second run: index 2 deduped, index 4 is new → exits 2, new correction in output
-    exit_code, stdout, _ = _run_slr(run_hook, test_project)
-    assert exit_code == 2
-    assert "Nope, still broken" in stdout
-    assert "Wrong, use const" not in stdout
-
-    # Third run: both corrections seen → exits 0
+    # Second run: index 2 deduped, index 4 is new → exits 0, new correction appended to pending
+    content_after_first = pending.read_text()
     exit_code, _, _ = _run_slr(run_hook, test_project)
     assert exit_code == 0
+    new_content = pending.read_text()
+    assert "Nope, still broken" in new_content
+    # First correction not repeated in the new block
+    assert new_content.count("Wrong, use const") == 1
+
+    # Third run: both corrections seen → exits 0, pending file unchanged
+    content_after_second = pending.read_text()
+    exit_code, _, _ = _run_slr(run_hook, test_project)
+    assert exit_code == 0
+    assert pending.read_text() == content_after_second
 
 
 def test_flow2_per_learning_dedup(test_project, run_hook, self_discovery_transcript):
@@ -465,28 +495,27 @@ def test_exits_without_transcript(test_project, run_hook):
 # ============================================================================
 
 def test_output_format_directive(test_project, run_hook, correction_transcript):
-    """7a: First line is exact directive; assistant context present."""
+    """7a: Pending file first block has exact directive; assistant context present; stdout empty."""
     correction_transcript(test_project["sessions_dir"])
 
     exit_code, stdout, _ = _run_slr(run_hook, test_project)
 
-    assert exit_code == 2
-    first_line = stdout.splitlines()[0]
-    assert first_line == (
-        "[VORBIT:CORRECTION-CAPTURE] Stop hook found correction keywords. "
-        "Run the Stop-Hook Correction Flow from vorbit-learning-rules.md."
-    )
-    assert "A: [" in stdout
-    assert "psycopg2" in stdout
-    assert "sqlite3" in stdout
+    assert exit_code == 0
+    assert stdout.strip() == ""
+    content = _pending_file(test_project).read_text()
+    assert "[VORBIT:CORRECTION-CAPTURE]" in content
+    assert "Stop hook found correction keywords." in content
+    assert "A: [" in content
+    assert "psycopg2" in content
+    assert "sqlite3" in content
 
 
 # ============================================================================
 # Section 8: Voluntary Keyword Detection
 # ============================================================================
 
-def test_voluntary_keyword_exits_2(test_project, run_hook):
-    """8a: 'remember this' → exits 2, VOLUNTARY-CAPTURE directive present."""
+def test_voluntary_keyword_exits_0(test_project, run_hook):
+    """8a: 'remember this' → exits 0, VOLUNTARY-CAPTURE directive in pending file."""
     sid = "test-session-vol123"
     _write_jsonl(test_project["sessions_dir"] / f"{sid}.jsonl", [
         _asst("I've refactored the auth module to use JWT tokens.", sid, "2026-02-15T10:00:00Z"),
@@ -496,33 +525,42 @@ def test_voluntary_keyword_exits_2(test_project, run_hook):
 
     exit_code, stdout, _ = _run_slr(run_hook, test_project)
 
-    assert exit_code == 2
-    assert "VORBIT:VOLUNTARY-CAPTURE" in stdout
-    assert "remember this" in stdout
+    assert exit_code == 0
+    assert stdout.strip() == ""
+    pending = _pending_file(test_project)
+    assert pending.exists()
+    content = pending.read_text()
+    assert "VORBIT:VOLUNTARY-CAPTURE" in content
+    assert "remember this" in content
 
 
 def test_no_voluntary_keywords_exits_0(test_project, run_hook, clean_transcript):
-    """8b: No voluntary keywords → exits 0."""
+    """8b: No voluntary keywords → exits 0, no pending file."""
     clean_transcript(test_project["sessions_dir"])
     exit_code, _, _ = _run_slr(run_hook, test_project)
     assert exit_code == 0
+    assert not _pending_file(test_project).exists()
 
 
 def test_voluntary_keyword_dedup(test_project, run_hook):
-    """8c (NEW): Second run on same voluntary transcript → exits 0 (fv dedup)."""
+    """8c: Second run on same voluntary transcript → exits 0, pending file unchanged (fv dedup)."""
     sid = "test-session-vol-dedup"
     _write_jsonl(test_project["sessions_dir"] / f"{sid}.jsonl", [
         _user("We always use sqlite3. Remember this.", sid, "2026-02-15T10:00:00Z"),
         _asst("Noted, sqlite3 it is.", sid, "2026-02-15T10:01:00Z"),
     ])
 
-    # First run: voluntary keyword found → exits 2, seen file written with fv entry
+    # First run: voluntary keyword found → exits 0, seen file written with fv entry
     exit_code, _, _ = _run_slr(run_hook, test_project)
-    assert exit_code == 2
+    assert exit_code == 0
     seen = _seen_file(test_project)
     assert seen.exists()
     assert "fv" in seen.read_text()
+    pending = _pending_file(test_project)
+    assert pending.exists()
 
-    # Second run: same session, same index already in seen file → exits 0
+    # Second run: same session, same index already in seen file → exits 0, pending unchanged
+    content_before = pending.read_text()
     exit_code, _, _ = _run_slr(run_hook, test_project)
     assert exit_code == 0
+    assert pending.read_text() == content_before

@@ -23,6 +23,7 @@ SCRIPTS = {
     "post_edit_validate": PLUGIN_ROOT / "hooks" / "scripts" / "post_edit_validate.py",
     "loop_controller": PLUGIN_ROOT / "skills" / "implement-loop" / "hooks" / "loop_controller.py",
     "stop_learn_reflect": PLUGIN_ROOT / "skills" / "learn" / "hooks" / "stop_learn_reflect.py",
+    "mark_voluntary_seen": PLUGIN_ROOT / "skills" / "learn" / "hooks" / "mark_voluntary_seen.py",
 }
 
 

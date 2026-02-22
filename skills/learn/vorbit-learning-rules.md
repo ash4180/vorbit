@@ -18,11 +18,11 @@ Repeated failure is NOT required. One correction = one trigger.
 
 ## Stop-Hook Voluntary Capture Flow
 
-When you see a message starting with `[VORBIT:VOLUNTARY-CAPTURE]`, the stop hook detected the user explicitly asking to save something. Run this flow:
+When `~/.claude/rules/pending-capture.md` is in your context and contains a `[VORBIT:VOLUNTARY-CAPTURE]` block, the stop hook detected the user explicitly asking to save something during a previous session. Run this flow for each voluntary block:
 
 **1. Identify what to save**
-- Read the `USER:` message in context — what learning did the user want to capture?
-- Read surrounding `A:` context to understand the full situation
+- Read the `USER:` line in the block — what learning did the user want to capture?
+- Read surrounding `A:` context lines to understand the full situation
 
 **2. Present via `AskUserQuestion`**
 Use `AskUserQuestion` with three fields:
@@ -31,20 +31,20 @@ Use `AskUserQuestion` with three fields:
 - **Destination** — absolute path of the file to write to (resolved from `references/routing.md`)
 
 **3. On approve** — write a structured entry to `~/.claude/rules/unprocessed-corrections.md`
-**4. On reject** — do nothing, session ends
+**4. On reject** — do nothing
 
 Never skip `AskUserQuestion`. Never write without user confirmation. Always show the exact root cause, rule, and destination before writing.
 
 ## Stop-Hook Correction Flow
 
-When you see a message starting with `[VORBIT:CORRECTION-CAPTURE]`, the stop hook has detected correction keywords and injected context from the just-ended session. Run this flow:
+When `~/.claude/rules/pending-capture.md` is in your context and contains a `[VORBIT:CORRECTION-CAPTURE]` block, the stop hook detected correction keywords from the previous session and wrote the context here for processing. Run this flow:
 
 **1. Read references**
 - Read `references/format.md` to classify the correction type (scope + type)
 - Read `references/routing.md` to determine the destination file
 
 **2. Consolidate**
-- If multiple corrections in the context are about the **same underlying error**, treat them as ONE learning
+- If multiple blocks are about the **same underlying error**, treat them as ONE learning
 - Derive a single root cause, rule, and destination covering all of them
 
 **3. Present via `AskUserQuestion`**
@@ -54,9 +54,13 @@ Use `AskUserQuestion` with three fields:
 - **Destination** — absolute path of the file to write to (resolved from `routing.md`)
 
 **4. On approve** — write a structured entry to `~/.claude/rules/unprocessed-corrections.md`
-**5. On reject** — do nothing, session ends
+**5. On reject** — do nothing
 
 Never skip `AskUserQuestion`. Never write without user confirmation. Always show the exact root cause, rule, and destination before writing.
+
+## After All Blocks Are Processed
+
+Once every block in `~/.claude/rules/pending-capture.md` has been handled (all CORRECTION and VOLUNTARY types, regardless of which flow processed them) — delete the file. The file may contain blocks of both types from different sessions; delete it once at the end, not after each individual flow.
 
 ## Real-Time Correction Capture (mid-session)
 
