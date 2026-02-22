@@ -23,6 +23,10 @@ Patterns learned from writing and testing hook scripts in this project.
 - **jq regex is substring-matching by default** — `test("no"; "i")` matches inside "not", "know", "cannot". Use Oniguruma word boundaries: build regex as `\\b${KEYWORD_REGEX}\\b` in bash (each `\b` needs double-escaping). Always verify with adversarial inputs that share characters with legitimate keywords.
 - **Short common words make poor correction signals** — even with word boundaries, words like `no`, `error`, `actually` appear constantly in normal technical discussion and produce false positives. Prefer multi-word phrases or domain-specific terms that can't appear incidentally.
 
+## Pipefail + Missing Files
+- **`awk file | cmd || fallback` double-captures when file is missing** — with `set -uo pipefail`, if `awk` fails on a missing file, the pipeline fails and `|| fallback` runs. But `cmd` (e.g. `jq`) already wrote output before the pipeline exit was evaluated — so the variable captures both `cmd`'s output AND `fallback`'s output, producing invalid data. Fix: wrap awk in a group: `{ awk ... 2>/dev/null || true; } | cmd || fallback` — the `|| true` ensures the group always exits 0, so `|| fallback` never fires spuriously.
+- **Grep patterns with `[` need escaping** — in `assert_file_contains`, patterns like `[msg:` are treated as unclosed regex bracket expressions by grep. Escape with `\[`: `assert_file_contains "$file" '\[msg:' "test name"`.
+
 ## Script Design
 - **Separate dedup state from output data** — don't write session IDs or seen-markers into the output file users will read (e.g. `unprocessed-corrections.md`). Use a dedicated sidecar file (e.g. `.seen-correction-sessions`) for dedup tracking. Output files should contain only real content, never structural markers added to prevent re-processing.
 

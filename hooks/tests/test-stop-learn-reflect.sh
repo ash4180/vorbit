@@ -744,7 +744,7 @@ test_skips_during_loop() {
   teardown_test_project "$test_dir"
 }
 
-test_session_dedup() {
+test_per_learning_dedup() {
   local test_dir="$TEST_BASE/test4b"
   local slug
   slug=$(setup_test_project "$test_dir")
@@ -752,15 +752,16 @@ test_session_dedup() {
 
   create_transcript_with_corrections "$HOME/.claude/projects/$slug" > /dev/null
 
-  # Pre-populate seen file with this session ID (dedup now uses .seen-correction-sessions)
+  # Pre-populate seen file with the correction's message index (tab-separated per-learning format)
+  # The correction "Wrong, this project uses SQLite" is at JSONL index 2
   mkdir -p "$ORIG_RULES_DIR"
-  echo "test-session-abc123" > "$ORIG_SEEN_FILE"
+  printf 'test-session-abc123\tf1\t2\n' > "$ORIG_SEEN_FILE"
   rm -f "$ORIG_OUTPUT_FILE"
 
   local exit_code=0
   echo "" | bash "$HOOK_SCRIPT" 2>/dev/null || exit_code=$?
 
-  assert_eq "0" "$exit_code" "4b: Session in seen file → exits 0 (dedup)"
+  assert_eq "0" "$exit_code" "4b: Correction index in seen file → exits 0 (per-learning dedup)"
   assert_file_not_exists "$ORIG_OUTPUT_FILE" "4b: unprocessed-corrections.md not written (no real content)"
 
   teardown_test_project "$test_dir"
@@ -790,9 +791,83 @@ test_correction_retrigger_dedup() {
   teardown_test_project "$test_dir"
 }
 
+test_multi_capture_new_index() {
+  local test_dir="$TEST_BASE/test4d"
+  local slug
+  slug=$(setup_test_project "$test_dir")
+  cd "$test_dir"
+
+  local sessions_dir="$HOME/.claude/projects/$slug"
+  local session_id="test-session-multi-idx"
+  local transcript="$sessions_dir/$session_id.jsonl"
+
+  # Create transcript with one correction at index 2
+  cat > "$transcript" << 'JSONL_EOF'
+{"type":"user","message":{"role":"user","content":"Write the function."},"sessionId":"test-session-multi-idx","timestamp":"2026-02-22T10:00:00Z"}
+{"type":"assistant","message":{"role":"assistant","content":[{"type":"text","text":"Using var for variables."}]},"sessionId":"test-session-multi-idx","timestamp":"2026-02-22T10:01:00Z"}
+{"type":"user","message":{"role":"user","content":"Wrong, use const."},"sessionId":"test-session-multi-idx","timestamp":"2026-02-22T10:02:00Z"}
+{"type":"assistant","message":{"role":"assistant","content":[{"type":"text","text":"Fixed, using const."}]},"sessionId":"test-session-multi-idx","timestamp":"2026-02-22T10:03:00Z"}
+JSONL_EOF
+
+  rm -f "$ORIG_OUTPUT_FILE" "$ORIG_SEEN_FILE"
+
+  # First run: correction at index 2 → exits 2, writes per-learning ID to SEEN_FILE
+  local exit_code=0
+  echo "" | bash "$HOOK_SCRIPT" 2>/dev/null || exit_code=$?
+  assert_eq "2" "$exit_code" "4d: First run with correction → exits 2"
+  assert_file_exists "$ORIG_SEEN_FILE" "4d: SEEN_FILE created after first capture"
+  assert_file_contains "$ORIG_SEEN_FILE" $'test-session-multi-idx\tf1\t2' "4d: SEEN_FILE has tab-separated per-learning ID"
+
+  # Append new correction at index 4 (simulates user saying "nope" later in same session)
+  cat >> "$transcript" << 'JSONL_EOF'
+{"type":"user","message":{"role":"user","content":"Nope, still broken."},"sessionId":"test-session-multi-idx","timestamp":"2026-02-22T10:04:00Z"}
+{"type":"assistant","message":{"role":"assistant","content":[{"type":"text","text":"Fixing now."}]},"sessionId":"test-session-multi-idx","timestamp":"2026-02-22T10:05:00Z"}
+JSONL_EOF
+
+  # Second run: index 2 already in SEEN_FILE (skip), index 4 is new → exits 2
+  exit_code=0
+  local output
+  output=$(echo "" | bash "$HOOK_SCRIPT" 2>/dev/null) || exit_code=$?
+  assert_eq "2" "$exit_code" "4d: Second run with new correction at new index → exits 2 (multi-capture)"
+  assert_output_contains "$output" "Nope, still broken" "4d: New correction included in output"
+  assert_output_not_contains "$output" "Wrong, use const" "4d: Already-captured correction not re-output"
+
+  # Third run: both indexes captured → exits 0
+  exit_code=0
+  echo "" | bash "$HOOK_SCRIPT" 2>/dev/null || exit_code=$?
+  assert_eq "0" "$exit_code" "4d: Third run after all corrections captured → exits 0"
+
+  teardown_test_project "$test_dir"
+}
+
+test_flow2_per_learning_dedup() {
+  local test_dir="$TEST_BASE/test4e"
+  local slug
+  slug=$(setup_test_project "$test_dir")
+  cd "$test_dir"
+
+  # Self-discovery transcript: assistant message with labels is at index 1
+  create_transcript_with_self_discovery "$HOME/.claude/projects/$slug" > /dev/null
+  rm -f "$ORIG_OUTPUT_FILE"
+
+  # Pre-populate SEEN_FILE with the self-learning's message index
+  mkdir -p "$ORIG_RULES_DIR"
+  printf 'test-session-selfd\tf2\t1\n' > "$ORIG_SEEN_FILE"
+
+  local exit_code=0
+  echo "" | bash "$HOOK_SCRIPT" 2>/dev/null || exit_code=$?
+
+  assert_eq "0" "$exit_code" "4e: Already-captured self-learning index in SEEN_FILE → exits 0 (per-learning dedup)"
+  assert_file_not_exists "$ORIG_OUTPUT_FILE" "4e: Output not written (no new self-learnings)"
+
+  teardown_test_project "$test_dir"
+}
+
 test_skips_during_loop
-test_session_dedup
+test_per_learning_dedup
 test_correction_retrigger_dedup
+test_multi_capture_new_index
+test_flow2_per_learning_dedup
 
 echo ""
 echo "--- Section 5: Self-Discovery Fallback ---"
@@ -822,7 +897,29 @@ test_self_discovery_fallback() {
   teardown_test_project "$test_dir"
 }
 
+test_flow2_msg_index_in_output() {
+  local test_dir="$TEST_BASE/test5b"
+  local slug
+  slug=$(setup_test_project "$test_dir")
+  cd "$test_dir"
+
+  # Self-discovery transcript: assistant message with labels is at index 1
+  create_transcript_with_self_discovery "$HOME/.claude/projects/$slug" > /dev/null
+  rm -f "$ORIG_OUTPUT_FILE" "$ORIG_SEEN_FILE"
+
+  local exit_code=0
+  echo "" | bash "$HOOK_SCRIPT" 2>/dev/null || exit_code=$?
+
+  assert_eq "0" "$exit_code" "5b: Self-discovery → exits 0"
+  assert_file_exists "$ORIG_OUTPUT_FILE" "5b: Output file created"
+  assert_file_contains "$ORIG_OUTPUT_FILE" '\[msg:' "5b: Message index reference present in learning header"
+  assert_file_contains "$ORIG_OUTPUT_FILE" '\[msg:1\]' "5b: Correct message index (assistant message at index 1)"
+
+  teardown_test_project "$test_dir"
+}
+
 test_self_discovery_fallback
+test_flow2_msg_index_in_output
 
 echo ""
 echo "--- Section 6: Symlink & Setup ---"

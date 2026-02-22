@@ -53,6 +53,19 @@ assert_output_not_contains() {
   fi
 }
 
+assert_file_exists() {
+  local file="$1"
+  local test_name="$2"
+  TESTS_RUN=$((TESTS_RUN + 1))
+  if [[ -f "$file" ]]; then
+    echo -e "${GREEN}✓${NC} $test_name"
+    TESTS_PASSED=$((TESTS_PASSED + 1))
+  else
+    echo -e "${RED}✗${NC} $test_name (file not found: $file)"
+    TESTS_FAILED=$((TESTS_FAILED + 1))
+  fi
+}
+
 # --- Shared E2E project setup ---
 # Creates a realistic project with files, a git repo, and a sessions dir.
 E2E_BASE="/tmp/test-e2e-stop-learn-$$"
@@ -446,6 +459,7 @@ e2e_9() {
   cd "$test_dir"
 
   local sessions_dir="$HOME/.claude/projects/$slug"
+  # Correction "Wrong" is at index 0
   cat > "$sessions_dir/e2e9-session.jsonl" << 'JSONL'
 {"type":"user","message":{"role":"user","content":"Wrong, use SQLite not PostgreSQL."},"sessionId":"e2e9-session","timestamp":"2026-02-21T10:00:00Z"}
 {"type":"assistant","message":{"role":"assistant","content":[{"type":"text","text":"Switching to SQLite."}]},"sessionId":"e2e9-session","timestamp":"2026-02-21T10:01:00Z"}
@@ -453,22 +467,206 @@ JSONL
 
   rm -f "$ORIG_OUTPUT_FILE" "$ORIG_SEEN_FILE"
 
-  # First run: exits 2, writes session ID to seen file (not to output file)
+  # First run: exits 2, writes per-learning ID to seen file (not to output file)
   local exit_code=0
   echo "" | bash "$HOOK_SCRIPT" 2>/dev/null || exit_code=$?
   assert_eq "2" "$exit_code" "E2E-9: first run → exits 2"
   assert_output_not_contains "$(cat "$ORIG_OUTPUT_FILE" 2>/dev/null)" "Session:" \
     "E2E-9: unprocessed-corrections.md not written on first run"
 
-  # Second run: same session → seen file dedup catches it
+  # Second run: same message index already in SEEN_FILE → exits 0
   exit_code=0
   echo "" | bash "$HOOK_SCRIPT" 2>/dev/null || exit_code=$?
-  assert_eq "0" "$exit_code" "E2E-9: second run same session → exits 0 (dedup)"
+  assert_eq "0" "$exit_code" "E2E-9: second run same session → exits 0 (per-learning dedup)"
 
   teardown_e2e_project "$test_dir"
 }
 
 e2e_9
+echo ""
+
+# =============================================================================
+# E2E-10: Multi-capture — new correction after first captured → exits 2 again
+# =============================================================================
+echo "--- E2E-10: Multi-capture ---"
+
+e2e_10() {
+  local test_dir="$E2E_BASE/e2e10"
+  local slug
+  slug=$(setup_e2e_project "$test_dir")
+  cd "$test_dir"
+
+  local sessions_dir="$HOME/.claude/projects/$slug"
+  local transcript="$sessions_dir/e2e10-session.jsonl"
+
+  # Transcript with one correction at index 2
+  cat > "$transcript" << 'JSONL'
+{"type":"user","message":{"role":"user","content":"Set up the database."},"sessionId":"e2e10-session","timestamp":"2026-02-22T10:00:00Z"}
+{"type":"assistant","message":{"role":"assistant","content":[{"type":"text","text":"Using MySQL."}]},"sessionId":"e2e10-session","timestamp":"2026-02-22T10:01:00Z"}
+{"type":"user","message":{"role":"user","content":"Wrong, we use PostgreSQL."},"sessionId":"e2e10-session","timestamp":"2026-02-22T10:02:00Z"}
+{"type":"assistant","message":{"role":"assistant","content":[{"type":"text","text":"Switching to PostgreSQL."}]},"sessionId":"e2e10-session","timestamp":"2026-02-22T10:03:00Z"}
+JSONL
+
+  rm -f "$ORIG_OUTPUT_FILE" "$ORIG_SEEN_FILE"
+
+  # First run: captures correction at index 2 → exits 2
+  local exit_code=0
+  local output
+  output=$(echo "" | bash "$HOOK_SCRIPT" 2>/dev/null) || exit_code=$?
+  assert_eq "2" "$exit_code" "E2E-10: first run → exits 2"
+  assert_output_contains "$output" "Wrong, we use PostgreSQL" "E2E-10: first correction in output"
+
+  # Append new correction at index 4 (simulates continued session after compaction or new turn)
+  cat >> "$transcript" << 'JSONL'
+{"type":"user","message":{"role":"user","content":"Nope, check the connection string."},"sessionId":"e2e10-session","timestamp":"2026-02-22T10:04:00Z"}
+{"type":"assistant","message":{"role":"assistant","content":[{"type":"text","text":"Fixed the connection string."}]},"sessionId":"e2e10-session","timestamp":"2026-02-22T10:05:00Z"}
+JSONL
+
+  # Second run: index 2 already captured, index 4 is new → exits 2
+  exit_code=0
+  output=$(echo "" | bash "$HOOK_SCRIPT" 2>/dev/null) || exit_code=$?
+  assert_eq "2" "$exit_code" "E2E-10: second run with new correction → exits 2 (multi-capture)"
+  assert_output_contains "$output" "Nope, check the connection string" "E2E-10: new correction captured"
+  assert_output_not_contains "$output" "Wrong, we use PostgreSQL" "E2E-10: first correction not re-captured"
+
+  # Third run: all corrections captured → exits 0
+  exit_code=0
+  echo "" | bash "$HOOK_SCRIPT" 2>/dev/null || exit_code=$?
+  assert_eq "0" "$exit_code" "E2E-10: third run after all captured → exits 0"
+
+  teardown_e2e_project "$test_dir"
+}
+
+e2e_10
+echo ""
+
+# =============================================================================
+# E2E-11: SEEN_FILE tab-separated format verification
+# =============================================================================
+echo "--- E2E-11: SEEN_FILE format ---"
+
+e2e_11() {
+  local test_dir="$E2E_BASE/e2e11"
+  local slug
+  slug=$(setup_e2e_project "$test_dir")
+  cd "$test_dir"
+
+  local sessions_dir="$HOME/.claude/projects/$slug"
+  # Correction at index 0
+  cat > "$sessions_dir/e2e11-session.jsonl" << 'JSONL'
+{"type":"user","message":{"role":"user","content":"Wrong, use const not var."},"sessionId":"e2e11-session","timestamp":"2026-02-22T10:00:00Z"}
+{"type":"assistant","message":{"role":"assistant","content":[{"type":"text","text":"Fixed."}]},"sessionId":"e2e11-session","timestamp":"2026-02-22T10:01:00Z"}
+JSONL
+
+  rm -f "$ORIG_OUTPUT_FILE" "$ORIG_SEEN_FILE"
+
+  local exit_code=0
+  echo "" | bash "$HOOK_SCRIPT" 2>/dev/null || exit_code=$?
+  assert_eq "2" "$exit_code" "E2E-11: exits 2 on correction"
+
+  # SEEN_FILE must have tab-separated format: session_id TAB f1 TAB msg_index
+  local seen_line
+  seen_line=$(cat "$ORIG_SEEN_FILE" 2>/dev/null | head -1)
+  assert_eq $'e2e11-session\tf1\t0' "$seen_line" "E2E-11: SEEN_FILE has tab-separated per-learning ID"
+
+  teardown_e2e_project "$test_dir"
+}
+
+e2e_11
+echo ""
+
+# =============================================================================
+# E2E-12: Self-learning flows independently after correction capture
+# =============================================================================
+echo "--- E2E-12: Self-learning after correction ---"
+
+e2e_12() {
+  local test_dir="$E2E_BASE/e2e12"
+  local slug
+  slug=$(setup_e2e_project "$test_dir")
+  cd "$test_dir"
+
+  local sessions_dir="$HOME/.claude/projects/$slug"
+  # Transcript: correction at index 2, self-learning at index 5
+  cat > "$sessions_dir/e2e12-session.jsonl" << 'JSONL'
+{"type":"user","message":{"role":"user","content":"Set up auth."},"sessionId":"e2e12-session","timestamp":"2026-02-22T10:00:00Z"}
+{"type":"assistant","message":{"role":"assistant","content":[{"type":"text","text":"Using JWT tokens."}]},"sessionId":"e2e12-session","timestamp":"2026-02-22T10:01:00Z"}
+{"type":"user","message":{"role":"user","content":"Wrong, we use sessions not JWT."},"sessionId":"e2e12-session","timestamp":"2026-02-22T10:02:00Z"}
+{"type":"assistant","message":{"role":"assistant","content":[{"type":"text","text":"Switching to session-based auth."}]},"sessionId":"e2e12-session","timestamp":"2026-02-22T10:03:00Z"}
+{"type":"user","message":{"role":"user","content":"Looks good."},"sessionId":"e2e12-session","timestamp":"2026-02-22T10:04:00Z"}
+{"type":"assistant","message":{"role":"assistant","content":[{"type":"text","text":"ROOT_CAUSE: Assumed JWT when project uses sessions.\nRULE: Always check existing auth strategy before implementing.\nDESTINATION: /Users/ash/Projects/vorbit/.claude/rules/bash-scripts.md"}]},"sessionId":"e2e12-session","timestamp":"2026-02-22T10:05:00Z"}
+JSONL
+
+  rm -f "$ORIG_OUTPUT_FILE" "$ORIG_SEEN_FILE"
+
+  # First run: correction at index 2 → exits 2, SEEN_FILE gets f1:2
+  local exit_code=0
+  echo "" | bash "$HOOK_SCRIPT" 2>/dev/null || exit_code=$?
+  assert_eq "2" "$exit_code" "E2E-12: first run → exits 2 (correction captured)"
+
+  # Second run: correction at index 2 already seen → Flow 1 passes through
+  # Flow 2: self-learning at index 5 is new → captures it → writes to output
+  exit_code=0
+  echo "" | bash "$HOOK_SCRIPT" 2>/dev/null || exit_code=$?
+  assert_eq "0" "$exit_code" "E2E-12: second run → exits 0 (self-learning captured by Flow 2)"
+  assert_file_exists "$ORIG_OUTPUT_FILE" "E2E-12: output file created by Flow 2"
+
+  local has_output
+  has_output=$(cat "$ORIG_OUTPUT_FILE" 2>/dev/null)
+  assert_output_contains "$has_output" "Always check existing auth strategy" "E2E-12: self-learning rule captured in output"
+  assert_output_contains "$has_output" "msg:5" "E2E-12: message index 5 referenced in output"
+
+  # Third run: both already captured → exits 0, no new output
+  local output_before
+  output_before=$(cat "$ORIG_OUTPUT_FILE" 2>/dev/null)
+  exit_code=0
+  echo "" | bash "$HOOK_SCRIPT" 2>/dev/null || exit_code=$?
+  assert_eq "0" "$exit_code" "E2E-12: third run → exits 0 (all captured)"
+  local output_after
+  output_after=$(cat "$ORIG_OUTPUT_FILE" 2>/dev/null)
+  assert_eq "$output_before" "$output_after" "E2E-12: no new entries written on third run"
+
+  teardown_e2e_project "$test_dir"
+}
+
+e2e_12
+echo ""
+
+# =============================================================================
+# E2E-13: unprocessed-corrections.md includes [msg:N] reference
+# =============================================================================
+echo "--- E2E-13: [msg:N] traceability in output ---"
+
+e2e_13() {
+  local test_dir="$E2E_BASE/e2e13"
+  local slug
+  slug=$(setup_e2e_project "$test_dir")
+  cd "$test_dir"
+
+  local sessions_dir="$HOME/.claude/projects/$slug"
+  # Transcript with self-learning only (no correction keywords) at index 1
+  cat > "$sessions_dir/e2e13-session.jsonl" << 'JSONL'
+{"type":"user","message":{"role":"user","content":"Fix the login page."},"sessionId":"e2e13-session","timestamp":"2026-02-22T10:00:00Z"}
+{"type":"assistant","message":{"role":"assistant","content":[{"type":"text","text":"ROOT_CAUSE: Session tokens expire too fast due to hardcoded TTL.\nRULE: Always read TTL from config, never hardcode.\nDESTINATION: .claude/rules/auth.md"}]},"sessionId":"e2e13-session","timestamp":"2026-02-22T10:01:00Z"}
+{"type":"user","message":{"role":"user","content":"Thanks."},"sessionId":"e2e13-session","timestamp":"2026-02-22T10:02:00Z"}
+JSONL
+
+  rm -f "$ORIG_OUTPUT_FILE" "$ORIG_SEEN_FILE"
+
+  local exit_code=0
+  echo "" | bash "$HOOK_SCRIPT" 2>/dev/null || exit_code=$?
+  assert_eq "0" "$exit_code" "E2E-13: self-learning only → exits 0"
+
+  local content
+  content=$(cat "$ORIG_OUTPUT_FILE" 2>/dev/null)
+  assert_output_contains "$content" "Session:" "E2E-13: session block written"
+  assert_output_contains "$content" "[msg:1]" "E2E-13: message index 1 referenced in learning header"
+  assert_output_contains "$content" "hardcoded TTL" "E2E-13: learning content present"
+
+  teardown_e2e_project "$test_dir"
+}
+
+e2e_13
 echo ""
 
 # =============================================================================

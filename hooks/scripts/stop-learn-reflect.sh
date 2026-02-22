@@ -2,6 +2,7 @@
 # Stop hook - detects correction keywords in user messages and continues session.
 # Falls back to self-discovered learning extraction when no keywords found.
 # Reads all config from vorbit-learning-rules.md — nothing hardcoded.
+# Per-learning ID tracking: SEEN_FILE stores session_id TAB flow TAB msg_index
 
 set -uo pipefail
 trap 'exit 0' ERR
@@ -47,18 +48,20 @@ fi
 SESSION_ID=$(basename "$TRANSCRIPT" .jsonl)
 
 # --- FLOW 1: Correction keyword detection ---
-# Skip if already processed this session (prevents exit-2 loop)
+# Per-learning dedup: each captured correction tracked individually as
+# session_id TAB f1 TAB msg_index in SEEN_FILE. Loop prevention: only the
+# specific message index is locked, so new corrections at new indexes capture.
 KEYWORDS_CSV=$(sed -n 's/.*<!-- correction-keywords: \(.*\) -->.*/\1/p' "$RULES_SOURCE" | head -1)
 
-if [[ -n "$KEYWORDS_CSV" ]] && ! grep -qF "$SESSION_ID" "$SEEN_FILE" 2>/dev/null; then
+if [[ -n "$KEYWORDS_CSV" ]]; then
   # Build regex: CSV to pipe-separated with word boundaries, case-insensitive
   # \b ensures "no" matches standalone word only, not inside "not", "know", "cannot"
   KEYWORD_REGEX=$(echo "$KEYWORDS_CSV" | sed 's/,/\\b|\\b/g')
   KEYWORD_REGEX="\\b${KEYWORD_REGEX}\\b"
 
-  # Extract user messages, filter false positives, scan for keywords
+  # Extract all matching user message indices
   # content may be a plain string or an array of {type,text} blocks — handle both
-  MATCHING_INDICES=$(jq -rs --arg regex "$KEYWORD_REGEX" '
+  ALL_MATCHING_INDICES=$(jq -rs --arg regex "$KEYWORD_REGEX" '
     def extract_text:
       if type == "string" then .
       elif type == "array" then [.[] | select(.type == "text") | .text] | join("\n")
@@ -79,12 +82,20 @@ if [[ -n "$KEYWORDS_CSV" ]] && ! grep -qF "$SESSION_ID" "$SEEN_FILE" 2>/dev/null
     )
   ' "$TRANSCRIPT" 2>/dev/null || echo "[]")
 
-  MATCH_COUNT=$(echo "$MATCHING_INDICES" | jq 'length' 2>/dev/null || echo "0")
+  # Filter: remove already-captured indices (tab-separated: session_id TAB f1 TAB msg_index)
+  # Group awk with || true so pipefail doesn't trigger when SEEN_FILE is missing
+  SEEN_F1=$({ awk -F'\t' -v sid="$SESSION_ID" '$1 == sid && $2 == "f1" {print $3}' "$SEEN_FILE" 2>/dev/null || true; } \
+    | jq -Rs 'split("\n") | map(select(length > 0)) | map(tonumber)' 2>/dev/null || echo "[]")
 
-  if [[ "$MATCH_COUNT" -gt 0 ]]; then
-    # Build context: preceding assistant + user correction + following assistant
+  NEW_MATCHING_INDICES=$(echo "$ALL_MATCHING_INDICES" \
+    | jq --argjson seen "$SEEN_F1" '[.[] | select(. as $i | ($seen | index($i)) == null)]' 2>/dev/null || echo "[]")
+
+  NEW_MATCH_COUNT=$(echo "$NEW_MATCHING_INDICES" | jq 'length' 2>/dev/null || echo "0")
+
+  if [[ "$NEW_MATCH_COUNT" -gt 0 ]]; then
+    # Build context from new matches: preceding assistant + user correction + following assistant
     # Assistant messages are identified by message.role == "assistant" (not entry.type)
-    CONTEXT=$(jq -rs --argjson indices "$MATCHING_INDICES" '
+    CONTEXT=$(jq -rs --argjson indices "$NEW_MATCHING_INDICES" '
       def extract_text:
         if type == "string" then .
         elif type == "array" then [.[] | select(.type == "text") | .text] | join("\n")
@@ -103,20 +114,20 @@ if [[ -n "$KEYWORDS_CSV" ]] && ! grep -qF "$SESSION_ID" "$SEEN_FILE" 2>/dev/null
       ] | join("\n")
     ' "$TRANSCRIPT" 2>/dev/null || echo "")
 
-    # Mark session as seen — separate file keeps unprocessed-corrections.md clean
+    # Mark each new correction as seen — per-learning ID: session_id TAB f1 TAB msg_index
     mkdir -p "$RULES_DIR"
-    echo "$SESSION_ID" >> "$SEEN_FILE"
+    echo "$NEW_MATCHING_INDICES" | jq -r '.[]' 2>/dev/null | while IFS= read -r idx; do
+      printf '%s\tf1\t%s\n' "$SESSION_ID" "$idx" >> "$SEEN_FILE"
+    done
 
     printf '[VORBIT:CORRECTION-CAPTURE] Stop hook found correction keywords. Run the Stop-Hook Correction Flow from vorbit-learning-rules.md.\n\n%s' "$CONTEXT"
     exit 2
   fi
 fi
 
-# --- FLOW 2: Self-discovered learning extraction (no correction keywords found) ---
-# Skip if session already recorded
-if grep -qF "## Session: ${SESSION_ID}" "$OUTPUT_FILE" 2>/dev/null; then
-  exit 0
-fi
+# --- FLOW 2: Self-discovered learning extraction ---
+# Per-learning dedup: session_id TAB f2 TAB msg_index — independent of Flow 1 captures.
+# Self-learnings are captured even after a correction was already captured in this session.
 
 # Read field names from rules file
 FIELDS_DEF=$(sed -n 's/.*<!-- learning-fields: \(.*\) -->.*/\1/p' "$RULES_SOURCE" | head -1)
@@ -130,41 +141,61 @@ F3=$(echo "$FIELDS_DEF" | cut -d',' -f3)
 
 TIMESTAMP=$(date '+%d %b %Y')
 
-# Quick check: any learning entries in this session?
-HAS_LEARNING=$(jq -rs --arg f1 "${F1}: " \
-  '[.[] | select(.type == "assistant") | .message.content[]? | select(.type == "text") | .text]
-  | map(select(contains($f1))) | length' \
-  "$TRANSCRIPT" 2>/dev/null || echo "0")
+# Filter already-captured self-learnings
+# Group awk with || true so pipefail doesn't trigger when SEEN_FILE is missing
+SEEN_F2=$({ awk -F'\t' -v sid="$SESSION_ID" '$1 == sid && $2 == "f2" {print $3}' "$SEEN_FILE" 2>/dev/null || true; } \
+  | jq -Rs 'split("\n") | map(select(length > 0)) | map(tonumber)' 2>/dev/null || echo "[]")
 
-if [[ "$HAS_LEARNING" == "0" ]]; then
+# Extract new self-learnings with their message indices
+# Each learning is tracked by the transcript line index of the assistant message
+LEARNINGS_WITH_INDICES=$(jq -rs \
+  --arg f1 "${F1}: " \
+  --arg f2 "${F2}: " \
+  --arg f3 "${F3}: " \
+  --argjson seen_f2 "$SEEN_F2" '
+  [range(length)] as $all_indices |
+  [., $all_indices] | transpose |
+  map(
+    . as [$entry, $idx] |
+    select($entry.type == "assistant") |
+    [$entry.message.content[]? | select(.type == "text") | .text
+      | select(contains($f1) and contains($f2) and contains($f3))] as $texts |
+    select(($texts | length) > 0) |
+    select(($seen_f2 | index($idx)) == null) |
+    {
+      idx: $idx,
+      root_cause: ($texts[0] | split($f1)[1] | split("\n")[0]),
+      rule:       ($texts[0] | split($f2)[1] | split("\n")[0]),
+      dest:       ($texts[0] | split($f3)[1] | split("\n")[0])
+    }
+  )
+' "$TRANSCRIPT" 2>/dev/null || echo "[]")
+
+NEW_LEARNING_COUNT=$(echo "$LEARNINGS_WITH_INDICES" | jq 'length' 2>/dev/null || echo "0")
+
+if [[ "$NEW_LEARNING_COUNT" == "0" ]]; then
   exit 0
 fi
 
-# Extract and format learning entries
-LEARNINGS=$(jq -rs \
-  --arg f1 "${F1}: " \
-  --arg f2 "${F2}: " \
-  --arg f3 "${F3}: " '
-  [.[] | select(.type == "assistant")] |
-  [.[] | .message.content[]? | select(.type == "text") | .text] |
-  map(select(contains($f1) and contains($f2) and contains($f3))) |
-  map({
-    root_cause: (split($f1)[1] | split("\n")[0]),
-    rule:       (split($f2)[1] | split("\n")[0]),
-    dest:       (split($f3)[1] | split("\n")[0])
-  }) |
+# Format learnings with message index reference for traceability
+LEARNINGS=$(echo "$LEARNINGS_WITH_INDICES" | jq -r '
   map(
-    "## " + (.root_cause | split(".")[0] | .[0:80]) + "\n" +
+    "## " + (.root_cause | split(".")[0] | .[0:80]) + " [msg:" + (.idx | tostring) + "]\n" +
     "**Root cause:** " + .root_cause + "\n" +
     "**Rule:** " + .rule + "\n" +
     "**Destination:** " + .dest
-  ) |
-  join("\n\n")
-' "$TRANSCRIPT" 2>/dev/null || echo "")
+  ) | join("\n\n")
+' 2>/dev/null || echo "")
 
 if [[ -z "$LEARNINGS" ]]; then
   exit 0
 fi
+
+# Mark each new self-learning as seen — per-learning ID: session_id TAB f2 TAB msg_index
+mkdir -p "$RULES_DIR"
+echo "$LEARNINGS_WITH_INDICES" | jq -r '.[] | .idx' 2>/dev/null | while IFS= read -r idx; do
+  printf '%s\tf2\t%s\n' "$SESSION_ID" "$idx" >> "$SEEN_FILE"
+done
 
 # Write structured output — only real content reaches this point
 if [[ ! -f "$OUTPUT_FILE" ]]; then
