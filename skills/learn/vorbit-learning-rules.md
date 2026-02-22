@@ -14,6 +14,27 @@ Repeated failure is NOT required. One correction = one trigger.
 **Voluntary capture keywords** — triggers Voluntary Capture:
 "remember this", "save this", "note this", "keep this", "don't forget this", "log this", "learn this"
 
+<!-- voluntary-keywords: remember this,save this,note this,keep this,don't forget this,log this,learn this -->
+
+## Stop-Hook Voluntary Capture Flow
+
+When you see a message starting with `[VORBIT:VOLUNTARY-CAPTURE]`, the stop hook detected the user explicitly asking to save something. Run this flow:
+
+**1. Identify what to save**
+- Read the `USER:` message in context — what learning did the user want to capture?
+- Read surrounding `A:` context to understand the full situation
+
+**2. Present via `AskUserQuestion`**
+Use `AskUserQuestion` with three fields:
+- **Root cause** — classify the learning type (from `references/format.md`: `claude-md`, `knowledge`, `skill`, `script`, `agent-mistake`, `user-preference`, `tool-behavior`, `general`)
+- **Rule** — the concise imperative rule to save (commit-message style)
+- **Destination** — absolute path of the file to write to (resolved from `references/routing.md`)
+
+**3. On approve** — write a structured entry to `~/.claude/rules/unprocessed-corrections.md`
+**4. On reject** — do nothing, session ends
+
+Never skip `AskUserQuestion`. Never write without user confirmation. Always show the exact root cause, rule, and destination before writing.
+
 ## Stop-Hook Correction Flow
 
 When you see a message starting with `[VORBIT:CORRECTION-CAPTURE]`, the stop hook has detected correction keywords and injected context from the just-ended session. Run this flow:

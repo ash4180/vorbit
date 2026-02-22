@@ -122,69 +122,56 @@ Processes `~/.claude/rules/unprocessed-corrections.md` — the digest of correct
 ### Step 1: Read the Digest
 
 The file is already in your context (loaded eagerly from `~/.claude/rules/`). Parse it:
-- Each `## Session:` block contains corrections from one session
+- Each `## Session:` block contains one or more corrections from one session
 - Block header has: session ID, absolute project path, timestamp
-- Each correction has: user message (prefixed `USER:`), optional preceding assistant context (prefixed `A:`)
+- Each entry is pre-structured with `**Root cause:**`, `**Rule:**`, and `**Destination:**` — already classified by the agent at capture time
 
 If the file is not present or empty → "No corrections to process." Stop.
 
-### Step 2: Read Existing Rules
+### Step 2: Check for Duplicates
 
 For each unique project path in the digest:
 1. Read `{project_path}/CLAUDE.md` — scan for "Learned Patterns" and "Error Patterns"
 2. Glob `{project_path}/.claude/rules/*.md` — scan existing knowledge files
 3. Glob `~/.claude/rules/*.md` — scan universal rules
-4. These are already-routed learnings — do NOT duplicate them
 
-### Step 3: Classify Each Correction
+Skip any entry whose rule is already captured in these files.
 
-Read `references/format.md` for the scope classification table. For each correction:
+### Step 3: Present for Approval
 
-1. **Extract the learning** — what rule or fact does this correction teach?
-2. **Filter ruthlessly:**
-   - NOT general programming knowledge (everyone knows this)
-   - NOT already captured in any rules file
-   - IS actionable for a future agent
-3. **Classify scope:** project (codebase-specific) or universal (agent-behavioral)
-4. **Classify destination:** using the routing table in `references/routing.md`
-
-### Step 4: Present for Approval
-
-Use `AskUserQuestion` to present all extracted learnings:
+Use `AskUserQuestion` to present all entries. Each entry already has its destination — show it directly:
 
 ```
-Found {N} learnings from {M} sessions:
+Found {N} entries from {M} sessions:
 
-1. [project] "Events table uses soft deletes" → {project}/.claude/rules/database.md
-2. [universal] "Don't assume test failures mean code is wrong" → ~/.claude/rules/agent-behavior.md
-3. [project] "CORS middleware must be before auth" → {project}/CLAUDE.md > Error Patterns
+1. "Always validate transcript parsing against a real JSONL sample"
+   → /path/to/project/.claude/rules/bash-scripts.md
+2. "Don't assume test failures mean code is wrong"
+   → ~/.claude/rules/agent-behavior.md
 
-Approve all? Or specify: approve 1,2 / reject 3
+Approve all? Or specify: approve 1 / reject 2
 ```
 
 - "Approve all" → route all
 - "Approve N,N" → route selected, discard rest
 - "Reject all" → delete digest without routing
 
-### Step 5: Route Approved Items
+### Step 4: Route Approved Items
 
-Read `references/routing.md` for routing instructions. Read `references/consolidation.md` before creating any new files.
+Read `references/consolidation.md` before writing to any file.
 
-**Project-scoped learnings** use the absolute project path from the digest block header.
-**Universal learnings** route to `~/.claude/rules/{topic}.md`.
+Write each approved entry to its `**Destination:**` path using the absolute path from the entry. If the destination is a `skill-fix` or `script-fix` path, read `references/routing.md` Group D to resolve the plugin root first.
 
-If routing `skill-fix` or `script-fix` items, read `references/routing.md` Group D to resolve the plugin path.
-
-### Step 6: Clean Up
+### Step 5: Clean Up
 
 Delete `~/.claude/rules/unprocessed-corrections.md` after processing all blocks.
 
-### Step 7: Report
+### Step 6: Report
 
 ```
 Routed {N} learnings:
-- "Events table uses soft deletes" → /path/to/project/.claude/rules/database.md
-- "Don't assume test failures mean code is wrong" → ~/.claude/rules/agent-behavior.md
+- "Always validate transcript parsing..." → /path/to/project/.claude/rules/bash-scripts.md
+- "Don't assume test failures..." → ~/.claude/rules/agent-behavior.md
 Rejected {M} items.
 Digest cleared.
 ```
