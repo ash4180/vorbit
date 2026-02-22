@@ -25,12 +25,15 @@ Detailed specs live in `references/` within this skill's directory. Glob for `**
 
 ## Mode Detection
 
+Both `pending-capture.md` and `unprocessed-corrections.md` live in `~/.claude/rules/`, which Claude Code auto-loads into every session. That's why their content appears in your context without the user doing anything — the stop hook writes to these files and the next session picks them up automatically.
+
+- If your context contains `pending-capture.md` content → run the **Stop-Hook Correction/Voluntary Flow** from `vorbit-learning-rules.md` for each block, then delete the file
 - If your context contains `unprocessed-corrections.md` content → run **Digest Processing**
 - If invoked via `/vorbit:learn:checkmemory` → run **Digest Processing**
 - If user correction detected mid-session → run **Correction Capture**
 - If user says "remember this", "save this", "note this", etc. → run **Voluntary Capture**
 
-**Priority rule:** If digest is in context AND a live trigger fires, the live trigger takes precedence. Handle Correction Capture or Voluntary Capture first, then run Digest Processing after.
+**Priority rule:** `pending-capture.md` processing runs first, before anything else. If digest is also in context, run Digest Processing after pending-capture.md is handled.
 
 ---
 
@@ -41,7 +44,7 @@ This mode runs continuously during every session via the injected rules file. NO
 ### Trigger Conditions
 
 Any **single** correction keyword from the user is enough:
-"no", "wrong", "that's not right", "error", "still error", "not working", "broken", "nope", "roll back", "revert", "actually", "that's not how"
+"nope", "wrong", "that's not right", "still error", "not working", "broken", "roll back", "revert", "that's not how"
 
 Repeated failure is NOT required. One correction = one trigger.
 
@@ -111,7 +114,9 @@ Triggers when the user explicitly asks to save something: "remember this", "save
 - "Edit path" → user specifies a different file
 - "Skip" → don't write anything
 
-**Step 3:** Write using the same routing as Correction Capture Step 4. Resume primary task.
+**Step 3:** Write using the same routing as Correction Capture Step 4.
+
+**Step 4:** Run `python3 ${CLAUDE_PLUGIN_ROOT}/skills/learn/hooks/mark_voluntary_seen.py` to mark this session's voluntary keyword messages as seen. This prevents the stop hook from re-prompting at session end for the same capture you just handled. Then resume primary task.
 
 ---
 
@@ -122,69 +127,56 @@ Processes `~/.claude/rules/unprocessed-corrections.md` — the digest of correct
 ### Step 1: Read the Digest
 
 The file is already in your context (loaded eagerly from `~/.claude/rules/`). Parse it:
-- Each `## Session:` block contains corrections from one session
+- Each `## Session:` block contains one or more corrections from one session
 - Block header has: session ID, absolute project path, timestamp
-- Each correction has: user message (prefixed `USER:`), optional preceding assistant context (prefixed `A:`)
+- Each entry is pre-structured with `**Root cause:**`, `**Rule:**`, and `**Destination:**` — already classified by the agent at capture time
 
 If the file is not present or empty → "No corrections to process." Stop.
 
-### Step 2: Read Existing Rules
+### Step 2: Check for Duplicates
 
 For each unique project path in the digest:
 1. Read `{project_path}/CLAUDE.md` — scan for "Learned Patterns" and "Error Patterns"
 2. Glob `{project_path}/.claude/rules/*.md` — scan existing knowledge files
 3. Glob `~/.claude/rules/*.md` — scan universal rules
-4. These are already-routed learnings — do NOT duplicate them
 
-### Step 3: Classify Each Correction
+Skip any entry whose rule is already captured in these files.
 
-Read `references/format.md` for the scope classification table. For each correction:
+### Step 3: Present for Approval
 
-1. **Extract the learning** — what rule or fact does this correction teach?
-2. **Filter ruthlessly:**
-   - NOT general programming knowledge (everyone knows this)
-   - NOT already captured in any rules file
-   - IS actionable for a future agent
-3. **Classify scope:** project (codebase-specific) or universal (agent-behavioral)
-4. **Classify destination:** using the routing table in `references/routing.md`
-
-### Step 4: Present for Approval
-
-Use `AskUserQuestion` to present all extracted learnings:
+Use `AskUserQuestion` to present all entries. Each entry already has its destination — show it directly:
 
 ```
-Found {N} learnings from {M} sessions:
+Found {N} entries from {M} sessions:
 
-1. [project] "Events table uses soft deletes" → {project}/.claude/rules/database.md
-2. [universal] "Don't assume test failures mean code is wrong" → ~/.claude/rules/agent-behavior.md
-3. [project] "CORS middleware must be before auth" → {project}/CLAUDE.md > Error Patterns
+1. "Always validate transcript parsing against a real JSONL sample"
+   → /path/to/project/.claude/rules/bash-scripts.md
+2. "Don't assume test failures mean code is wrong"
+   → ~/.claude/rules/agent-behavior.md
 
-Approve all? Or specify: approve 1,2 / reject 3
+Approve all? Or specify: approve 1 / reject 2
 ```
 
 - "Approve all" → route all
 - "Approve N,N" → route selected, discard rest
 - "Reject all" → delete digest without routing
 
-### Step 5: Route Approved Items
+### Step 4: Route Approved Items
 
-Read `references/routing.md` for routing instructions. Read `references/consolidation.md` before creating any new files.
+Read `references/consolidation.md` before writing to any file.
 
-**Project-scoped learnings** use the absolute project path from the digest block header.
-**Universal learnings** route to `~/.claude/rules/{topic}.md`.
+Write each approved entry to its `**Destination:**` path using the absolute path from the entry. If the path is relative, resolve it against the project path from the block header. If the destination is a `skill-fix` or `script-fix` path, read `references/routing.md` Group D to resolve the plugin root first.
 
-If routing `skill-fix` or `script-fix` items, read `references/routing.md` Group D to resolve the plugin path.
-
-### Step 6: Clean Up
+### Step 5: Clean Up
 
 Delete `~/.claude/rules/unprocessed-corrections.md` after processing all blocks.
 
-### Step 7: Report
+### Step 6: Report
 
 ```
 Routed {N} learnings:
-- "Events table uses soft deletes" → /path/to/project/.claude/rules/database.md
-- "Don't assume test failures mean code is wrong" → ~/.claude/rules/agent-behavior.md
+- "Always validate transcript parsing..." → /path/to/project/.claude/rules/bash-scripts.md
+- "Don't assume test failures..." → ~/.claude/rules/agent-behavior.md
 Rejected {M} items.
 Digest cleared.
 ```

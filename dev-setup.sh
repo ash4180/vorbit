@@ -90,5 +90,33 @@ done
 echo "→ Created cache directory with symlinked contents"
 
 echo ""
+
+# 8. Python tooling (via asdf + pip)
+echo "→ Setting up Python tooling..."
+if command -v asdf &>/dev/null; then
+  if ! asdf plugin list 2>/dev/null | grep -q "^python$"; then
+    echo "  Adding asdf python plugin..."
+    asdf plugin add python
+  fi
+  echo "  Running asdf install (pins Python version from .tool-versions)..."
+  asdf install 2>/dev/null || echo "  Warning: asdf install failed — run 'asdf install' manually if needed"
+else
+  echo "  Warning: asdf not found — Python version not pinned. Install asdf to use .tool-versions."
+fi
+
+PIP_CMD=$(command -v pip3 2>/dev/null || command -v pip 2>/dev/null || true)
+if [[ -n "$PIP_CMD" ]]; then
+  echo "  Installing dev dependencies via pip (pytest)..."
+  # pip >= 22 supports editable installs from pyproject.toml; older pip needs fallback
+  if "$PIP_CMD" install -e ".[dev]" --quiet; then
+    echo "  Installed via 'pip install -e \".[dev]\"'"
+  else
+    "$PIP_CMD" install "pytest>=7.0" --quiet || echo "  Warning: pip install failed — run 'pip install pytest' manually"
+  fi
+else
+  echo "  Warning: pip not found — run 'pip install pytest' manually to install pytest"
+fi
+
+echo ""
 echo "Done! Restart Claude Code to load $PLUGIN_NAME."
 echo "\${CLAUDE_PLUGIN_ROOT} → $CACHE_VERSION_DIR (real dir, contents symlinked to $PLUGIN_SOURCE)"

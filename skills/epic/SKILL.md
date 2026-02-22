@@ -128,6 +128,25 @@ If feature includes UI components:
 - Note: "Reference `/vorbit:design:ui-patterns` skill"
 - Identify existing UI patterns to follow
 
+### 4.6 Map Coupled File Paths (Required)
+
+**Before creating any ticket, identify files that must change together.**
+
+A "coupled pair" is any two files where one file's output/format is consumed by the other. If one changes without the other, the system breaks.
+
+Examples of coupling:
+- Script output format ↔ agent recognition string in rules file
+- API response shape ↔ client parser
+- Config schema ↔ validator
+
+**For each coupled pair:**
+1. Identify the **shared contract** (exact string, format, field name, or value both sides depend on)
+2. Put both files in the **same sub-issue** — OR — add an explicit cross-reference in both tickets with the exact shared contract value
+
+**Rule:** Never split tightly coupled file changes across separate tickets without explicitly documenting the shared contract in both. Partial implementation of one ticket will break the system until the other is also done.
+
+**For large codebases:** If the dependency graph is unclear, spawn a team or use `/vorbit:review` to map it before planning tickets. Blast radius analysis — who imports what, what reads what — prevents silent coupling errors.
+
 ## Step 5: Create Technical Plan (SDD)
 
 **RULE: If ANY requirement is unclear, use AskUserQuestion.**
@@ -282,8 +301,14 @@ US-XXX: As a [user], I want [goal]...
 | F1-S3 | API: `POST /payments` | Payment processing and order creation |
 
 ## Test Criteria (TDD - write tests FIRST)
+
+### Unit Tests
 - [ ] Unit test: [component behavior]
-- [ ] Integration test: [user flow]
+
+### E2E Tests
+- [ ] E2E: [happy path] — assert observable output, not internal signals
+- [ ] E2E: [each flow branch]
+- [ ] E2E: [negative case]
 
 ## PRD Reference
 [Link]
@@ -356,8 +381,15 @@ Run `/vorbit:design:ui-patterns` before implementing UI components.
 - [ ] AC-SUB-2 Criterion 2
 
 ## Test Criteria (TDD - write tests FIRST)
+
+### Unit Tests
 - [ ] Unit test: [specific behavior]
 - [ ] Unit test: [edge case]
+
+### E2E Tests (required if feature involves scripts, hooks, or data parsing)
+- [ ] E2E: [happy path] — assert observable output ([file written / state changed]), not just exit code
+- [ ] E2E: [each code path / flow branch] — one test per distinct flow
+- [ ] E2E: [false positive / negative case] — inputs that must NOT trigger
 ```
 
 **Priority Mapping**:
@@ -375,6 +407,34 @@ Every issue (epic and sub-issue) MUST include `## Test Criteria` section:
 - Tests are written FIRST before implementation code
 - Implementation is only "done" when all tests pass
 - No issue is complete without corresponding tests
+
+---
+
+## E2E Test Quality Rules
+
+Apply these rules when writing E2E test criteria for any sub-issue, regardless of stack (API, UI, script, service):
+
+**1. Fixtures must match the real data format**
+Before writing any E2E fixture (mock API response, database seed, file, event payload), sample the real system output first. Never hand-write fixtures based on assumptions — simplified formats hide bugs that only surface in production.
+> Verify the actual shape of the data from the real system, then write fixtures that match it exactly.
+
+**2. Assert observable output, not internal signals**
+E2E tests must assert what the end user or downstream system actually observes:
+- UI: rendered content, visible state, navigation
+- API: response body, status code, database state after the request
+- Script/service: files written, messages sent, external state changed
+
+Internal signals (exit codes, log lines, intermediate variables) are not the observable output. Always trace through to the final effect.
+
+**3. Every code path needs at least one E2E test**
+If the feature has multiple flows or branches (happy path, error path, empty state, retry), each needs its own E2E test. Coverage of one path does not imply correctness of another.
+
+**4. Assertions must be non-vacuous**
+Before asserting on the content of something (file, response, record), first assert it exists. An assertion on a missing resource trivially passes and gives false confidence.
+> Asserting "file does not contain X" when the file doesn't exist always passes — even if the code was supposed to create it.
+
+**5. Test the integrated system, not parts in isolation**
+E2E tests should exercise the full stack end-to-end — real HTTP calls, real DB writes, real file I/O. Mocking internals in an E2E test defeats the purpose. Reserve mocking for unit tests.
 
 ---
 

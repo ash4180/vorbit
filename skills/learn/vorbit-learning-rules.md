@@ -5,14 +5,64 @@ Watch for these patterns during every session. When detected, follow the learn s
 ## When to Trigger
 
 **Correction keywords** — any single word/phrase triggers Correction Capture:
-"no", "nope", "wrong", "that's not right", "error", "still error", "not working", "broken", "nope", "roll back", "revert", "actually", "that's not how"
+"nope", "wrong", "that's not right", "still error", "not working", "broken", "roll back", "revert", "that's not how"
+
+<!-- correction-keywords: nope,wrong,that's not right,still error,not working,broken,roll back,revert,that's not how -->
 
 Repeated failure is NOT required. One correction = one trigger.
 
 **Voluntary capture keywords** — triggers Voluntary Capture:
-"remember this", "save this", "note this", "keep this", "don't forget this", "log this"
+"remember this", "save this", "note this", "keep this", "don't forget this", "log this", "learn this"
 
-## What to Do
+<!-- voluntary-keywords: remember this,save this,note this,keep this,don't forget this,log this,learn this -->
+
+## Stop-Hook Voluntary Capture Flow
+
+When `~/.claude/rules/pending-capture.md` is in your context and contains a `[VORBIT:VOLUNTARY-CAPTURE]` block, the stop hook detected the user explicitly asking to save something during a previous session. Run this flow for each voluntary block:
+
+**1. Identify what to save**
+- Read the `USER:` line in the block — what learning did the user want to capture?
+- Read surrounding `A:` context lines to understand the full situation
+
+**2. Present via `AskUserQuestion`**
+Use `AskUserQuestion` with three fields:
+- **Root cause** — classify the learning type (from `references/format.md`: `claude-md`, `knowledge`, `skill`, `script`, `agent-mistake`, `user-preference`, `tool-behavior`, `general`)
+- **Rule** — the concise imperative rule to save (commit-message style)
+- **Destination** — absolute path of the file to write to (resolved from `references/routing.md`)
+
+**3. On approve** — write a structured entry to `~/.claude/rules/unprocessed-corrections.md`
+**4. On reject** — do nothing
+
+Never skip `AskUserQuestion`. Never write without user confirmation. Always show the exact root cause, rule, and destination before writing.
+
+## Stop-Hook Correction Flow
+
+When `~/.claude/rules/pending-capture.md` is in your context and contains a `[VORBIT:CORRECTION-CAPTURE]` block, the stop hook detected correction keywords from the previous session and wrote the context here for processing. Run this flow:
+
+**1. Read references**
+- Read `references/format.md` to classify the correction type (scope + type)
+- Read `references/routing.md` to determine the destination file
+
+**2. Consolidate**
+- If multiple blocks are about the **same underlying error**, treat them as ONE learning
+- Derive a single root cause, rule, and destination covering all of them
+
+**3. Present via `AskUserQuestion`**
+Use `AskUserQuestion` with three fields:
+- **Root cause** — why this happened (classify using `format.md`: `claude-md`, `knowledge`, `skill`, `script`, `agent-mistake`, `user-preference`, `tool-behavior`, `general`)
+- **Rule** — the concise imperative rule to add (commit-message style, from `format.md` Title Format)
+- **Destination** — absolute path of the file to write to (resolved from `routing.md`)
+
+**4. On approve** — write a structured entry to `~/.claude/rules/unprocessed-corrections.md`
+**5. On reject** — do nothing
+
+Never skip `AskUserQuestion`. Never write without user confirmation. Always show the exact root cause, rule, and destination before writing.
+
+## After All Blocks Are Processed
+
+Once every block in `~/.claude/rules/pending-capture.md` has been handled (all CORRECTION and VOLUNTARY types, regardless of which flow processed them) — delete the file. The file may contain blocks of both types from different sessions; delete it once at the end, not after each individual flow.
+
+## Real-Time Correction Capture (mid-session)
 
 > This flow is for **user-reported corrections only**. If the agent self-discovers an error, write the labeled learning fields (see format below) in your response — the stop hook picks them up automatically.
 
