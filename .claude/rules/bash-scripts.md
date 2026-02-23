@@ -9,6 +9,11 @@ Hook scripts are now Python (`hooks/scripts/*.py`, `skills/*/hooks/*.py`). Bash-
 - **Stop hook scripts must consume `sys.stdin.read()` before any early exit** — Claude Code pipes output into stdin; if the hook exits without reading, the pipe can block or error. Call `sys.stdin.read()` as the first statement in `main()`.
 - **Use `try: main() / except Exception: sys.exit(0)` in `__main__`** — unexpected errors in a stop hook must fall back to `sys.exit(0)`, not crash with a non-zero code that Claude Code treats as "Stop hook error". Wrap the top-level call in a broad exception handler.
 
+## Pyre2 Type Checking
+
+- **Add type annotations to all hook script functions** — Pyre2 can't infer types through nested generics like `list[dict[str, Any]]`. Without annotations, subscripting (`messages[i]`) and slicing (`text[:200]`) produce cascading errors. Annotate parameters, return types, empty list initializers (`all_matching: list[int] = []`), and local variables extracted from generic containers (`entry: dict[str, Any] = messages[i]`).
+- **Pyre2 doesn't narrow types through `sys.exit()` guards** — `if not match: sys.exit(0)` doesn't tell Pyre2 that `match` is non-None afterward. Add `assert match is not None` after the guard to explicitly narrow the type.
+
 ## macOS Path Resolution
 
 - **`/tmp` resolves to `/private/tmp`** — `git rev-parse --show-toplevel` returns the resolved symlink path. When computing project slugs in tests, always use `path.resolve()` (Python) or `realpath` (bash). Raw `/tmp/...` and resolved `/private/tmp/...` produce different slugs.
