@@ -19,7 +19,7 @@
 
 ## Absolute Path Routing
 
-When processing `unprocessed-corrections.md`, each block header contains the full project path:
+When processing learnings (from pending-capture approval or unprocessed-corrections digest), each block header contains the full project path:
 
 ```
 ## Session: abc123 | Project: /Users/ash/Desktop/myproject | 15 Feb 2026

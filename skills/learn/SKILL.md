@@ -27,8 +27,8 @@ Detailed specs live in `references/` within this skill's directory. Glob for `**
 
 Both `pending-capture.md` and `unprocessed-corrections.md` live in `~/.claude/rules/`, which Claude Code auto-loads into every session. That's why their content appears in your context without the user doing anything — the stop hook writes to these files and the next session picks them up automatically.
 
-- If your context contains `pending-capture.md` content → run the **Stop-Hook Correction/Voluntary Flow** from `vorbit-learning-rules.md` for each block, then delete the file
-- If your context contains `unprocessed-corrections.md` content → run **Digest Processing**
+- If your context contains `pending-capture.md` content → run the **Stop-Hook Correction/Voluntary Flow** from `vorbit-learning-rules.md` for each block, then delete the file. On approve, write directly to the destination file (one review, no intermediate step).
+- If your context contains `unprocessed-corrections.md` content → run **Digest Processing** (this only appears from Flow 2: self-discovered learnings that the stop hook wrote directly)
 - If invoked via `/vorbit:learn:checkmemory` → run **Digest Processing**
 - If user correction detected mid-session → run **Correction Capture**
 - If user says "remember this", "save this", "note this", etc. → run **Voluntary Capture**

@@ -1,6 +1,6 @@
 ---
 name: prd
-version: 1.2.2
+version: 1.4.0
 description: Use when user says "write PRD", "create requirements", "define feature", "document requirements", "product spec", or wants to create a Product Requirements Document. Outputs to Notion or Anytype.
 ---
 
@@ -56,11 +56,10 @@ Use the template below. Include:
 - Description (one line, max 100 chars)
 - Problem (max 3 sentences, no tech)
 - Users
-- User Stories with acceptance criteria (ID each criterion as `AC-*`)
+- User Stories with plain language acceptance criteria (ID each as `AC-*`)
 - Assumptions (only explicit defaults accepted by the user, or explicit deferrals)
 - User Flows (Actor/Surface/Action/Result + Story/AC refs across Pages/Components/Services)
 - Constraints
-- Out of Scope
 - Success Criteria (with numbers)
 
 **User Flow Rules:**
@@ -90,6 +89,8 @@ Use the template below. Include:
 - Keep Flow 1 detailed enough for ticket derivation (typically 4-12 steps)
 - Every `AC-*` should map to at least one flow step, unless explicitly marked `Non-journey AC` with reason
 
+**Acceptance Criteria format:** Plain language descriptions of what "done" looks like. Each AC is a short statement — what the user can do, what the system does, or what constraint is met. No formal structure (MUST/SHOULD, GIVEN/WHEN/THEN) — the `/vorbit:epic` skill formalizes these into testable specs later.
+
 **Show the complete PRD in chat for review:**
 
 ```markdown
@@ -106,14 +107,14 @@ Use the template below. Include:
 
 ## User Stories
 
-### US1: [Title]
+### US-1: [Title]
 As a [user], I want [goal], so that [benefit].
 
 **Acceptance Criteria:**
-- [ ] AC-1 ...
-- [ ] AC-2 ...
+- AC-1: [What the user can do or what the system does when done]
+- AC-2: [Another observable outcome or constraint]
 
-### US2: [Title]
+### US-2: [Title]
 ...
 
 ## Assumptions
@@ -127,10 +128,10 @@ As a [user], I want [goal], so that [benefit].
 
 | Step ID | Actor | Surface | Action | Result | Story Refs | AC Refs |
 |---------|-------|---------|--------|--------|------------|---------|
-| F1-S1 | User | [Page] | [What user does] | [What happens] | US1 | AC-1 |
-| F1-S2 | UI | [Component] | [UI response] | [What user sees] | US1 | AC-1 |
-| F1-S3 | System | [Service/API] | [Processes request] | [Data/state updated] | US1 | AC-2 |
-| F1-S4 | UI | [Page] | [Shows result] | [End state] | US1 | AC-2 |
+| F1-S1 | User | [Page] | [What user does] | [What happens] | US-1 | AC-1 |
+| F1-S2 | UI | [Component] | [UI response] | [What user sees] | US-1 | AC-1 |
+| F1-S3 | System | [Service/API] | [Processes request] | [Data/state updated] | US-1 | AC-2 |
+| F1-S4 | UI | [Page] | [Shows result] | [End state] | US-1 | AC-2 |
 
 ### Flow 2: [Alternative/Error Flow] (optional)
 ...
@@ -141,14 +142,11 @@ As a [user], I want [goal], so that [benefit].
 ## Story-to-Flow Mapping
 | User Story | Flow Coverage | AC Coverage | Notes |
 |------------|---------------|-------------|-------|
-| US1 | Flow 1 (F1-S1 to F1-S4) | AC-1, AC-2 | Primary journey |
-| US2 | Flow 2 (F2-S1 to F2-S3) | AC-3 | Error/alternate path |
-| US3 | No user flow required | AC-4 | Internal technical migration only |
+| US-1 | Flow 1 (F1-S1 to F1-S4) | AC-1, AC-2 | Primary journey |
+| US-2 | Flow 2 (F2-S1 to F2-S3) | AC-3 | Error/alternate path |
+| US-3 | No user flow required | AC-4 | Internal technical migration only |
 
 ## Constraints
-- ...
-
-## Out of Scope
 - ...
 
 ## Success Criteria
@@ -220,14 +218,15 @@ Only flag work as a gap if it **cannot be naturally bundled into an existing tic
 | Story-to-Flow Mapping | Yes | Every story maps to flow(s) and AC coverage, or marked "No user flow required" with reason |
 | Success Criteria | Yes | Measurable with numbers |
 | Constraints | No | Budget, timeline, compliance |
-| Out of Scope | No | What we're NOT building |
 
 ## Validation Rules
 
 - **Name**: 3-8 words, no technical jargon
 - **Description**: one line, max 100 chars
 - **Problem**: Max 3 sentences, describes user pain not technical gap
-- **User Stories**: Format "As a [user], I want [goal], so that [benefit]"; each criterion should be IDed as `AC-*`
+- **User Stories**: Format "As a [user], I want [goal], so that [benefit]"; each criterion IDed as `AC-*`
+- **AC format**: Plain language bullet — `AC-{n}: [what is true when done]`. Describes observable outcomes (what user sees, what system does). No formal structure needed — `/vorbit:epic` formalizes later
+- **AC observability**: Criteria describe what the user or caller observes — not internal state
 - **Assumptions**: Only explicit defaults accepted by user, or explicit deferrals
 - **User Flows**: At least one flow with Actor/Surface/Action/Result/Story refs/AC refs. Primary flow must include User, UI, and System. Use `Agent` only for explicit agent/model steps; keep normal service/API logic under `System`
 - **Flow 1 quality bar**: includes start/end, stable step IDs, explicit API/service touchpoints, and 4-12 state-transition steps
@@ -239,17 +238,21 @@ Only flag work as a gap if it **cannot be naturally bundled into an existing tic
 
 ## User Story Format
 
-```
-US-001: As a [user type], I want [goal], so that [benefit]
-  Acceptance:
-  - AC-1 [Specific testable criterion]
-  - AC-2 [Another criterion]
+```markdown
+### US-1: [Title]
+As a [user type], I want [goal], so that [benefit].
+
+**Acceptance Criteria:**
+- AC-1: [What the user can do or what the system does when done]
+- AC-2: [Another observable outcome or constraint]
 ```
 
 Rules:
 - One goal per story
-- Each story has acceptance criteria
+- Each AC is a plain language statement of what "done" looks like
+- Describes what user/caller **observes** — not internal state
 - Stories map to Linear issues (via /vorbit:implement:epic)
+- `/vorbit:epic` formalizes these into MUST/SHOULD + GIVEN/WHEN/THEN specs
 
 ## Success Criteria Format
 
@@ -289,3 +292,6 @@ Content goes in page body as markdown.
 | "We need OAuth2 for authentication" | "Users cannot access personalized features without accounts" | Problem describes user pain, not technical solution |
 | "Users should be happy with login" | "90% of users complete login in under 10 seconds" | Success criteria must have numbers |
 | "OAuth2 JWT Token Auth Implementation" | "User Login and Signup" | Name avoids jargon |
+| `- [ ] AC-1 Form validates email` | `AC-1: User sees error when email is invalid` | ACs describe observable outcomes in plain language |
+| `AC-1: isLoading state is set to true` | `AC-1: Loading spinner appears during submission` | Describe what user sees, not internal state |
+| `AC-1: Uses MUST/SHOULD + GIVEN/WHEN/THEN` | `AC-1: Preview updates when form changes` | PRD uses plain language — epic formalizes later |

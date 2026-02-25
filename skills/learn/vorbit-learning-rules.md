@@ -30,7 +30,7 @@ Use `AskUserQuestion` with three fields:
 - **Rule** — the concise imperative rule to save (commit-message style)
 - **Destination** — absolute path of the file to write to (resolved from `references/routing.md`)
 
-**3. On approve** — write a structured entry to `~/.claude/rules/unprocessed-corrections.md`
+**3. On approve** — write the learning directly to the destination file (follow `references/routing.md` for the write procedure). Skip `unprocessed-corrections.md` — no intermediate step needed.
 **4. On reject** — do nothing
 
 Never skip `AskUserQuestion`. Never write without user confirmation. Always show the exact root cause, rule, and destination before writing.
@@ -53,7 +53,7 @@ Use `AskUserQuestion` with three fields:
 - **Rule** — the concise imperative rule to add (commit-message style, from `format.md` Title Format)
 - **Destination** — absolute path of the file to write to (resolved from `routing.md`)
 
-**4. On approve** — write a structured entry to `~/.claude/rules/unprocessed-corrections.md`
+**4. On approve** — write the learning directly to the destination file (follow `references/routing.md` for the write procedure). Skip `unprocessed-corrections.md` — no intermediate step needed.
 **5. On reject** — do nothing
 
 Never skip `AskUserQuestion`. Never write without user confirmation. Always show the exact root cause, rule, and destination before writing.

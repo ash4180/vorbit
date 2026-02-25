@@ -79,37 +79,44 @@ def mark_seen(seen_file: Path, session_id: str, flow: str, indices: list[int]) -
 
 
 def build_context(messages: list[dict[str, Any]], indices: list[int]) -> str:
-    """Build context block: preceding assistant + user message + following assistant."""
+    """Build context block: preceding assistant + user message + following assistant.
+
+    Skips assistant messages with empty text (e.g. tool-use-only messages).
+    """
     lines: list[str] = []
     for idx in indices:
-        # Search backward for nearest assistant message (skip progress/tool entries)
+        # Search backward for nearest assistant message with text content
         for i in range(idx - 1, -1, -1):
             entry: dict[str, Any] = messages[i]
             if entry.get("type") == "assistant":
                 full: str = extract_text(entry.get("message", {}).get("content", ""))
-                lines.append(f"A: [{full[:200]}]")
-                break
+                if full.strip():
+                    lines.append(f"A: [{full[:1000]}]")
+                    break
         user_entry: dict[str, Any] = messages[idx]
         text: str = extract_text(user_entry.get("message", {}).get("content", ""))
         lines.append(f"USER: {text}")
-        # Search forward for nearest assistant message (skip progress/tool entries)
+        # Search forward for nearest assistant message with text content
         for i in range(idx + 1, len(messages)):
             entry = messages[i]
             if entry.get("type") == "assistant":
                 full = extract_text(entry.get("message", {}).get("content", ""))
-                lines.append(f"A: [{full[:200]}]")
-                break
+                if full.strip():
+                    lines.append(f"A: [{full[:1000]}]")
+                    break
         lines.append("")
     return "\n".join(lines)
 
 
-def write_pending(pending_file: Path, project_root: str, directive_tag: str, directive_msg: str, context: str) -> None:
+def write_pending(pending_file: Path, project_root: str, directive_tag: str, directive_msg: str, context: str, transcript_ref: str = "") -> None:
     """Append a capture block to pending-capture.md for the next session to process."""
     p = Path(pending_file)
     p.parent.mkdir(parents=True, exist_ok=True)
     timestamp = datetime.now().strftime("%d %b %Y")
+    ref_line = f"Transcript: {transcript_ref}\n" if transcript_ref else ""
     block = (
         f"## [{directive_tag}] | Project: {project_root} | {timestamp}\n"
+        f"{ref_line}"
         f"{directive_msg}\n\n"
         f"{context}\n"
         "---\n\n"
@@ -229,6 +236,8 @@ def main():
 
         if new_indices:
             context = build_context(messages, new_indices)
+            idx_list = ",".join(str(i) for i in new_indices)
+            transcript_ref = f"{transcript_path} #msg:{idx_list}"
             write_pending(
                 pending_file,
                 project_root,
@@ -236,6 +245,7 @@ def main():
                 "Stop hook found correction keywords. "
                 "Run the Stop-Hook Correction Flow from vorbit-learning-rules.md.",
                 context,
+                transcript_ref=transcript_ref,
             )
             mark_seen(seen_file, session_id, "f1", new_indices)
             sys.exit(0)
@@ -264,6 +274,8 @@ def main():
 
         if new_voluntary:
             context = build_context(messages, new_voluntary)
+            idx_list = ",".join(str(i) for i in new_voluntary)
+            transcript_ref = f"{transcript_path} #msg:{idx_list}"
             write_pending(
                 pending_file,
                 project_root,
@@ -271,6 +283,7 @@ def main():
                 "Stop hook found voluntary capture keywords. "
                 "Run the Stop-Hook Voluntary Capture Flow from vorbit-learning-rules.md.",
                 context,
+                transcript_ref=transcript_ref,
             )
             mark_seen(seen_file, session_id, "fv", new_voluntary)
             sys.exit(0)

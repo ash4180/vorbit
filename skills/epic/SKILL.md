@@ -1,6 +1,6 @@
 ---
 name: epic
-version: 1.4.2
+version: 1.6.0
 description: Use when user says "create issues", "break down PRD", "set up epic", "create Linear tasks", "plan sprint", "convert to issues", or wants to transform PRD user stories into Linear epics and sub-issues.
 ---
 
@@ -37,6 +37,9 @@ Read and follow `_shared/mcp-tool-routing.md` (glob for `**/skills/_shared/mcp-t
 
 **IF no PRD exists:**
 1. Gather requirements via conversation
+
+**AC formalization requirement:**
+PRD acceptance criteria are plain language. The epic skill MUST formalize them into MUST/SHOULD + GIVEN/WHEN/THEN format per `_shared/requirement-format.md` (glob for `**/skills/_shared/requirement-format.md`). This is where plain language becomes testable spec.
 
 **Traceability requirements before planning:**
 - Every user story has at least one `AC-*`
@@ -183,6 +186,37 @@ For each User Story, create:
 
 **TDD rule:** Every issue MUST include `## Test Criteria` section. Tests are written FIRST before implementation.
 
+**Test derivation from AC scenarios (required):**
+After formalizing PRD criteria into MUST/SHOULD + GIVEN/WHEN/THEN, derive E2E test criteria mechanically per `_shared/requirement-format.md`:
+- Each GIVEN clause → test setup/precondition
+- Each WHEN clause → test action
+- Each THEN clause → one E2E assertion
+- Each AND clause → one additional E2E assertion
+- Constraint ACs (no scenarios) → direct assertion from the requirement statement
+- Do NOT invent test scenarios — derive them from the PRD AC scenarios first, then add edge cases
+
+Example (behavioral):
+```
+PRD AC-2: Real-time preview updates
+Preview MUST update when form inputs change.
+
+Scenario: Field change triggers update
+- WHEN user changes any form field
+- THEN preview re-renders within 500ms
+
+Derived:
+  E2E: Change form field -> verify preview re-renders within 500ms (from AC-2)
+```
+
+Example (constraint):
+```
+PRD AC-5: Response time budget
+API endpoints MUST respond within 200ms at p95.
+
+Derived:
+  E2E: Measure p95 latency across endpoints -> verify < 200ms (from AC-5)
+```
+
 **Epic planning inputs per story (required):**
 - User story ID (`US-*`)
 - Relevant AC IDs (`AC-*`)
@@ -202,20 +236,20 @@ For EACH sub-issue, include all these sections:
 | Section | Required | Purpose |
 |---------|----------|---------|
 | **Why This Is Needed** | ✅ | What it does + why it matters |
-| **Related Epic AC** | ✅ | Copy relevant ACs from parent epic |
+| **Acceptance Criteria** | ✅ | Reference relevant epic ACs by ID + plain language summary |
 | **Related Flow Steps** | ✅ | Copy relevant flow step IDs + touched surfaces |
 | **Reuse & Patterns** | ✅ | Existing code, utilities, constants |
 | **File Changes** | ✅ | Exact file paths with action (CREATE/MODIFY) |
 | **Mock Data** | If UI work | Expected mocks and cleanup note |
-| **Acceptance Criteria** | ✅ | Sub-issue specific criteria |
-| **Test Criteria** | ✅ | TDD requirements |
+| **Implementation Checklist** | ✅ | Plain language criteria for this task |
+| **Test Criteria** | ✅ | Unit tests (E2E is in parent epic) |
 
 ### Mapping Epic AC to Sub-issues
 
 1. List all Epic Acceptance Criteria (`AC-*`)
 2. List all related flow steps for the story (`F*-S*`)
-3. For each sub-issue, identify which Epic ACs and flow steps it satisfies
-4. Copy those specific ACs into "Related Epic AC" and flow steps into "Related Flow Steps"
+3. For each sub-issue, identify which Epic ACs and flow steps it covers
+4. Reference those ACs by ID + plain language summary in the sub-issue's "Acceptance Criteria" section
 5. **Rule:** Every Epic AC must be covered by at least one sub-issue
 6. **Rule:** Every in-scope flow step with implementation impact must be covered by at least one sub-issue
 
@@ -227,6 +261,31 @@ Before creating Linear issues, validate this matrix:
 - `Flow step(s)` -> sub-issue(s)
 
 If any link is missing, stop and resolve via `AskUserQuestion` before Step 8.
+
+## Step 7.6: PRD Change Tracking (when updating existing epic)
+
+When the PRD has changed since the epic was created, track deltas in the epic description:
+
+```markdown
+## PRD Changes Since Epic Created
+### ADDED
+- AC-7: [Name] — Needs new sub-issue
+
+### MODIFIED
+- AC-3: [Name] — [What changed, e.g. "latency target: 1s → 500ms"]
+  Impact: Update test criteria in [sub-issue ID]
+
+### REMOVED
+- US-3: [Title] — Reason: [e.g. "Descoped to v2"]
+  Impact: Close [sub-issue ID] as won't-fix
+```
+
+**Rules:**
+- Only track when updating an existing epic (skip for new epics)
+- Each ADDED AC must map to a new or existing sub-issue
+- Each MODIFIED AC must identify which sub-issues need updating
+- Each REMOVED story/AC must identify which sub-issues to close
+- Ask user to confirm impact assessment before modifying Linear issues
 
 ## Step 8: Create in Linear
 
@@ -291,8 +350,17 @@ Next: Start with Phase 1 issues using `/vorbit:implement:implement ABC-101`
 US-XXX: As a [user], I want [goal]...
 
 ## Acceptance Criteria
-- [ ] AC-1 Criterion 1
-- [ ] AC-2 Criterion 2
+
+#### AC-1: [Name]
+[Requirement statement — MUST or SHOULD]
+
+**Scenario: [scenario name]**
+- GIVEN [precondition] _(if needed)_
+- WHEN [trigger from PRD]
+- THEN [observable outcome]
+
+#### AC-2: [Constraint name]
+[Constraint — MUST or SHOULD. Directly testable.]
 
 ## Related PRD Flow Context
 | Flow Step | Surface | Why it matters |
@@ -300,15 +368,11 @@ US-XXX: As a [user], I want [goal]...
 | F1-S2 | UI: `CheckoutForm` | User submits payment details |
 | F1-S3 | API: `POST /payments` | Payment processing and order creation |
 
-## Test Criteria (TDD - write tests FIRST)
-
-### Unit Tests
-- [ ] Unit test: [component behavior]
-
-### E2E Tests
-- [ ] E2E: [happy path] — assert observable output, not internal signals
-- [ ] E2E: [each flow branch]
-- [ ] E2E: [negative case]
+## E2E Test Plan (derived from ACs — verified by /verify)
+- [ ] E2E: [GIVEN setup +] [WHEN action] -> [THEN assertion] (from AC-{n}, MUST/SHOULD)
+- [ ] E2E: [constraint direct assertion] (from AC-{n}, MUST/SHOULD)
+- [ ] E2E: [edge case] — agent-added for robustness
+- [ ] E2E: [negative case] — inputs that must NOT trigger
 
 ## PRD Reference
 [Link]
@@ -324,10 +388,11 @@ US-XXX: As a [user], I want [goal]...
 **What this does:** [Simple 1-sentence explanation]
 **Why it matters:** [Business/user impact - what breaks without this?]
 
-## Related Epic Acceptance Criteria
-> This sub-issue must satisfy these goals from the parent epic:
-- [ ] AC-1 [Epic AC that this sub-issue addresses]
-- [ ] AC-2 [Epic AC that this sub-issue addresses]
+## Acceptance Criteria
+> Full scenarios and E2E test plan in parent epic.
+
+- **AC-1: [Name]** (MUST/SHOULD) — [plain language: what this sub-issue must satisfy]
+- **AC-2: [Name]** (MUST/SHOULD) — [plain language summary]
 
 ## Related Flow Steps
 > Implementation context from PRD flow:
@@ -376,20 +441,17 @@ Run `/vorbit:design:ui-patterns` before implementing UI components.
 > **Handover note:** Run `/vorbit:implement:cleanup-mocks [feature]` before backend takes over.
 > Mocks will be registered in `.claude/mock-registry.json` for tracking.
 
-## Acceptance Criteria (Sub-issue specific)
-- [ ] AC-SUB-1 Criterion 1
-- [ ] AC-SUB-2 Criterion 2
+## Implementation Checklist
+- [ ] [Concrete implementation criterion in plain language]
+- [ ] [Another criterion — what must be true when this sub-issue is done]
 
 ## Test Criteria (TDD - write tests FIRST)
 
 ### Unit Tests
-- [ ] Unit test: [specific behavior]
+- [ ] Unit test: [specific behavior for this component/function]
 - [ ] Unit test: [edge case]
 
-### E2E Tests (required if feature involves scripts, hooks, or data parsing)
-- [ ] E2E: [happy path] — assert observable output ([file written / state changed]), not just exit code
-- [ ] E2E: [each code path / flow branch] — one test per distinct flow
-- [ ] E2E: [false positive / negative case] — inputs that must NOT trigger
+> E2E tests are in the parent epic's test plan — verified by `/vorbit:verify`.
 ```
 
 **Priority Mapping**:
@@ -403,16 +465,16 @@ Run `/vorbit:design:ui-patterns` before implementing UI components.
 
 **CRITICAL: All implementation follows Test-Driven Development.**
 
-Every issue (epic and sub-issue) MUST include `## Test Criteria` section:
-- Tests are written FIRST before implementation code
-- Implementation is only "done" when all tests pass
-- No issue is complete without corresponding tests
+Test responsibilities are split by level:
+- **Epic**: `## E2E Test Plan` — derived from formalized ACs, verified by `/vorbit:verify`
+- **Sub-issue**: `## Test Criteria` — unit tests written FIRST before implementation code
+- Implementation is only "done" when unit tests pass and `/vorbit:verify` confirms E2E plan
 
 ---
 
 ## E2E Test Quality Rules
 
-Apply these rules when writing E2E test criteria for any sub-issue, regardless of stack (API, UI, script, service):
+Apply these rules when writing E2E test criteria in the epic's test plan, regardless of stack (API, UI, script, service):
 
 **1. Fixtures must match the real data format**
 Before writing any E2E fixture (mock API response, database seed, file, event payload), sample the real system output first. Never hand-write fixtures based on assumptions — simplified formats hide bugs that only surface in production.

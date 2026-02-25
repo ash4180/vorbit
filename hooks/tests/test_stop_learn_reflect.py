@@ -511,6 +511,79 @@ def test_output_format_directive(test_project, run_hook, correction_transcript):
 
 
 # ============================================================================
+# Section 7b: Context Quality (skip empties, char limit, transcript ref)
+# ============================================================================
+
+def test_context_skips_empty_assistant(test_project, run_hook):
+    """7b-a: Tool-use-only assistant messages (no text) are skipped; context finds next message with real text."""
+    sid = "test-session-skipempty"
+    tool_only = {
+        "type": "assistant",
+        "message": {"role": "assistant", "content": [{"type": "tool_use", "id": "t1", "name": "Edit", "input": {}}]},
+        "sessionId": sid,
+        "timestamp": "2026-02-15T10:01:00Z",
+    }
+    _write_jsonl(test_project["sessions_dir"] / f"{sid}.jsonl", [
+        _asst("I'll refactor the component layout.", sid, "2026-02-15T10:00:00Z"),
+        tool_only,  # empty text — should be skipped in backward search
+        _user("Wrong, don't touch that file", sid, "2026-02-15T10:02:00Z"),
+        tool_only,  # empty text — should be skipped in forward search
+        _asst("Sorry, reverting the change now.", sid, "2026-02-15T10:04:00Z"),
+    ])
+
+    exit_code, _, _ = _run_slr(run_hook, test_project)
+    assert exit_code == 0
+    content = _pending_file(test_project).read_text()
+    assert "refactor the component" in content  # found past the empty msg
+    assert "reverting the change" in content  # found past the empty msg
+
+
+def test_context_1000_char_limit(test_project, run_hook):
+    """7b-b: Assistant context captures up to 1000 chars, not truncated at 200."""
+    sid = "test-session-charlimit"
+    long_response = "A" * 500 + " MARKER_AT_500 " + "B" * 485
+    _write_jsonl(test_project["sessions_dir"] / f"{sid}.jsonl", [
+        _asst(long_response, sid, "2026-02-15T10:00:00Z"),
+        _user("Wrong, that approach is incorrect", sid, "2026-02-15T10:01:00Z"),
+        _asst("Fixed the issue.", sid, "2026-02-15T10:02:00Z"),
+    ])
+
+    exit_code, _, _ = _run_slr(run_hook, test_project)
+    assert exit_code == 0
+    content = _pending_file(test_project).read_text()
+    # Under old 200-char limit, MARKER_AT_500 would be truncated
+    assert "MARKER_AT_500" in content
+
+
+def test_context_truncates_beyond_1000(test_project, run_hook):
+    """7b-b2: Content beyond 1000 chars is truncated — marker past position 1000 is absent."""
+    sid = "test-session-trunc"
+    long_response = "A" * 1050 + " SHOULD_BE_TRUNCATED " + "B" * 100
+    _write_jsonl(test_project["sessions_dir"] / f"{sid}.jsonl", [
+        _asst(long_response, sid, "2026-02-15T10:00:00Z"),
+        _user("Wrong, that approach is incorrect", sid, "2026-02-15T10:01:00Z"),
+        _asst("Fixed the issue.", sid, "2026-02-15T10:02:00Z"),
+    ])
+
+    exit_code, _, _ = _run_slr(run_hook, test_project)
+    assert exit_code == 0
+    content = _pending_file(test_project).read_text()
+    assert "SHOULD_BE_TRUNCATED" not in content
+
+
+def test_pending_includes_transcript_ref(test_project, run_hook, correction_transcript):
+    """7b-c: Pending capture block includes transcript file path and message indices."""
+    correction_transcript(test_project["sessions_dir"])
+
+    exit_code, _, _ = _run_slr(run_hook, test_project)
+    assert exit_code == 0
+    content = _pending_file(test_project).read_text()
+    assert "Transcript:" in content
+    assert ".jsonl" in content
+    assert "#msg:" in content
+
+
+# ============================================================================
 # Section 8: Voluntary Keyword Detection
 # ============================================================================
 
