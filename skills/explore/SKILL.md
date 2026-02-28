@@ -47,6 +47,16 @@ Then ask follow-ups:
 
 **DO NOT proceed until you have answers to 10+ questions.**
 
+## Step 2.5: Question Quota Gate
+
+Before proceeding to Step 3, you MUST:
+1. List every question you asked and the user's answer (abbreviated, one line each)
+2. Output: **"Questions asked: [N]/10"**
+3. If N < 10 → return to Step 2 and generate more questions
+4. If user declined to answer some → still counts toward quota if asked
+
+NEVER proceed to Step 3 with fewer than 10 questions asked. This gate is non-negotiable.
+
 ## Step 3: Analyze
 
 After gathering context:

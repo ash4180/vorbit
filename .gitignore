@@ -9,6 +9,7 @@ node_modules/
 
 # Vorbit working state
 .vorbit/
+vorbit-architecture.html
 
 # Loop state (runtime only, not committed)
 .claude/

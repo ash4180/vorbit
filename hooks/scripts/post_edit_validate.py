@@ -11,33 +11,15 @@ import subprocess
 import sys
 from pathlib import Path
 
-
-def find_project_root(file_path):
-    """Find git root, falling back to file's parent directory."""
-    try:
-        result = subprocess.run(
-            ["git", "rev-parse", "--show-toplevel"],
-            capture_output=True, text=True,
-            cwd=str(Path(file_path).parent)
-        )
-        if result.returncode == 0:
-            return result.stdout.strip()
-    except Exception:
-        pass
-    return str(Path(file_path).parent)
+from _utils import find_project_root, get_file_path_or_exit, parse_tool_input
 
 
 def main():
-    tool_input_str = os.environ.get("TOOL_INPUT", "")
-    try:
-        tool_input = json.loads(tool_input_str) if tool_input_str else {}
-    except json.JSONDecodeError:
+    tool_input = parse_tool_input()
+    if not tool_input:
         sys.exit(0)
 
-    file_path = tool_input.get("file_path", "")
-    if not file_path or not Path(file_path).is_file():
-        sys.exit(0)
-
+    file_path = get_file_path_or_exit(tool_input)
     project_root = find_project_root(file_path)
     file_ext = Path(file_path).suffix.lstrip(".")
     dry_run = os.environ.get("DRY_RUN") == "1"
