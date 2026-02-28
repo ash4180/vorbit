@@ -16,12 +16,9 @@ Create reusable UI prototypes that become production code. Frontend devs swap mo
 - **Single mock import**: Each component imports mock at top of file, with `// TODO: Replace with real API`.
 - **Use TaskCreate/TaskUpdate**: Track progress through all phases.
 
-## Phase 0: Verify External Connections
+## Phase 0: Detect Platform & Verify Connection
 
-**IF Notion URL provided OR wants to fetch PRD from Notion:**
-1. Run a lightweight test: use `notion-find` to search for "test"
-2. **IF fails:** "Notion connection expired. Run `/mcp` to reconnect, then retry." → **STOP**
-3. **IF succeeds:** proceed
+Read and follow `_shared/mcp-tool-routing.md` (glob for `**/skills/_shared/mcp-tool-routing.md`). Discover connected platforms, ask user which to use, and verify connection.
 
 **IF Figma URL provided:**
 1. Use `mcp__plugin_figma_figma__get_design_context` to fetch the design
