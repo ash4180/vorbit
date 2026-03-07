@@ -41,6 +41,15 @@ Standalone, draggable sections that fit into page slots. Build as reusable eleme
 
 ## Workflow
 
+### Step 0: Canvas Sync Check
+
+Before starting, check if Pencil MCP is available and canvas-sync is configured:
+1. Run `ToolSearch` for `"pencil"` — if Pencil tools exist:
+2. Check if `.claude/rules/canvas-sync.md` exists (Glob for it)
+3. **IF Pencil available but no canvas-sync.md:** Use `AskUserQuestion`: "Pencil is connected but not configured for this project. Run `/vorbit:design:canvas-sync` first to sync your design tokens and components? (Recommended)" with options: "Run canvas-sync first (Recommended)", "Skip — continue without sync"
+4. **IF user chooses to sync:** Stop and tell them to run `/vorbit:design:canvas-sync`, then come back
+5. **IF canvas-sync.md exists:** Read it — use detected stack, tokens, and component inventory to inform Webflow development decisions
+
 ### Step 1: Gather Inputs
 
 Collect required information:
