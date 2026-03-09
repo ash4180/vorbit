@@ -259,9 +259,11 @@ Token source depends on the path:
 
 This is the key performance improvement. Without this phase, every mockup builds every Button, Card, Input from raw primitives. With reusable components, mockups use `I(parent, {type: "ref", ref: "btnId"})` — one operation instead of 8-12.
 
-### Step 1: Load Pencil guidelines
+### Step 1: Load layout model and Pencil guidelines
 
-Load the appropriate Pencil guidelines based on the path and detected platform:
+**First**, read `skills/canvas-sync/references/layout-model.md` `[Skill ref]` — the CSS→Pencil mental model. This teaches how block vs inline elements work, when to wrap text in frames, how flex layout maps to Pencil, and platform safe area rules. Understanding this prevents layout bugs at the source.
+
+**Then** load the appropriate Pencil guidelines based on the path and detected platform:
 
 **Path A (codebase — building reusable components):**
 - Call `mcp__pencil__get_guidelines("design-system")` `[Pencil]` — how to structure reusable components (naming, slots, nesting)
@@ -408,12 +410,15 @@ Key: the content slot uses `layout: "none"` (stacking mode) so bone and nav-over
 **For screens without floating elements (Pattern B-simple, C, D):**
 No stacking needed — leave the content slot as `layout: "vertical"` (or `"horizontal"` for sidebar layouts) and build the bone directly.
 
-**CRITICAL — Pencil property syntax (silent failures):**
-Before writing ANY `batch_design` call, review the "Pencil properties that silently drop" table in the detection/platform reference. Key rules:
-- Padding: `padding: 16` or `padding: [vertical, horizontal]` — NOT `paddingTop`/`paddingLeft` (silently dropped)
-- Border: `stroke: {align: "inside", fill: "$--border", thickness: 1}` — NOT `stroke: "$--border", strokeWidth: 1` (silently dropped)
-- Icons: `type: "icon_font"` with `iconFontFamily: "lucide", iconFontName: "home"` — NOT `type: "icon"` or `icon: "lucide/home"` (silently dropped)
-- Always call `get_guidelines("design-system")` first — it has the authoritative schema with examples.
+**CRITICAL — Review layout model and syntax before building:**
+Before writing ANY `batch_design` call, review the checklist at the bottom of `references/layout-model.md`. Key rules:
+- Text/icon nodes ignore `width`/`height` — wrap in a frame when you need sizing control (see "When to Wrap")
+- `fill_container` only works inside flex parents — not inside `layout: "none"` (see "Flexbox" section)
+- Padding: `padding: [t,r,b,l]` — NOT `paddingTop`/`paddingLeft` (silently dropped)
+- Border: `stroke: {align: "inside", fill: "$--border", thickness: 1}` — NOT `stroke: "$--border", strokeWidth: 1`
+- Icons: `type: "icon_font"` with `iconFontFamily: "lucide", iconFontName: "home"` — NOT `type: "icon"`
+- Safe areas: All interactive content within shell's content slot, with platform-appropriate margins (16px+ on mobile)
+- Always call `get_guidelines("design-system")` first — it has the authoritative Pencil schema with examples.
 
 **Batch strategy** — keep each `batch_design` call under 25 operations:
 - Batch 1: Library frame (vertical layout) + Screen Shells (2-3 shells, ~12 ops)
