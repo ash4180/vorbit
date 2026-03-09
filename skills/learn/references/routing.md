@@ -19,13 +19,7 @@
 
 ## Absolute Path Routing
 
-When processing `unprocessed-corrections.md`, each block header contains the full project path:
-
-```
-## Session: abc123 | Project: /Users/ash/Desktop/myproject | 15 Feb 2026
-```
-
-Use `/Users/ash/Desktop/myproject` as the `{origin}` for all project-scoped learnings from that block. This ensures learnings route to the correct project even when the current session is in a different project.
+Each Obsidian correction note has `project_path` in its YAML frontmatter (e.g., `/Users/ash/Desktop/myproject`). Use this as the `{origin}` for all project-scoped learnings. This ensures learnings route to the correct project even when the current session is in a different project.
 
 ## Group A: CLAUDE.md (error, pattern)
 

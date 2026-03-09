@@ -238,30 +238,6 @@ def voluntary_transcript():
 
 
 @pytest.fixture
-def self_discovery_transcript():
-    """Transcript with self-discovered learning fields in an assistant message.
-
-    The stop hook's Flow 2 reads ROOT_CAUSE/RULE/DESTINATION from assistant
-    messages and writes to unprocessed-corrections.md.
-    """
-    def _make(sessions_dir, session_id="test-session-self123"):
-        sid = session_id
-        learning_text = (
-            "ROOT_CAUSE: The script assumed PostgreSQL but the project uses SQLite.\n"
-            "RULE: Always check pyproject.toml for the database driver before adding DB code.\n"
-            "DESTINATION: /Users/ash/Projects/vorbit/.claude/rules/architecture.md"
-        )
-        return _write_transcript(
-            sessions_dir / f"{sid}.jsonl",
-            [
-                _user_msg("Fix the database connection.", sid, "2026-02-15T10:00:00Z"),
-                _assistant_msg(learning_text, sid, "2026-02-15T10:01:00Z"),
-            ],
-        )
-    return _make
-
-
-@pytest.fixture
 def multiple_corrections_transcript():
     """Transcript with two separate correction keywords across different user messages."""
     def _make(sessions_dir, session_id="test-session-multi789"):
