@@ -11,6 +11,9 @@ dev = [
 [tool.pytest.ini_options]
 testpaths = ["hooks/tests"]
 
+[tool.setuptools.packages.find]
+include = ["hooks*"]
+
 [build-system]
 requires = ["setuptools>=61"]
 build-backend = "setuptools.build_meta"
