@@ -21,3 +21,4 @@ __pycache__/
 .claude/
 settings.local.json
 CLAUDE.md
+vorbit_hooks.egg-info
