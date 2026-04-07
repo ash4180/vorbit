@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "name": "vorbit-learn-capture",
+            "type": "command",
+            "command": "python3 $VORBIT_PLUGIN_ROOT/scripts/hooks/gemini-session-end.py"
+          }
+        ]
+      }
+    ]
+  }
+}

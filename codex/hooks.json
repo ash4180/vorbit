@@ -1,0 +1,9 @@
+{
+  "Stop": [
+    {
+      "name": "vorbit-learn-capture",
+      "type": "command",
+      "command": "python3 $VORBIT_PLUGIN_ROOT/scripts/hooks/codex-stop.py"
+    }
+  ]
+}

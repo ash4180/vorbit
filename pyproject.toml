@@ -9,10 +9,10 @@ dev = [
 ]
 
 [tool.pytest.ini_options]
-testpaths = ["hooks/tests"]
+testpaths = ["hooks/tests", "tests"]
 
 [tool.setuptools.packages.find]
-include = ["hooks*"]
+include = ["hooks*", "vorbit_core*"]
 
 [build-system]
 requires = ["setuptools>=61"]

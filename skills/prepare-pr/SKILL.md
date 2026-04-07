@@ -74,7 +74,7 @@ For branches without design files, the skill still handles PR body generation an
    ```
    Only remove the issue-specific directory. If other issue directories exist under `designs/`, leave them — they belong to other features.
 
-4. **Commit the stripping:**
+4. **Commit the stripping** — this is a mechanical commit, do NOT add `Co-Authored-By` or any AI attribution:
    ```bash
    git commit -m "chore: strip design files before merge"
    ```
@@ -98,8 +98,9 @@ For branches without design files, the skill still handles PR body generation an
 
 1. **Fetch Linear issue** (if issue-id was found):
    - Call `mcp__linear-server__get_issue` with the issue identifier
-   - Extract: title, description, acceptance criteria, labels, parent issue
-   - If issue has a parent → note the epic title for context
+   - Extract: title, description, acceptance criteria, labels, parent issue, **url**
+   - The issue response includes a `url` field — use it for the "Related" section links
+   - If issue has a parent → fetch the parent too for its url and title
 
 2. **Analyze commit history** on this branch:
    ```bash
@@ -122,8 +123,8 @@ For branches without design files, the skill still handles PR body generation an
    [Omit this section if nothing notable]
 
    ## Related
-   - Closes {ISSUE-ID}
-   [- Parent epic: {epic title} if applicable]
+   - Closes [{ISSUE-ID}]({linear-issue-url})
+   [- Parent epic: [{epic-id}]({epic-url}) {epic title} if applicable]
 
    ## Test plan
    - [ ] [AC 1 from Linear issue]
@@ -163,8 +164,7 @@ For branches without design files, the skill still handles PR body generation an
    git push -u origin {branch-name}
    ```
 
-2. **Create the PR:**
-   Use `gh pr create` with the approved title and body. Use a heredoc for the body to preserve formatting:
+2. **Create the PR** — use the approved body exactly as the user approved it. Do NOT append `🤖 Generated with Claude Code` or `Co-Authored-By` footers:
    ```bash
    gh pr create --base {base-branch} --title "{title}" --body "$(cat <<'EOF'
    {approved body}

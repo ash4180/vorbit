@@ -1,39 +1,66 @@
 #!/usr/bin/env python3
-"""Mark all voluntary-keyword messages in current session as seen.
+"""Mark voluntary Claude messages as seen in both canonical and legacy state."""
 
-Called by SKILL.md Voluntary Capture after writing a learning mid-session.
-Prevents the stop hook from writing an unnecessary pending-capture.md entry
-at session end for capture that was already handled during the session.
+from __future__ import annotations
 
-Exit codes: 0 always (non-blocking helper).
-"""
-
-import json
 import os
-import re
 import subprocess
 import sys
 from pathlib import Path
-from typing import Any
 
 
-def extract_text(content: Any) -> str:
-    if isinstance(content, str):
-        return content
-    if isinstance(content, list):
-        return "\n".join(
-            block.get("text", "") for block in content if block.get("type") == "text"
+def _runtime_plugin_root() -> Path:
+    plugin_root = os.environ.get("CLAUDE_PLUGIN_ROOT", "").strip()
+    if plugin_root:
+        return Path(plugin_root).expanduser().resolve()
+    return Path(__file__).resolve().parent.parent.parent.parent
+
+
+MODULE_ROOT = Path(__file__).resolve().parent.parent.parent.parent
+RUNTIME_PLUGIN_ROOT = _runtime_plugin_root()
+if str(MODULE_ROOT) not in sys.path:
+    sys.path.insert(0, str(MODULE_ROOT))
+
+from vorbit_core.config import resolve_config  # noqa: E402
+from vorbit_core.learn.runtime import append_seen_indices, load_seen_indices, scan_keywords  # noqa: E402
+from vorbit_core.learn.storage import LearnStore  # noqa: E402
+from vorbit_core.learn.text import load_transcript, read_comment  # noqa: E402
+
+
+def _project_root() -> Path:
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "--show-toplevel"],
+            capture_output=True,
+            text=True,
         )
-    return ""
+        if result.returncode == 0 and result.stdout.strip():
+            return Path(result.stdout.strip()).resolve()
+    except Exception:
+        pass
+    return Path.cwd().resolve()
 
 
-def main():
-    plugin_root = os.environ.get("CLAUDE_PLUGIN_ROOT", "")
-    if not plugin_root:
-        # 4 levels up: mark_voluntary_seen.py → hooks/ → learn/ → skills/ → plugin root
-        plugin_root = str(Path(__file__).resolve().parent.parent.parent.parent)
+def _latest_transcript(project_root: Path) -> Path | None:
+    sessions_dir = Path.home() / ".claude" / "projects" / str(project_root).replace("/", "-")
+    try:
+        transcripts = sorted(
+            sessions_dir.glob("*.jsonl"),
+            key=lambda path: path.stat().st_mtime,
+            reverse=True,
+        )
+    except Exception:
+        return None
+    return transcripts[0] if transcripts else None
 
-    rules_source = Path(plugin_root) / "skills" / "learn" / "vorbit-learning-rules.md"
+
+def main() -> None:
+    project_root = _project_root()
+    transcript_path = _latest_transcript(project_root)
+    if transcript_path is None:
+        sys.exit(0)
+
+    rules_source = RUNTIME_PLUGIN_ROOT / "skills" / "learn" / "vorbit-learning-rules.md"
     if not rules_source.exists():
         sys.exit(0)
 
@@ -42,100 +69,38 @@ def main():
     except Exception:
         sys.exit(0)
 
-    # Read voluntary keywords from HTML comment
-    match = re.search(r"<!--\s*voluntary-keywords:\s*(.*?)\s*-->", rules_text)
-    if not match:
+    voluntary_csv = read_comment(rules_text, "voluntary-keywords")
+    if not voluntary_csv:
         sys.exit(0)
 
-    assert match is not None  # narrowing for type checker; guarded by sys.exit above
-    phrases = [p.strip() for p in match.group(1).split(",") if p.strip()]
-    if not phrases:
+    import re
+
+    keywords = [item.strip() for item in voluntary_csv.split(",") if item.strip()]
+    if not keywords:
+        sys.exit(0)
+    pattern = r"\b(" + "|".join(re.escape(keyword) for keyword in keywords) + r")\b"
+    messages = load_transcript(transcript_path, fmt="claude")
+    if not messages:
         sys.exit(0)
 
-    voluntary_pattern = r"\b(" + "|".join(re.escape(p) for p in phrases) + r")\b"
-
-    # Get project root
-    try:
-        result = subprocess.run(
-            ["git", "rev-parse", "--show-toplevel"],
-            capture_output=True, text=True,
-        )
-        project_root = result.stdout.strip() if result.returncode == 0 else os.getcwd()
-    except Exception:
-        project_root = os.getcwd()
-
-    # Find the current session transcript
-    project_slug = project_root.replace("/", "-")
-    sessions_dir = Path.home() / ".claude" / "projects" / project_slug
-
-    try:
-        transcripts = sorted(
-            sessions_dir.glob("*.jsonl"),
-            key=lambda p: p.stat().st_mtime,
-            reverse=True,
-        )
-    except Exception:
-        sys.exit(0)
-
-    if not transcripts:
-        sys.exit(0)
-
-    transcript_path = transcripts[0]
     session_id = transcript_path.stem
-    seen_file = Path.home() / ".claude" / "rules" / ".seen-correction-sessions"
+    config = resolve_config(project_root, legacy_claude_bridge=True)
+    store = LearnStore(config)
+    state_path = store.state_dir / "claude-seen.tsv"
+    legacy_path = Path.home() / ".claude" / "rules" / ".seen-correction-sessions"
 
-    # Load transcript
-    messages = []
-    try:
-        with open(transcript_path) as f:
-            for line in f:
-                line = line.strip()
-                if not line:
-                    continue
-                try:
-                    messages.append(json.loads(line))
-                except json.JSONDecodeError:
-                    continue
-    except Exception:
+    matches = scan_keywords(messages, pattern)
+    if not matches:
         sys.exit(0)
 
-    # Find all voluntary-keyword user messages
-    matching_indices = []
-    for idx, msg in enumerate(messages):
-        if msg.get("type") != "user":
-            continue
-        text = extract_text(msg.get("message", {}).get("content", ""))
-        if not text or len(text) > 500:
-            continue
-        if "<teammate-message" in text:
-            continue
-        if re.search(voluntary_pattern, text, re.IGNORECASE):
-            matching_indices.append(idx)
-
-    if not matching_indices:
+    seen = load_seen_indices(state_path, session_id, "fv") | load_seen_indices(legacy_path, session_id, "fv")
+    new_indices = [idx for idx in matches if idx not in seen]
+    if not new_indices:
         sys.exit(0)
 
-    # Load already-seen fv entries for this session
-    seen = set()
-    try:
-        with open(seen_file) as f:
-            for line in f:
-                parts = line.strip().split("\t")
-                if len(parts) == 3 and parts[0] == session_id and parts[1] == "fv":
-                    try:
-                        seen.add(int(parts[2]))
-                    except ValueError:
-                        pass
-    except FileNotFoundError:
-        pass
-
-    # Mark unseen voluntary messages as seen
-    new_indices = [i for i in matching_indices if i not in seen]
-    if new_indices:
-        seen_file.parent.mkdir(parents=True, exist_ok=True)
-        with open(seen_file, "a") as f:
-            for idx in new_indices:
-                f.write(f"{session_id}\tfv\t{idx}\n")
+    append_seen_indices(state_path, session_id, "fv", new_indices)
+    append_seen_indices(legacy_path, session_id, "fv", new_indices)
+    sys.exit(0)
 
 
 if __name__ == "__main__":
