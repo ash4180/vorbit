@@ -1,6 +1,6 @@
 ---
 name: vorbit-prd
-description: Use when the user wants to create a Product Requirements Document, write requirements, define a feature, or document a product spec with shared Vorbit learnings.
+description: Use when the user wants to create a Product Requirements Document, write requirements, define a feature, or document a product spec with shared Vorbit rules.
 ---
 
 # Vorbit PRD

@@ -1,5 +1,7 @@
 # Vorbit Rule Loading
 
+Rules are maintained manually — add `.md` files to the folders below by hand. There is no automatic capture.
+
 Before applying any Vorbit workflow:
 
 1. Resolve the project root with `git rev-parse --show-toplevel`, falling back to the current working directory.
@@ -9,9 +11,6 @@ Before applying any Vorbit workflow:
    - `$VORBIT_HOME/rules/projects/<project-slug>/*.md`
    - `$VORBIT_HOME/rules/agents/gemini/universal/*.md`
    - `$VORBIT_HOME/rules/agents/gemini/projects/<project-slug>/*.md`
-4. If the repo contains the Vorbit helper script, you may render the bundle instead:
-   - `python3 scripts/vorbit-learning.py rules --agent gemini --project-root <project-root>`
-5. Pending learnings in `$VORBIT_HOME/pending/*.json` are review items only. Do not treat them as durable rules.
 
 Project slug rule:
 - If a project override exists in `.vorbit/config.toml`, use it.

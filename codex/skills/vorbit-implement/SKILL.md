@@ -1,6 +1,6 @@
 ---
 name: vorbit-implement
-description: Use when the user wants to implement a feature, fix a bug, work from a ticket, or follow Vorbit's coding workflow in a codebase with shared and Codex-local learnings.
+description: Use when the user wants to implement a feature, fix a bug, work from a ticket, or follow Vorbit's coding workflow in a codebase with shared project rules.
 ---
 
 # Vorbit Implement

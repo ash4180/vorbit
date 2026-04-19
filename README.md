@@ -1,12 +1,12 @@
 # Vorbit
 
-TDD-first product development workflows for Claude Code, Codex CLI, and Gemini CLI — with shared multi-agent learning.
+TDD-first product development workflows for Claude Code, Codex CLI, and Gemini CLI.
 
 Vorbit packages three layers:
 - **Commands** (`commands/`) — slash command entry points, thin dispatchers
 - **Skills** (`skills/`, `codex/skills/`, `gemini/skills/`) — workflow logic per agent
-- **Hooks** — automatic correction capture and learning across all agents
-- **Core** (`vorbit_core/`) — shared Python library for config, learning, and rule management
+- **Hooks** — formatting, validation, and push warnings
+- **Core** (`vorbit_core/`) — shared Python library for configuration
 
 ## Installation
 
@@ -30,7 +30,7 @@ cd /path/to/vorbit
 bash scripts/sync-codex-skills.sh
 ```
 
-This syncs Vorbit skills into `~/.codex/skills/` and installs the stop hook for automatic correction capture.
+This syncs Vorbit skills into `~/.codex/skills/`.
 
 ### Gemini CLI
 
@@ -39,19 +39,7 @@ cd /path/to/vorbit
 bash scripts/sync-gemini-skills.sh
 ```
 
-This syncs Vorbit skills into `~/.gemini/skills/` and installs the session end hook for automatic correction capture.
-
-### Obsidian Export (optional, all agents)
-
-To write correction notes to your Obsidian vault, add to `~/.vorbit/config.toml`:
-
-```toml
-[exporters.obsidian]
-enabled = true
-vault_path = "/path/to/your/obsidian/vault"
-```
-
-Each agent writes to its own subfolder: `claude/`, `codex/`, `gemini/`.
+This syncs Vorbit skills into `~/.gemini/skills/`.
 
 ## Recommended Workflow
 
@@ -69,51 +57,23 @@ Each agent writes to its own subfolder: `claude/`, `codex/`, `gemini/`.
 ## Core Features
 
 - **Automated Hooks**: Vorbit uses Python scripts to auto-format (Biome/Prettier), validate (tsc, go build, mypy), warn before push, and manage loop modes during execution.
-- **Learning System**: Vorbit captures session corrections ("wrong", "broken", "revert") via stop hooks and writes them to the canonical store. Use `python3 scripts/vorbit-learning.py pending` to review.
-- **Canonical Multi-Agent Store**: Captures, pending review items, and durable rules live in a configurable store (`VORBIT_HOME`, then `~/.vorbit/config.toml`, then `~/.vorbit`). Agent-specific compatibility bridges (Claude `~/.claude/rules/`, Obsidian export) are generated from that store.
-- **Multi-Agent**: Claude Code, Codex CLI, and Gemini CLI share the same learning store. Each agent has its own skills, hooks, and rule projections — but learnings flow across all agents after review.
+- **Multi-Agent**: Claude Code, Codex CLI, and Gemini CLI share the same skill set. Each agent has its own skills and rule projections under `codex/` and `gemini/`.
 - **Prototypes & Design**: Quickly bootstrap prototype interfaces, user journeys, and apply standard UI patterns with the design commands.
-
-## Learning System
-
-When you correct any agent ("wrong", "broken", "revert"), Vorbit captures the correction and creates a pending review item. No correction becomes a durable rule without human approval.
-
-```bash
-# List pending learnings
-python3 scripts/vorbit-learning.py pending --project-root .
-
-# Approve a learning
-python3 scripts/vorbit-learning.py approve <review-id> --approved-by <name>
-
-# Reject a learning
-python3 scripts/vorbit-learning.py reject <review-id> --reason "<why>"
-
-# View rules for a specific agent
-python3 scripts/vorbit-learning.py rules --agent claude
-python3 scripts/vorbit-learning.py rules --agent codex
-python3 scripts/vorbit-learning.py rules --agent gemini
-```
 
 ## Repository Layout
 ```text
 vorbit/
-├── vorbit_core/               # Shared Python library (config, learning, rules)
+├── vorbit_core/               # Shared Python library (config)
 ├── skills/                    # Claude Code skills
 ├── commands/                  # Claude Code slash commands
 ├── hooks/                     # Claude Code hooks
 ├── codex/
-│   ├── skills/                # Codex CLI skills
-│   └── hooks.json             # Codex hook config reference
+│   └── skills/                # Codex CLI skills
 ├── gemini/
-│   ├── skills/                # Gemini CLI skills
-│   └── hooks-settings.json    # Gemini hook config reference
+│   └── skills/                # Gemini CLI skills
 ├── scripts/
-│   ├── hooks/                 # Hook wrappers for Codex and Gemini
-│   ├── sync-codex-skills.sh   # Install Codex skills + hooks
-│   ├── sync-gemini-skills.sh  # Install Gemini skills
-│   ├── vorbit-codex-cli.py    # Manual Codex transcript capture
-│   ├── vorbit-gemini-cli.py   # Manual Gemini transcript capture
-│   └── vorbit-learning.py     # Review CLI (approve/reject/list)
+│   ├── sync-codex-skills.sh   # Install Codex skills
+│   └── sync-gemini-skills.sh  # Install Gemini skills
 ├── tests/                     # Tests for vorbit_core
 ├── CLAUDE.md                  # Claude Code plugin development guide
 ├── AGENTS.md                  # Codex CLI instructions

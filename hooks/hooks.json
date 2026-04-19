@@ -32,10 +32,6 @@
           {
             "type": "command",
             "command": "python3 ${CLAUDE_PLUGIN_ROOT}/skills/implement-loop/hooks/loop_controller.py"
-          },
-          {
-            "type": "command",
-            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/skills/learn/hooks/stop_learn_reflect.py"
           }
         ]
       }

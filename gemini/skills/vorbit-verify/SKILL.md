@@ -1,6 +1,6 @@
 ---
 name: vorbit-verify
-description: Use when the user wants to verify an implementation, validate acceptance criteria, or run a Vorbit-style post-change check using shared project rules and Gemini-local learnings.
+description: Use when the user wants to verify an implementation, validate acceptance criteria, or run a Vorbit-style post-change check using shared project rules.
 ---
 
 # Vorbit Verify
