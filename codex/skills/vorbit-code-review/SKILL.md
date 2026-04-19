@@ -1,6 +1,6 @@
 ---
-name: vorbit-review
-description: Use when the user wants a Vorbit-style code review, PR review, or pre-merge check that respects shared project rules and Codex-local learned mistakes.
+name: vorbit-code-review
+description: Use when the user wants a code review, PR review, pre-merge check, or runs the code-review command. Respects shared project rules.
 ---
 
 # Vorbit Review
