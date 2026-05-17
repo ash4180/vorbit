@@ -98,18 +98,6 @@ vorbit/
   - **Webflow** (webflow)
   - **Mobbin** (optional — figma and pencil pull real-world UI references when connected)
 
-## Testing
-
-Hook scripts have their own pytest suite at `hooks/tests/`.
-
-```bash
-# Install dev dependencies first
-pip install -e ".[dev]"
-
-# Run hook tests
-pytest hooks/tests
-```
-
 ## Credits
 
 Some design knowledge in `skills/_shared/design-knowledge/` is adapted from [design-expert-skill](https://github.com/Opikat/design-expert-skill) by Ekaterina Pykhova, used under the MIT License. See `skills/_shared/design-knowledge/LICENSE` and `ATTRIBUTIONS.md` for full terms.
