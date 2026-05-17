@@ -18,13 +18,13 @@ Create reusable UI prototypes that become production code. Frontend devs swap mo
 
 ## Phase 0: Detect Platform & Verify Connection
 
-### Canvas Sync Check
-Before starting, check if Pencil MCP is available and canvas-sync is configured:
+### Pencil Check
+Before starting, check if Pencil MCP is available and configured:
 1. Run `ToolSearch` for `"pencil"` — if Pencil tools exist:
-2. Check if `.claude/rules/canvas-sync.md` exists (Glob for it)
-3. **IF Pencil available but no canvas-sync.md:** Use `AskUserQuestion`: "Pencil is connected but not configured for this project. Run `/vorbit:design:canvas-sync` first to sync your design tokens and components? (Recommended)" with options: "Run canvas-sync first (Recommended)", "Skip — continue without sync"
-4. **IF user chooses to sync:** Stop and tell them to run `/vorbit:design:canvas-sync`, then come back
-5. **IF canvas-sync.md exists:** Read it — use detected stack, tokens, and component inventory to inform prototype decisions
+2. Check if `.claude/rules/pencil.md` exists (Glob for it)
+3. **IF Pencil available but no pencil.md:** Use `AskUserQuestion`: "Pencil is connected but not configured for this project. Run `/vorbit:design:pencil` first to sync your design tokens and components? (Recommended)" with options: "Run pencil first (Recommended)", "Skip — continue without sync"
+4. **IF user chooses to sync:** Stop and tell them to run `/vorbit:design:pencil`, then come back
+5. **IF pencil.md exists:** Read it — use detected stack, tokens, and component inventory to inform prototype decisions
 
 ### Platform Discovery
 Read and follow `_shared/mcp-tool-routing.md` (glob for `**/skills/_shared/mcp-tool-routing.md`). Discover connected platforms, ask user which to use, and verify connection.

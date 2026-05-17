@@ -1,10 +1,10 @@
 ---
-name: canvas-sync
-version: 2.1.0
-description: Scan codebase and sync design tokens, components, and conventions to Pencil canvas — or start from scratch using Pencil style guides when no codebase exists. Use when user says "sync canvas", "configure pencil", "setup pencil", "canvas sync", "sync tokens to pencil", "design from scratch", "pick a style guide", or wants Pencil to generate project-aware code. Also triggers on "build component library", "pencil components", "start designing", or when mockup quality from Pencil is poor.
+name: pencil
+version: 1.0.0
+description: Scan codebase and sync design tokens, components, and conventions to Pencil canvas — or start from scratch using Pencil style guides when no codebase exists. Use when user says "pencil", "sync pencil", "configure pencil", "setup pencil", "pencil sync", "sync tokens to pencil", "design from scratch", "pick a style guide", or wants Pencil to generate project-aware code. Also triggers on "build component library", "pencil components", "start designing", or when mockup quality from Pencil is poor.
 ---
 
-# Canvas Sync Skill
+# Pencil Skill
 
 Scan a codebase to detect its stack, extract design tokens, build a component inventory, create reusable Pencil components on canvas, and write project rules so AI-generated mockups and code match project conventions.
 
@@ -30,12 +30,12 @@ Read and follow `_shared/mcp-tool-routing.md` (glob for `**/skills/_shared/mcp-t
 
 **Goal**: Detect framework, styling, component library, icon library, and target platform with screen sizes.
 
-Read the detection tables at `skills/canvas-sync/references/detection.md`.
+Read the detection tables at `skills/pencil/references/detection.md`.
 
 **Actions**:
 1. Create todo list with all phases (0-6)
 2. Check flags:
-   - **`--refresh`:** Read existing `.claude/rules/canvas-sync.md`, skip to Phase 2 using cached stack config. No confirmations until final sync preview.
+   - **`--refresh`:** Read existing `.claude/rules/pencil.md`, skip to Phase 2 using cached stack config. No confirmations until final sync preview.
    - **`--components-only`:** Skip token extraction (Phase 2), go straight to Phase 3.
    - **First run:** Continue with full scan below.
 3. Read `package.json` (if it exists) to detect dependencies
@@ -43,7 +43,7 @@ Read the detection tables at `skills/canvas-sync/references/detection.md`.
 5. **Detect platform and screen sizes** — two paths:
 
    **Path A — Project detected** (package.json or framework signals found):
-   - Read the platform-specific reference: `skills/canvas-sync/references/platforms/{detected}.md` `[Skill ref]`
+   - Read the platform-specific reference: `skills/pencil/references/platforms/{detected}.md` `[Skill ref]`
      - Mobile detected → `platforms/mobile.md`
      - Web detected → `platforms/web.md`
      - Desktop detected → `platforms/desktop.md`
@@ -214,7 +214,7 @@ Follow the "Component Inventory Scan" section in `detection.md` `[Skill ref]`:
    This will:
      1. Sync tokens as Pencil variables
      2. Build reusable components on canvas (top 10)
-     3. Write project rules with screen presets to .claude/rules/canvas-sync.md
+     3. Write project rules with screen presets to .claude/rules/pencil.md
 
    Proceed?
    ```
@@ -235,7 +235,7 @@ Token source depends on the path:
 
 **Actions**:
 1. **IF no `.pen` file is open** (from Phase 0):
-   - Ask: "No .pen file is open. Skip canvas sync and just write project rules?"
+   - Ask: "No .pen file is open. Skip Pencil sync and just write project rules?"
    - **IF skip:** Jump to Phase 6
    - **IF user opens a file:** Call `mcp__pencil__get_editor_state` again `[Pencil]`
 2. Call `mcp__pencil__get_variables` `[Pencil]` to read existing canvas variables
@@ -261,7 +261,7 @@ This is the key performance improvement. Without this phase, every mockup builds
 
 ### Step 1: Load layout model and Pencil guidelines
 
-**First**, read `skills/canvas-sync/references/layout-model.md` `[Skill ref]` — the CSS→Pencil mental model. This teaches how block vs inline elements work, when to wrap text in frames, how flex layout maps to Pencil, and platform safe area rules. Understanding this prevents layout bugs at the source.
+**First**, read `skills/pencil/references/layout-model.md` `[Skill ref]` — the CSS→Pencil mental model. This teaches how block vs inline elements work, when to wrap text in frames, how flex layout maps to Pencil, and platform safe area rules. Understanding this prevents layout bugs at the source.
 
 **Then** load the appropriate Pencil guidelines based on the path and detected platform:
 
@@ -445,15 +445,15 @@ Input: "ghi789"
 
 ## Phase 6: Write Project Rules
 
-**Goal**: Write `.claude/rules/canvas-sync.md` with both code generation AND Pencil mockup rules.
+**Goal**: Write `.claude/rules/pencil.md` with both code generation AND Pencil mockup rules.
 
 **Actions**:
 1. Generate rules file with TWO sections — code rules and Pencil rules:
 
 ```markdown
-# Canvas Sync: Project Conventions
+# Pencil: Project Conventions
 
-Generated by canvas-sync v2. Re-run with --refresh to update.
+Generated by pencil v2. Re-run with --refresh to update.
 
 ## Stack
 - Framework: [detected]
@@ -558,16 +558,16 @@ Synced to Pencil canvas as variables:
 - **Pencil ref:** `[pencil-node-id]` (use for mockups)
 ```
 
-2. Write to `.claude/rules/canvas-sync.md`
+2. Write to `.claude/rules/pencil.md`
 3. Present summary:
 
 ```
-Canvas sync complete:
+Pencil sync complete:
   Stack:        Next.js + Tailwind v4 + Shadcn + Lucide
   Platform:     Web (Desktop 1440×900, Tablet 768×1024, Mobile 390×844)
   Tokens:       23 synced to Pencil canvas
   Components:   14 inventoried, 10 built as reusable Pencil components
-  Rules:        .claude/rules/canvas-sync.md written
+  Rules:        .claude/rules/pencil.md written
 
   Pencil mockups will now use existing components via copy/instance.
   Screen presets ensure mockups match real device dimensions.
@@ -578,7 +578,7 @@ Canvas sync complete:
 
 ## Refresh Mode (`--refresh`)
 
-1. Read existing `.claude/rules/canvas-sync.md` for cached stack config
+1. Read existing `.claude/rules/pencil.md` for cached stack config
 2. Skip stack detection and confirmation
 3. Re-extract tokens and components
 4. Diff tokens → sync only changes to Pencil
@@ -588,7 +588,7 @@ Canvas sync complete:
 
 ## Components-Only Mode (`--components-only`)
 
-1. Read existing `.claude/rules/canvas-sync.md` for cached stack + tokens
+1. Read existing `.claude/rules/pencil.md` for cached stack + tokens
 2. Skip token extraction (Phase 2) entirely
 3. Re-scan components (Phase 3)
 4. Skip token sync (Phase 4)

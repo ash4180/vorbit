@@ -3,7 +3,7 @@
 Use for transforming PRD user stories into Linear epics and sub-issues.
 
 1. Load Vorbit durable rules before doing anything else.
-2. Gather context: fetch PRD from Notion/Anytype or conversation. Extract user stories, `AC-*` criteria, user flows, and story-to-flow mapping. Lock requirement baseline before codebase analysis.
+2. Gather context: fetch the source PRD as a Linear ticket via `get_issue` (or by `list_issues` title-search if only a name was given), or gather requirements via conversation if no PRD ticket exists. Extract user stories (`US-*`), `AC-*` criteria, and user flows. Lock the requirement baseline before codebase analysis.
 3. Detect team's Linear setup: verify auth, list teams, get statuses/labels/projects. Keep calls scoped with `team` and `limit`.
 4. Analyze codebase: find similar features, discover reusable code (search by usage first, then common dirs), discover constants, check for mock data, detect UI work, map coupled file paths.
 5. Create technical plan (SDD): overview, flow impact matrix, PRD compliance check, data model, API, components, testing strategy, risks.

@@ -8,6 +8,8 @@ description: Use when user says "implement --loop", "loop mode", "iterate on iss
 
 Manages Ralph Wiggum-style iteration loops for the implement command. Handles sub-issue tracking, state management, and completion detection.
 
+> **Linear MCP namespace**: All Linear calls in this skill use `mcp__plugin_linear_linear__*` (the namespace shipped with the vorbit plugin). Bare verb names below (`list_issues`, `update_issue`, `create_comment`, `list_issue_statuses`) and `Tool: <verb>` blocks refer to the corresponding `mcp__plugin_linear_linear__<verb>` tool.
+
 ## When to Use
 
 - User runs `/vorbit:implement:implement [issue] --loop`

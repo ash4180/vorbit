@@ -1,291 +1,212 @@
 ---
 name: prd
-version: 1.2.2
-description: Use when user says "write PRD", "create requirements", "define feature", "document requirements", "product spec", or wants to create a Product Requirements Document. Outputs to Notion or Anytype.
+version: 2.0.0
+description: Use when user says "write PRD", "create requirements", "define feature", "document requirements", "product spec", "create ticket", or wants to capture a feature spec as a single Linear ticket. Creates a Linear ticket directly with user stories, acceptance criteria, user flows, constraints, and success criteria.
 ---
 
 # PRD Skill
 
-Create Product Requirements Documents with proper structure. No fluff, just what needs building.
+Create a Linear ticket that captures a product requirement. No fluff, just what needs building.
+
+> **Linear MCP namespace**: All Linear calls in this skill use `mcp__plugin_linear_linear__*` (the namespace shipped with the vorbit plugin). Bare verb names below (`get_user`, `list_teams`, `save_issue`, etc.) refer to the corresponding `mcp__plugin_linear_linear__<verb>` tool.
 
 ## Step 1: Gather Context (Draft First)
 
-Goal: produce a PRD draft first. Platform connection must not block drafting.
+The goal is a drafted PRD before touching Linear. Connection problems must never block drafting.
 
-**IF URL or ID provided:**
-1. Try to fetch content using `_shared/mcp-tool-routing.md` (glob for `**/skills/_shared/mcp-tool-routing.md`)
-2. If MCP connection is missing or retrieval fails, ask user to paste relevant sections and continue
-3. Use restructure mode, then proceed to Step 2
+**IF a Linear ticket URL or ID is provided (existing draft, similar feature, etc.):**
+1. Use `get_issue` to fetch the source ticket and read its description for context
+2. Restructure: keep the source intent, normalize wording to the schema below, mark gaps as `TBD`
 
-**Restructure mode definition:**
-- Transform existing source content into the PRD schema while preserving intent
-- Keep strong source details as-is; normalize structure and wording
-- Mark missing required fields as `TBD` and resolve through Step 2 questions
+**IF the user pastes content from elsewhere (Notion, a doc, an old spec):**
+1. Use the pasted text directly as input — the skill's Linear-only `allowed-tools` cannot fetch external docs
+2. Ask the user for any sections they referenced but did not paste, then restructure as above
 
-**IF existing context (explore doc, conversation):**
-1. Use that context as input
-2. Proceed to Step 2 for gaps
+**IF conversation already covers the feature:** use that context as input.
 
-**IF starting fresh:**
-1. Proceed to Step 2
+**IF starting fresh:** proceed to Step 2.
 
 ## Step 2: Clarify Requirements
 
-**RULE: Ask on every meaningful uncertainty. Do not silently assume unclear requirements.**
+**Rule: ask about every meaningful uncertainty. Do not silently guess.**
 
-Ask a MAXIMUM of 3 rounds of questions using `AskUserQuestion` (batch related unknowns together). Focus on:
-1. **Problem** - user pain and why this matters
-2. **Users** - who is affected, primary vs secondary users
-3. **Scope** - what is explicitly in and out
-4. **Constraints** - compliance, timeline, platform, integration limits
-5. **Edge cases** - failure paths and unusual but realistic usage
-6. **Success metrics** - measurable target outcomes
+Use `AskUserQuestion`, batch related unknowns together, max 3 rounds. Focus on:
+1. **Problem** — user pain and why this matters
+2. **Users** — who is affected, primary vs secondary
+3. **Scope** — what is in and what is out
+4. **Constraints** — compliance, timing, platform, integration limits
+5. **Edge cases** — failure paths and unusual but realistic usage
+6. **Success metrics** — measurable outcomes
 
-**For anything uncertain:**
-1. Mark the requirement as `TBD` inline where it appears in the PRD
-2. Ask the user to clarify using `AskUserQuestion` (batched, max 3 rounds)
-3. Update `TBD` markers with the user's answers before showing the final draft
-4. If still unanswered after 3 rounds, keep `TBD` and label it
+For anything still unknown:
+1. Mark it `TBD` inline where it would appear in the PRD
+2. Ask the user via `AskUserQuestion` (batched, max 3 rounds)
+3. Replace the `TBD` with the answer before the final draft
+4. If still unresolved after 3 rounds, leave the `TBD` with a short label
 
-Every `TBD` MUST have a corresponding question asked. No silent guessing.
+Every `TBD` must have a matching question attempt. No silent guessing.
 
-## Step 3: Generate PRD Draft
+## Step 3: Generate Draft
 
-Use the template below. Include:
-- Name (3-8 words, no jargon)
-- Description (one line, max 100 chars)
-- Problem (max 3 sentences, no tech)
-- Users
-- User Stories with acceptance criteria (ID each criterion as `AC-*`)
-- Assumptions (only explicit defaults accepted by the user, or explicit deferrals)
-- User Flows (Actor/Surface/Action/Result + Story/AC refs across Pages/Components/Services)
+Use the template below. Match VIB-2978's prose style — no big tables.
+
+**Required content:**
+- Feature name (3-8 words, no jargon) — this becomes the Linear ticket **title**
+- Description: one short paragraph under the H1
+- Problem: 1-2 short paragraphs, no tech detail
+- User Stories: `US-001`, `US-002`, ... each with `AC-N` items
+- User Flows: at least one happy flow in prose Entry/Exit form
 - Constraints
-- Out of Scope
-- Success Criteria (with numbers)
+- Success Criteria with numbers
 
-**User Flow Rules:**
-- Every PRD needs at least ONE flow
-- Each step has: Actor (who), Surface (where), Action (what), Result (outcome)
-- The primary flow MUST include User, UI, and System actors
-- Use `Agent` as an actor only when a model/agent performs a distinct journey step (for example: generates content, makes a recommendation/decision, classifies input, or executes tools)
-- Do NOT label normal backend/API processing as `Agent`; use `System` for standard deterministic service behavior
-- Add additional flows only for materially different paths (error, edge, alternate)
-- Every user story MUST map to at least one flow (or be explicitly marked `No user flow required` with a reason)
-- No strict 1:1 is required: one flow can cover multiple user stories
+After showing the draft, ask: **"Does this look good? Ready to create the Linear ticket?"**
 
-**Core Flow Building Rules (Flow 1):**
-- Flow 1 is REQUIRED and represents the primary end-to-end happy path
-- Start at the user's first trigger and end at the user-visible completion state
-- Use stable step IDs: `F1-S1`, `F1-S2`, ...
-- Keep one state transition per step (no hidden jumps)
-- Each step MUST specify:
-  - Actor
-  - Surface (page/component/service)
-  - Action
-  - Result
-  - Story refs (`US-*`)
-  - AC refs (`AC-*`)
-- If a step calls an API/service, show the endpoint/service name in `Surface` or `Result`
-- If a step can fail, point to alternate flow coverage in `Result` (for example: `On failure -> Flow 2`)
-- Keep Flow 1 detailed enough for ticket derivation (typically 4-12 steps)
-- Every `AC-*` should map to at least one flow step, unless explicitly marked `Non-journey AC` with reason
-
-**Show the complete PRD in chat for review:**
+### Template
 
 ```markdown
 # [Feature Name]
 
 ## Description
-[One-line summary, max 100 chars]
+
+[1-2 sentences summarizing the feature]
 
 ## Problem
-[Max 3 sentences, no tech details]
 
-## Users
-[Who has this problem]
+[1-2 short paragraphs explaining user pain and why this matters]
 
 ## User Stories
 
-### US1: [Title]
-As a [user], I want [goal], so that [benefit].
+### US-001: [Title]
+
+As a [user], I want [goal], so [benefit].
 
 **Acceptance Criteria:**
-- [ ] AC-1 ...
-- [ ] AC-2 ...
 
-### US2: [Title]
-...
+- [ ] AC-1 [Specific testable criterion]
+- [ ] AC-2 [Another specific criterion]
 
-## Assumptions
-- [Explicit default accepted by user]
-- [Explicitly deferred decision with owner]
+### US-002: [Title]
+
+As a [user], I want [goal], so [benefit].
+
+**Acceptance Criteria:**
+
+- [ ] AC-3 ...
+- [ ] AC-4 ...
 
 ## User Flows
 
-### Flow 1: [Primary Flow Name]
-**Entry:** [Page/Screen] → **Exit:** [Page/Screen]
+### Flow 1: [Name] (Happy flow)
 
-| Step ID | Actor | Surface | Action | Result | Story Refs | AC Refs |
-|---------|-------|---------|--------|--------|------------|---------|
-| F1-S1 | User | [Page] | [What user does] | [What happens] | US1 | AC-1 |
-| F1-S2 | UI | [Component] | [UI response] | [What user sees] | US1 | AC-1 |
-| F1-S3 | System | [Service/API] | [Processes request] | [Data/state updated] | US1 | AC-2 |
-| F1-S4 | UI | [Page] | [Shows result] | [End state] | US1 | AC-2 |
+**Entry:** [Start screen] → [Step] → [Step] → [Step] → **Exit:** [End state]
 
-### Flow 2: [Alternative/Error Flow] (optional)
-...
+### Flow 2: [Name] (Happy flow, second main path)
 
-> Add `Agent` rows only when the agent performs a distinct journey step; otherwise keep those steps as `System`.
-> Detailed journey diagram: `/vorbit:design:journey`
+**Entry:** [Start] → [Step] → [Step] → **Exit:** [End]
 
-## Story-to-Flow Mapping
-| User Story | Flow Coverage | AC Coverage | Notes |
-|------------|---------------|-------------|-------|
-| US1 | Flow 1 (F1-S1 to F1-S4) | AC-1, AC-2 | Primary journey |
-| US2 | Flow 2 (F2-S1 to F2-S3) | AC-3 | Error/alternate path |
-| US3 | No user flow required | AC-4 | Internal technical migration only |
+### Flow 3: [Name] (alternate / error)
+
+Entry: [Start] → [Step] → Server returns error → Error toast, values preserved → Exit: [State]
 
 ## Constraints
-- ...
 
-## Out of Scope
-- ...
+* [Constraint with reason — what cannot change]
+* [Constraint about backend, design, timeline, etc.]
 
 ## Success Criteria
-- [Measurable metric with number]
-- ...
+
+* [Measurable target with a number]
+* [Another measurable target]
 ```
 
-**After showing draft, ask:** "Does this PRD look good? Ready to save?"
+### Flow rules
+
+- Every PRD needs at least one happy flow
+- Flow steps use prose `Entry: X → step → step → **Exit:** Y` form
+- Each step names what the user does, the surface they touch, and the visible result
+- Add a separate flow for any materially different path (second happy path, alternate, error)
+- Every user story should be covered by at least one flow step
+- Keep flows ticket-sized: typically 3-8 arrows per flow
+
+### TBD rules
+
+- `TBD` is fine in Constraints, Success Criteria numbers, and flow details that depend on later design decisions
+- `TBD` is **not** allowed in Problem, Users, or User Stories — those must be concrete before the ticket is created
+- Every `TBD` must have a matching `AskUserQuestion` attempt
 
 ## Step 4: Confirm Draft
 
-**Only proceed after user confirms the draft.**
+Only proceed after the user confirms the draft. If they ask for changes, edit the draft in chat and re-confirm.
 
-## Step 5: Save Document (Optional)
+## Step 5: Create the Linear Ticket
 
-If user confirms saving:
-1. If a platform was already identified earlier, reuse it unless user asks to switch
-2. Otherwise follow `_shared/mcp-tool-routing.md` to discover connected platforms, ask user which one to use, and verify connection
-3. Save with the selected platform's MCP tools:
-   - `type`: `"PRD"`
-   - `name`: feature name
-   - `body`: full PRD markdown
+1. `get_user` with `query: "me"` to verify Linear auth/session
+2. `list_teams` (scoped `limit`, e.g. 10-20). If multiple teams, ask the user which one
+3. `list_projects` with the selected team (scoped `limit`). If multiple, ask the user which one. If the team has no projects, skip the project field
+4. `save_issue` to create the ticket:
+   - `title`: the feature name (the H1 line, without the `#`)
+   - `team`: selected team name (string, name-based — not `teamId`)
+   - `project`: selected project name if any (string, name-based — not `projectId`)
+   - `description`: the full PRD body in markdown, starting at `## Description` and including everything below
 
-If user does not want to save, skip Step 5 and continue to Step 6.
+**Reliability rules:**
+- Keep calls scoped with `team` and `limit`. Don't run unfiltered workspace-wide listing
+- On temporary MCP/API error, retry once with the same parameters
+- If `list_teams` fails, ask the user to type the team name directly
+- Only block execution when auth fails
 
 ## Step 6: Report
 
-- Draft status: confirmed (and whether it was saved)
-- URL or object ID (if saved)
-- Platform used (Notion/Anytype)
-- Summary: X user stories, Y success criteria
-- Next: `/vorbit:design:journey` or `/vorbit:implement:epic`
-
-## Coverage Review Mode
-
-When asked to review if tickets/issues fulfill a PRD:
-
-### Step 1: Fetch Both Sides
-- Read the PRD (from Notion, Anytype, or provided content)
-- Read all referenced tickets (from Linear or provided list)
-
-### Step 2: Map User Stories to Tickets
-For each user story + acceptance criteria in the PRD, find the ticket(s) that cover it. Present as a coverage matrix.
-
-### Step 3: Identify Gaps
-
-Only flag work as a gap if it **cannot be naturally bundled into an existing ticket**. If it's a side effect of implementing an existing ticket, it's not a gap — it's housekeeping that happens during implementation.
-
-### Step 4: Report
-- Coverage matrix: user story → ticket(s)
-- Gaps: work that cannot be bundled into existing tickets
-- Verdict: fully covered / has gaps
+- Linear ticket **URL**
+- Team and project used
+- Quick summary: X user stories, Y flows, Z success criteria
+- Suggested next step:
+  - `/vorbit:implement:epic <ticket-id>` to break the ticket into engineering sub-issues
+  - `/vorbit:design:journey` to draw a flow diagram in FigJam
 
 ---
 
-# PRD Schema & Validation
+## Coverage Review Mode
+
+When asked to review whether sub-issues fulfill a parent PRD ticket:
+
+1. Read the parent ticket (`get_issue`) and all sub-issues (`list_issues` with the parent's `parentId`)
+2. Map each User Story and `AC-N` to the sub-issue(s) covering it
+3. Flag work that **cannot be bundled** into an existing sub-issue as a gap; bundle-able housekeeping is not a gap
+4. Report: coverage matrix (story → sub-issues), gaps, verdict (covered / has gaps)
+
+---
+
+# Schema & Validation
 
 ## Required Sections
 
 | Section | Required | Rules |
 |---------|----------|-------|
-| Name | Yes | 3-8 words, no jargon |
-| Description | Yes | Max 100 chars |
-| Problem | Yes | Max 3 sentences, no tech details |
-| Users | Yes | Who has the problem |
-| User Stories | Yes | "As a [user]..." with acceptance criteria |
-| Assumptions | Yes | Explicit defaults accepted by user, or explicit deferrals |
-| User Flows | Yes | Actor/Surface/Action/Result + Story/AC refs; primary flow includes User/UI/System, Agent when applicable |
-| Story-to-Flow Mapping | Yes | Every story maps to flow(s) and AC coverage, or marked "No user flow required" with reason |
+| Title (H1) | Yes | 3-8 words, no jargon. Becomes Linear ticket title. |
+| Description | Yes | 1-2 short sentences, no tech detail |
+| Problem | Yes | 1-2 short paragraphs, user pain not tech gap |
+| User Stories | Yes | `As a [user], I want ..., so ...` plus `AC-N` items |
+| User Flows | Yes | At least one happy flow in Entry/Exit prose form |
+| Constraints | Yes | Limits the implementation must respect |
 | Success Criteria | Yes | Measurable with numbers |
-| Constraints | No | Budget, timeline, compliance |
-| Out of Scope | No | What we're NOT building |
 
 ## Validation Rules
 
-- **Name**: 3-8 words, no technical jargon
-- **Description**: one line, max 100 chars
-- **Problem**: Max 3 sentences, describes user pain not technical gap
-- **User Stories**: Format "As a [user], I want [goal], so that [benefit]"; each criterion should be IDed as `AC-*`
-- **Assumptions**: Only explicit defaults accepted by user, or explicit deferrals
-- **User Flows**: At least one flow with Actor/Surface/Action/Result/Story refs/AC refs. Primary flow must include User, UI, and System. Use `Agent` only for explicit agent/model steps; keep normal service/API logic under `System`
-- **Flow 1 quality bar**: includes start/end, stable step IDs, explicit API/service touchpoints, and 4-12 state-transition steps
-- **Story-to-Flow Mapping**: every user story must map to at least one flow, or be explicitly marked `No user flow required` with reason
-- **AC-to-Flow coverage**: every `AC-*` maps to one or more flow steps, or is marked `Non-journey AC` with reason
-- **Success Criteria**: Contains measurable numbers (percentages, times, counts)
-- **TBD allowed selectively**: `TBD` is fine in Constraints, Success Criteria numbers, and User Flow steps that depend on design decisions. NOT allowed in Problem, Users, or User Stories — those must be concrete
-- **TBD question rule**: every `TBD` must have a corresponding `AskUserQuestion` attempt
-
-## User Story Format
-
-```
-US-001: As a [user type], I want [goal], so that [benefit]
-  Acceptance:
-  - AC-1 [Specific testable criterion]
-  - AC-2 [Another criterion]
-```
-
-Rules:
-- One goal per story
-- Each story has acceptance criteria
-- Stories map to Linear issues (via /vorbit:implement:epic)
-
-## Success Criteria Format
-
-```
-- 95% of signups complete successfully
-- Page loads in under 2 seconds
-- Error rate below 0.1%
-```
-
-Rules:
-- Include numbers
-- Must be verifiable (yes/no answer)
-- Business outcomes, not tech metrics
-
-## Notion Mapping
-
-| Notion Field | PRD Field | Notes |
-|--------------|-----------|-------|
-| Name | Feature name | title property |
-| Description | One-line summary | text, max 100 chars |
-| Type | `["PRD"]` | multi_select, if exists |
-
-Content goes in page body as markdown.
-
-## Anytype Mapping
-
-| Anytype Field | PRD Field | Notes |
-|---------------|-----------|-------|
-| name | Feature name | object name |
-| body | Full PRD content | markdown format |
-| type_key | "page" | or custom type if available |
+- **Title**: 3-8 words, no jargon
+- **Description**: short, plain English, no tech detail
+- **Problem**: describes user pain, not the technical fix
+- **User Stories**: `As a [user], I want [goal], so [benefit]`. Each story has at least one `AC-N`
+- **User Flows**: at least one. Use Entry/Exit anchors. 3-8 arrows per flow is the sweet spot
+- **AC coverage**: every `AC-N` should be reflected in at least one flow step
+- **Success Criteria**: contain real numbers (percentages, times, counts)
+- **TBD**: allowed in Constraints, Success Criteria numbers, and flow details only — never in Problem, Users, or User Stories. Every `TBD` must have a matching `AskUserQuestion` attempt
 
 ## Common Mistakes
 
 | Wrong | Right | Why |
 |-------|-------|-----|
-| "We need OAuth2 for authentication" | "Users cannot access personalized features without accounts" | Problem describes user pain, not technical solution |
-| "Users should be happy with login" | "90% of users complete login in under 10 seconds" | Success criteria must have numbers |
-| "OAuth2 JWT Token Auth Implementation" | "User Login and Signup" | Name avoids jargon |
+| "We need JWT auth" | "Users cannot access personalized features without accounts" | Problem describes user pain, not the technical fix |
+| "Users should be happy with login" | "90% of users complete login in under 10 seconds" | Success criteria need real numbers |
+| "OAuth2 JWT Token Auth Implementation" | "User Login and Signup" | Title avoids jargon |
+| Flow as steps only (`User → API → DB → API → User`) | `Entry: Login → Click Submit → Loading → Token returned → Exit: Home` | Flows describe what the user sees, with Entry/Exit anchors |
