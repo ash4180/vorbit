@@ -5,9 +5,10 @@ Use for Figma design-system sync and front-end-ready Figma mockups.
 ## Required Setup
 
 1. Load Vorbit durable rules before doing anything else.
-2. Do NOT depend on the Figma MCP's "MANDATORY companion skills" (`figma-use`, `figma-generate-design`) as the binding mechanism. They are declared in the MCP server instructions but are not installed as `Skill`-callable entries in most environments. Use the inline pre-write contract below instead.
-3. **Pre-write contract** — before any call to `generate_figma_design` or `use_figma`, the working context must contain a live `get_libraries` result, a real component key from `search_design_system` for every component need, a real variable ID from `get_variable_defs` for every token need, AND those keys/IDs must appear verbatim in the prompt body sent to the write tool. Naming a component without its key tells the tool nothing — it draws a fresh primitive.
-4. Work incrementally. Never batch unrelated Figma mutations into one call.
+2. **Choose the right writer.** Per Figma's own `use_figma` tool description: `use_figma` is the default for all writes (it runs JavaScript via the Plugin API and imports library components by key). `generate_figma_design` is the exception — only for capturing a web-app page as a pixel-perfect reference, then deleted. For PRD-driven, from-scratch, iOS, or Android mockups, use `use_figma` only.
+3. **Load `figma-use` guidance before any `use_figma` call.** Try the `Skill` tool first; if `figma-use` is not registered, fall back to `ReadMcpResourceTool` with URI `skill://figma/figma-use/SKILL.md`. This guidance covers Plugin API gotchas that cause silent JavaScript failures.
+4. **Pre-write contract** — `get_libraries` must have run this session, every component need must have a real key from `search_design_system`, every token need must have a real variable ID from `get_variable_defs`, AND the JavaScript code passed to `use_figma` must call `figma.importComponentByKeyAsync` with each key before creating instances.
+5. Work incrementally. Never batch unrelated Figma mutations into one call.
 
 ## Shared Mindset
 
@@ -30,7 +31,12 @@ Use for Figma design-system sync and front-end-ready Figma mockups.
    - For each component need, call `search_design_system` with a concrete query (e.g. "button primary", "card surface"). Record the returned component key and library source.
    - Call `get_variable_defs` to capture token IDs for colors, spacing, radii, and typography. These IDs — not hex codes — are what `generate_figma_design` needs to bind tokens.
    - If `search_design_system` returns no match for a need, mark it as a gap. Never silently substitute a custom primitive.
-6. Present discovery findings (including library names, matched component keys, captured variable IDs, and any gaps) and get user confirmation before planning screens or syncing a library.
+6. Mobbin reference research — collaborative with the user, MANDATORY when Mobbin is connected, one search per anticipated screen, no exceptions. Mobbin belongs in Discovery, not at draw time: the library tells you which components exist; Mobbin shows how real shipped apps compose them. Co-evaluate with the user before locking the inventory.
+   - For each anticipated screen, call `mcp__mobbin__search_screens({ query: "<screen purpose>", platform: "<ios|web>", limit: 5, mode: "deep" })`.
+   - Present top 3 Mobbin results per screen alongside the matched library components. Ask the user to pick a direction per screen — layout, state model, copy tone, edge cases.
+   - Task list MUST include one "Mobbin reference: <screen name>" task per anticipated screen, BEFORE any build task. Missing tasks = silent skip; user can audit the list directly.
+   - No "direct re-skin" escape. The only legitimate skip is "Mobbin is not connected" (record as gap; degraded quality is expected).
+7. Present consolidated discovery findings — library names, matched component keys, captured variable IDs, Mobbin pattern picks per screen, any gaps — and get user confirmation before moving forward.
 
 ## Design-System Sync Path
 
@@ -46,6 +52,10 @@ Use this path when the user asks to create, sync, or reconcile a Figma design sy
 
 Use this path when the user asks for Figma mockups, screens, pages, or journey-informed designs.
 
+⚠ **This path IS the design process — not just tooling execution.** Every step below runs in full regardless of how cleanly the tools work. A passing `use_figma` import only proves you can place a library instance — whether it belongs on this screen, in this position, alongside which neighbors, at what state, is design. Page inventory, design-system mapping with real keys, mockup plan, Mobbin reference patterns, and per-screen user confirmation are non-skippable. Skipping any of them because "tools are working" produces decoration, not a mockup an engineer can implement.
+
+⚠ **Mobbin references should already exist from Discovery Phase step 6.** This path is execution of an agreed plan, not the moment to discover references. If you find yourself wanting to search Mobbin here, return to the Discovery Phase — do the collaborative research with the user, record picks per screen, then come back. Task list discipline: Mobbin tasks belong in Discovery, before any build task. A build task without a corresponding upstream Mobbin task is evidence Discovery was skipped or reordered.
+
 1. Build a page inventory before drawing: page name, route, user goal, entry point, exit point, primary actions, data needed, and required states.
 2. Map each page to front-end component boundaries before creating Figma frames.
 3. Use shadcn-friendly boundaries where applicable: Button, Input, Form, Card, Dialog, Sheet, Tabs, Table, Dropdown, Badge, Toast, Accordion, Checkbox, RadioGroup, Select, Switch, Tooltip.
@@ -53,9 +63,9 @@ Use this path when the user asks for Figma mockups, screens, pages, or journey-i
 5. Present the page inventory and get user confirmation.
 6. Present the design-system mapping for each page. Every mapped component must include the real `search_design_system` key and every mapped token must include the real `get_variable_defs` ID. A name without a key is a gap, not a match — go back and look it up. Get user confirmation.
 7. Present the mockup plan with frame names, sections, the actual component keys and variable IDs bound to each slot, and states. Get user confirmation before creating screens.
-8. Generate with the keys, not the names. When calling `generate_figma_design`, pass the component keys and variable IDs in the prompt/payload so the tool instances them instead of drawing fresh primitives. Naming a component without its key tells the tool nothing — it draws a rectangle and labels it.
+8. Build with `use_figma`, not `generate_figma_design`. Pass Phase 3 component keys and variable IDs in the JavaScript code body. The code must call `figma.importComponentByKeyAsync(key)` for each component and bind variables via `figma.variables.getVariableByIdAsync` + `setBoundVariable`. `generate_figma_design` is reserved for web-app screenshot capture only — for PRD or non-web targets, skip it.
 9. Name frames by page, route, section, and state so frontend implementation is obvious.
-10. Validate each generated page with `get_metadata` and `get_screenshot`. Orphan-frame check is mandatory and blocking: scan metadata for child nodes whose names suggest library components (Button, NavItem-*, Card, Input, Sidebar) but appear as `<frame>` rather than `<instance>`. Also flag any `<text>` node containing emoji characters — that almost always means an icon component wasn't looked up. If any orphan is found, STOP, do not present the result as done, report the orphan list, and re-generate that section with explicit keys in the prompt.
+10. Validate each generated page with `get_metadata` and `get_screenshot`. Orphan-frame check is mandatory and blocking: scan metadata for child nodes whose names suggest library components (Button, NavItem-*, Card, Input, Sidebar) but appear as `<frame>` rather than `<instance>`. Also flag any `<text>` node containing emoji characters — that almost always means an icon component wasn't imported. If any orphan is found, STOP, do not present the result as done, report the orphan list, and re-run `use_figma` with JavaScript that explicitly imports each missing component via `figma.importComponentByKeyAsync`.
 11. Get user confirmation after each generated page or screen before continuing.
 
 ## Handoff Rules
