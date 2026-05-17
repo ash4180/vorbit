@@ -1,6 +1,6 @@
 ---
 name: figma
-version: 1.0.0
+version: 1.1.0
 description: Use when user says "figma", "figma it", "sync figma", "figma mockup", "create figma file", "design to figma", "figma from PRD", "figma from journey", "build in figma", "figma design system", or wants to create, sync, or update anything in Figma (design system, components, variables, mockups, or front-end-ready screens). Always checks linked Figma libraries first; asks the user when no linked library exists rather than inventing primitives.
 ---
 
@@ -97,21 +97,23 @@ Present the inventory and **use AskUserQuestion** to confirm before mapping desi
 
 **Goal**: Decide exactly what linked Figma assets will be used.
 
-For each page/component, map:
+For each page/component, map. **The "Figma key/ID" column must contain a real key returned by `search_design_system` or `get_variable_defs` — not a name, not a placeholder.** If a row has no real key, it's a gap, not a match.
 
-| Code / Need | Figma asset | Source | Action |
-|-------------|-------------|--------|--------|
-| Button primary | Button / Primary | Linked library | Reuse |
-| Form field | Input | Local component | Reuse |
-| Missing empty state | None | Gap | Ask before creating |
+| Code / Need | Figma asset | Figma key/ID | Source | Action |
+|-------------|-------------|--------------|--------|--------|
+| Button primary | Button / Primary | `comp:abc123` (from `search_design_system`) | Linked library "DS Core" | Reuse as instance |
+| Color / background | `--surface-bg` | `var:xyz789` (from `get_variable_defs`) | Linked library "DS Tokens" | Bind variable |
+| Form field | Input | `comp:def456` | Local component | Reuse as instance |
+| Empty state illustration | None | — | Gap | Ask before creating |
 
 Rules:
-1. **Always check linked Figma libraries first** — components, variables, text styles, effect styles. This is a hard gate, not a preference.
+1. **Always check linked Figma libraries first** — components, variables, text styles, effect styles. This is a hard gate, not a preference. Phase 1 step 6 should have already produced the keys; this phase pins them to each need.
 2. Reuse linked-library assets when they match the need; reuse local existing assets when no linked match exists.
 3. **If a needed asset is missing from the linked library, STOP and ASK the user**: add it to the library, point to a different linked library, or explicitly approve a custom primitive. Never invent primitives silently.
 4. Stop and ask if no linked design system exists at all — do not fall back to "create custom primitives" without explicit user approval.
    - **Before asking**, read `_shared/design-knowledge/references/aesthetic-direction.md` `[Skill ref]` so the question is grounded in concrete aesthetic vocabulary (committed direction, restraint, clarity). Skim `_shared/design-knowledge/data/styles.csv` and `colors.csv` if proposing palette or style options.
 5. Stop and ask if code and Figma disagree on tokens, components, or naming.
+6. **A row without a real key is a gap, not a match.** If you find yourself writing "Button / Primary" in the asset column with nothing in the key column, you didn't actually look it up — go back to Phase 1 step 6 and run `search_design_system` for it.
 
 Present the mapping and **use AskUserQuestion** to confirm before writing anything.
 
@@ -135,19 +137,23 @@ Use this path when the user asks to create, sync, or reconcile Figma design-syst
 
 Use this path when the user asks for Figma mockups, screens, pages, or journey-informed designs.
 
+**Pre-flight (gate the whole phase):**
+- `figma-generate-design` companion skill must be loaded (Phase 0.5).
+- Phase 3 mapping must have real component keys and variable IDs — not names. If any row in the mapping table has a blank "Figma key/ID" column, return to Phase 1 step 6 before drawing.
+
 1. Present the mockup plan:
    - Frame names
    - Routes/screens
    - Sections
-   - Reused design-system assets
+   - **Reused design-system assets — listed with the actual component keys and variable IDs from Phase 3**, not just names. Engineers (and the agent itself) need to see which keys bind to which slots.
    - Required states
 2. **Use AskUserQuestion** to confirm before creating screens.
 3. **Reference patterns (Mobbin, if connected in Phase 0):** Before drawing each new screen, call `mcp__mobbin__search_screens({ query: "<screen purpose or named pattern>", platform: "<ios|web>", limit: 5, mode: "deep" })`. Pick the platform based on the project's target. Use top 3 results as visual reference for layout, components, edge states, and copy patterns. Skip the search when the screen is a direct re-skin of an existing component or when Mobbin is unavailable. Do **not** block on Mobbin failures — degrade to drawing from the design system alone.
-4. Create screens with linked component instances and variables whenever available.
-5. Do not hardcode styling when a token or component exists.
+4. **Generate with the keys, not the names.** When calling `generate_figma_design`, pass the component keys from Phase 3 in the prompt/payload so the tool instances them instead of drawing fresh primitives. Naming a component without its key tells the tool nothing — it draws a rectangle and labels it.
+5. Do not hardcode styling when a token or component exists. Bind variables by ID; do not write hex codes inline.
 6. Name frames by page, route, section, and state.
 7. Use auto-layout and stable frame hierarchy so frontend implementation is obvious.
-8. Validate each generated page with metadata and screenshot checks when available.
+8. Validate each generated page with `get_metadata` and `get_screenshot`. **Orphan-frame check**: scan the metadata for nodes whose `componentId` / `componentKey` is empty when the Phase 3 mapping says they should be a library instance. If you find orphans, stop, report them to the user, and re-generate that section with the keys explicitly bound.
 9. **Use AskUserQuestion** after each generated page/screen before continuing.
 
 ## Handoff Rules
@@ -166,9 +172,12 @@ Final report must include:
 
 - Creating screens before confirming the page inventory
 - Drawing hardcoded rectangles when linked components or tokens exist
+- **Skipping the Figma MCP companion skills (`figma-use`, `figma-generate-design`)** — these are declared MANDATORY by the Figma MCP server. Without them, `generate_figma_design` produces orphan frames because no library context is bound.
+- **Treating component names as keys** — writing "Button / Primary" in the mapping without the actual key from `search_design_system` means you didn't look it up. Generation will fall back to a fresh rectangle.
 - **Inventing primitives when the linked library is missing the asset** — always STOP and ASK the user. Silent invention fragments the design system over time.
 - **Treating "no linked library" as permission to create custom primitives** — ask the user how to proceed (link a library, request library updates, or explicitly approve custom work) before drawing anything
 - **Fetching from an empty Figma file in a loop** — if the file or frame is blank, switch to push mode (`generate_figma_design`) and seed it first
+- **Skipping the orphan-frame metadata check** — after each generated page, scan `get_metadata` for nodes that should be library instances but have no `componentKey`. Silent orphans drift forward into engineering handoff and look like the library is broken.
 - Inventing pages not supported by PRD, journey, or code
 - Making visual-only mockups with unclear route/component/state boundaries
 - Depending on another design tool's rules or node IDs
