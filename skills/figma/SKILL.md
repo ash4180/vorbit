@@ -30,10 +30,11 @@ Read and follow `_shared/mcp-tool-routing.md` (glob for `**/skills/_shared/mcp-t
 
 The default writer is `mcp__figma__use_figma`. Before calling it, load the figma-use guidance.
 
-- If `figma:figma-use` is in this session's available-skills list → call `Skill` with `figma:figma-use`.
-- Otherwise → call `ReadMcpResourceTool` with `server: figma`, `uri: skill://figma/figma-use/SKILL.md`.
+Phase 0 already verified the Figma MCP is connected. The Figma MCP exposes the figma-use content as a resource — read it directly:
 
-Both load the same content. Pick whichever exists.
+Call `ReadMcpResourceTool` with `server: figma`, `uri: skill://figma/figma-use/SKILL.md`.
+
+Do not call the `Skill` tool for figma-use. `Skill(figma:figma-use)` needs the separate `figma@claude-plugins-official` Claude Code plugin (different from the Figma MCP), and that plugin's install state is unreliable — `Skill` calls there frequently error with `Unknown skill: figma:figma-use`. The MCP resource path doesn't depend on that plugin and always works.
 
 
 ## Phase 1: Discovery
@@ -59,6 +60,7 @@ Both load the same content. Pick whichever exists.
    - Components and component sets
    - Text styles and effect styles
    - **Empty-file check**: if the target file or frame is blank (screenshot returns nothing, `get_design_context` reports "nothing selected"), the file has not been seeded yet. Do NOT keep fetching — switch to **code→design push mode** and use `generate_figma_design` (or equivalent write tool) to push the current UI/intent into Figma first, then continue from a populated frame.
+     - Before calling `generate_figma_design`, load its companion guidance: `ReadMcpResourceTool` with `server: figma`, `uri: skill://figma/figma-generate-design/SKILL.md`.
 6. **Discover linked libraries — executable, not aspirational:**
    - Call `mcp__figma__get_libraries` to list every library connected to the target file. Record library names, IDs, and whether each is enabled.
    - **IF the result is empty:** the file has no linked library. STOP here and ask the user (link a library, point to a different file, or explicitly approve custom primitives). Do not skip ahead to drawing.
@@ -132,6 +134,8 @@ Present the mapping and **use AskUserQuestion** to confirm before writing anythi
 
 Use this path when the user asks to create, sync, or reconcile Figma design-system assets from code.
 
+**Before starting Phase 4A, also load `figma-generate-library`** via `ReadMcpResourceTool` (`server: figma`, `uri: skill://figma/figma-generate-library/SKILL.md`). It covers what to build and in what order — variables, text styles, effect styles, components, variants — so the design system comes out professional-grade.
+
 1. Compare code tokens/components with Figma variables, styles, and components.
 2. Lock exact v1 scope: variables, text styles, effect styles, components, and variants.
 3. Get user confirmation before writing.
@@ -155,13 +159,14 @@ Use this path when the user asks for Figma mockups, screens, pages, or journey-i
 **Pre-flight (gate the phase):**
 - Phase 2 inventory done + user-confirmed. Phase 3 mapping has a real key/ID in every row. Mockup plan drafted.
 - Phase 0.5 done — `figma-use` guidance loaded. Writer = `use_figma` (default); `generate_figma_design` only as web-app screenshot reference.
-- **Import contract — enforced by hook.** The PreToolUse hook `skills/figma/hooks/pre_use_figma_validate.py` blocks any `use_figma` call whose JS contains `.createInstance(` without `importComponentByKeyAsync(`. To pass: for every Phase 3 component key, call `await figma.importComponentByKeyAsync("<key>")` before any `.createInstance()`. Bind variables via `figma.variables.getVariableByIdAsync("<var-id>")` — no inline hex. A `<frame>` named "Button / Primary" is the failure mode this hook exists to prevent. See `figma-use` guidance (Phase 0.5) for the full Plugin API skeleton.
+- **Import contract:** for every Phase 3 component key, the JS passed to `use_figma` must call `await figma.importComponentByKeyAsync("<key>")` before any `.createInstance()`. Bind variables via `figma.variables.getVariableByIdAsync("<var-id>")` — no inline hex. A `<frame>` named "Button / Primary" is the failure pattern this rule prevents. See `figma-use` guidance (Phase 0.5) for the full Plugin API skeleton.
 
 If any pre-flight item is incomplete, return to that earlier phase.
 
 1. Present the mockup plan: frame names, routes, sections, **reused assets listed with actual keys/IDs from Phase 3**, required states.
 2. **Use AskUserQuestion** to confirm.
 3. **Build with `use_figma`.** Pass Phase 3 keys to `code`; JS calls `figma.importComponentByKeyAsync(key)` then `.createInstance()`. For web-app pixel-perfect copies, run `generate_figma_design` in parallel as a screenshot reference, refine `use_figma` to match, then delete the screenshot output. For PRD/intent/iOS/Android, skip `generate_figma_design`.
+   - **If using `generate_figma_design`**, load its companion guidance first: `ReadMcpResourceTool` with `server: figma`, `uri: skill://figma/figma-generate-design/SKILL.md`.
 4. Bind variables by ID (`figma.variables.getVariableByIdAsync` + `setBoundVariable`); no inline hex.
 5. Name frames by page, route, section, state.
 6. Use auto-layout and stable hierarchy.
@@ -190,7 +195,7 @@ Final report must include:
 - **Using `generate_figma_design` as the main writer** — it's reserved for web-app screenshot reference. `use_figma` is the default writer; wrong tool was the v1.0–v1.2 root cause of orphan frames.
 - **Calling `use_figma` without loading `figma-use` first** — covers Plugin API gotchas that cause silent JavaScript failures.
 - **Running Mobbin searches without reporting findings to chat** — the report block (Phase 1 step 7b) is the deliverable. AskUserQuestion alone is not a substitute; the user needs to see what was returned before picking direction.
-- **Listing Phase 3 component keys in JS comments without `importComponentByKeyAsync` calls** — the PreToolUse hook (`skills/figma/hooks/pre_use_figma_validate.py`) will block this. If you see the hook fire, fix the JS, don't try to bypass it.
+- **Listing Phase 3 component keys in JS comments without `importComponentByKeyAsync` calls** — the keys must appear in actual `importComponentByKeyAsync(...)` calls in the JS body, not just in comments or the `description` parameter. Otherwise the library components aren't imported and the result is orphan frames named like the components but unlinked.
 - **Substituting emoji for icon components** — tells that no icon component was imported. Search the library for real icons.
 - **Inventing primitives when the library is missing the asset or no library exists** — STOP and ASK the user (link a library, update it, or explicitly approve custom work). Silent invention fragments the design system.
 - **Fetching from an empty Figma file in a loop** — if blank, push mode (`generate_figma_design`) seeds it first.

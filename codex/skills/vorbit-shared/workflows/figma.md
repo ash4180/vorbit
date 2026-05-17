@@ -6,7 +6,9 @@ Use for Figma design-system sync and front-end-ready Figma mockups.
 
 1. Load Vorbit durable rules before doing anything else.
 2. **Choose the right writer.** Per Figma's own `use_figma` tool description: `use_figma` is the default for all writes (it runs JavaScript via the Plugin API and imports library components by key). `generate_figma_design` is the exception — only for capturing a web-app page as a pixel-perfect reference, then deleted. For PRD-driven, from-scratch, iOS, or Android mockups, use `use_figma` only.
-3. **Load `figma-use` guidance before any `use_figma` call.** If `figma:figma-use` is in your available-skills list, call `Skill` with `figma:figma-use`. Otherwise call `ReadMcpResourceTool` with `server: figma` and `uri: skill://figma/figma-use/SKILL.md`. Both load the same content; pick whichever exists.
+3. **Load `figma-use` guidance before any `use_figma` call.** The Figma MCP (already verified connected) exposes figma-use as a resource — call `ReadMcpResourceTool` with `server: figma` and `uri: skill://figma/figma-use/SKILL.md`. Do not use the `Skill` tool — `Skill(figma:figma-use)` needs the separate `figma@claude-plugins-official` Claude Code plugin (different from the Figma MCP), and that plugin's install state is unreliable. The MCP resource path always works.
+   - **If building a design system from code**, also load `figma-generate-library` via `ReadMcpResourceTool` (`uri: skill://figma/figma-generate-library/SKILL.md`) — covers what to build in what order.
+   - **If using `generate_figma_design`** (web-app screenshot reference), also load `figma-generate-design` via `ReadMcpResourceTool` (`uri: skill://figma/figma-generate-design/SKILL.md`).
 4. **Pre-write contract** — `get_libraries` must have run this session, every component need must have a real key from `search_design_system`, every token need must have a real variable ID from `get_variable_defs`, AND the JavaScript code passed to `use_figma` must call `figma.importComponentByKeyAsync` with each key before creating instances.
 5. Work incrementally. Never batch unrelated Figma mutations into one call.
 
