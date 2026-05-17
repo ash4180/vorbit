@@ -8,6 +8,8 @@ description: Use when user says "create issues", "break down PRD", "set up epic"
 
 Transform User Stories (from PRD) into executable Engineering Tasks (Epics/Issues) in Linear.
 
+> **Linear MCP namespace**: All Linear calls in this skill use `mcp__plugin_linear_linear__*` (the namespace shipped with the vorbit plugin). Bare verb names below (`get_user`, `list_teams`, `list_issues`, etc.) refer to the corresponding `mcp__plugin_linear_linear__<verb>` tool.
+
 **Key Features:**
 - Sub-issues include plain-language "Why" section
 - Each sub-issue references parent epic's acceptance criteria
@@ -17,32 +19,29 @@ Transform User Stories (from PRD) into executable Engineering Tasks (Epics/Issue
 - UI components reference the ui-patterns skill
 - Visual dependency tree shows implementation order by phase
 
-## Step 1: Detect Platform & Verify Connection
+## Step 1: Verify Linear Connection
 
-Read and follow `_shared/mcp-tool-routing.md` (glob for `**/skills/_shared/mcp-tool-routing.md`). Discover connected platforms, ask user which to use, and verify connection.
+PRDs live as Linear tickets (see [`/vorbit:design:prd`](../../skills/prd/SKILL.md)). Confirm Linear auth before fetching the source ticket: call `get_user` with `query: "me"`. On failure, tell the user to run `/mcp` to reconnect and stop.
 
 ## Step 2: Gather Context
 
-**IF Notion PRD URL provided:**
-1. Use `notion-find` to fetch the PRD
-2. Extract user stories, acceptance criteria (`AC-*` IDs), user flows, and story-to-flow mapping
+**IF Linear ticket URL or ID provided:**
+1. Use `get_issue` to fetch the parent ticket
+2. Extract user stories (`US-*` IDs), acceptance criteria (`AC-*` IDs), user flows, constraints, and success criteria from the ticket description
 
-**IF Anytype PRD URL or object ID provided:**
-1. Use `API-get-object` to fetch the PRD
-2. Extract user stories, acceptance criteria (`AC-*` IDs), user flows, and story-to-flow mapping
+**IF feature name provided (no ticket ID):**
+1. Use `list_issues` scoped to the team with a title-based filter to locate the PRD ticket
+2. If multiple candidates, ask the user which one via `AskUserQuestion`
+3. Fetch with `get_issue` and extract as above
 
-**IF feature name provided:**
-1. Search detected platform for existing PRD
-2. Extract user stories, acceptance criteria (`AC-*` IDs), user flows, and story-to-flow mapping
-
-**IF no PRD exists:**
-1. Gather requirements via conversation
+**IF no PRD ticket exists:**
+1. Ask the user if they want to create the PRD first via `/vorbit:design:prd` — recommend that path so the source-of-truth lives in Linear
+2. If the user prefers to skip the PRD step, gather requirements via conversation and capture them inline so the epic still has US/AC/flow content to trace against
 
 **Traceability requirements before planning:**
 - Every user story has at least one `AC-*`
-- Story-to-flow mapping exists (or explicit `No user flow required` reason)
-- Every `AC-*` maps to flow step(s) or is marked non-journey with reason
-- If any item is missing, use `AskUserQuestion` and resolve before Step 5
+- Every `AC-*` is reflected in at least one user flow step (the new prose flows replace the old Story-to-Flow Mapping table)
+- If any user story has no AC, or any AC has no flow coverage, use `AskUserQuestion` to resolve before Step 5
 
 **PRD-first sequencing rule (required):**
 - Lock requirement baseline first: `US-* -> AC-* -> Flow`
@@ -241,7 +240,7 @@ Present the following:
 
 1. **Parent issue URL**
 2. **Sub-issue count:** X total (P1: Y, P2: Z, P3: W)
-3. **PRD link** (URL or object ID)
+3. **PRD ticket URL** (the source Linear ticket the epic was derived from)
 4. **Implementation Order** (dependency tree)
 
 ### Implementation Order Format

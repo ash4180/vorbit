@@ -8,6 +8,8 @@ description: Use when user says "implement this", "build feature", "fix this bug
 
 A disciplined, Test-Driven Development (TDD) workflow for implementing features or fixing bugs.
 
+> **Linear MCP namespace**: All Linear calls in this skill use `mcp__plugin_linear_linear__*` (the namespace shipped with the vorbit plugin). Bare verb names below (`list_issues`, `update_issue`, etc.) refer to the corresponding `mcp__plugin_linear_linear__<verb>` tool.
+
 ## Handle Loop Mode
 
 **If `--loop` or `--cancel` in arguments:**
