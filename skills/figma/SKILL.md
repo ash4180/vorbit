@@ -24,6 +24,7 @@ Read and follow `_shared/mcp-tool-routing.md` (glob for `**/skills/_shared/mcp-t
 2. **IF no Figma tools found:** "No Figma connection found. Run `/mcp` to connect, then retry." → **STOP**
 3. Verify connection with a lightweight Figma read operation such as file/page metadata.
 4. **IF verification fails:** "Figma connection expired. Run `/mcp` to reconnect, then retry." → **STOP**
+5. **Reference patterns (optional):** Run `ToolSearch` for `"mobbin"`. If Mobbin tools are available, note this — they'll be used in Phase 4B to fetch real-world UI references before drawing each new screen. If absent, continue without reference patterns (do **not** block).
 
 ## Phase 1: Discovery
 
@@ -122,12 +123,13 @@ Use this path when the user asks for Figma mockups, screens, pages, or journey-i
    - Reused design-system assets
    - Required states
 2. **Use AskUserQuestion** to confirm before creating screens.
-3. Create screens with linked component instances and variables whenever available.
-4. Do not hardcode styling when a token or component exists.
-5. Name frames by page, route, section, and state.
-6. Use auto-layout and stable frame hierarchy so frontend implementation is obvious.
-7. Validate each generated page with metadata and screenshot checks when available.
-8. **Use AskUserQuestion** after each generated page/screen before continuing.
+3. **Reference patterns (Mobbin, if connected in Phase 0):** Before drawing each new screen, call `mcp__mobbin__search_screens({ query: "<screen purpose or named pattern>", platform: "<ios|web>", limit: 5, mode: "deep" })`. Pick the platform based on the project's target. Use top 3 results as visual reference for layout, components, edge states, and copy patterns. Skip the search when the screen is a direct re-skin of an existing component or when Mobbin is unavailable. Do **not** block on Mobbin failures — degrade to drawing from the design system alone.
+4. Create screens with linked component instances and variables whenever available.
+5. Do not hardcode styling when a token or component exists.
+6. Name frames by page, route, section, and state.
+7. Use auto-layout and stable frame hierarchy so frontend implementation is obvious.
+8. Validate each generated page with metadata and screenshot checks when available.
+9. **Use AskUserQuestion** after each generated page/screen before continuing.
 
 ## Handoff Rules
 

@@ -25,6 +25,7 @@ Read and follow `_shared/mcp-tool-routing.md` (glob for `**/skills/_shared/mcp-t
 3. **IF found:** Call `mcp__pencil__get_editor_state` to verify connection
 4. **IF fails:** "Pencil connection expired. Run `/mcp` to reconnect, then retry." → **STOP**
 5. **IF succeeds:** Note whether a `.pen` file is currently open (needed for Phases 4-5)
+6. **Reference patterns (optional):** Run `ToolSearch` for `"mobbin"`. If Mobbin tools are available, note this — future mockup-building tasks (driven by the rules file written in Phase 6) will use Mobbin to fetch real-world UI references before drawing new screens. If absent, continue without reference patterns (do **not** block).
 
 ## Phase 1: Codebase Scan
 
@@ -495,6 +496,21 @@ The `content` slot has `placeholder: true` — insert all page content there. Th
 ## Pencil Mockup Rules
 
 When building mockups in .pen files, use these reusable components instead of raw frames.
+
+### Reference patterns (Mobbin, if connected)
+
+Before drawing each new screen, check if Mobbin MCP is available (`ToolSearch` for `"mobbin"`). If connected, call:
+
+```
+mcp__mobbin__search_screens({
+  query: "<screen purpose or named pattern, e.g. 'billing settings', 'feed empty state'>",
+  platform: "<ios|web>",  // pick based on this project's target platform
+  limit: 5,
+  mode: "deep"
+})
+```
+
+Use top 3 results as visual reference for layout, components, edge states, and copy patterns. Skip when the screen is a direct re-skin of an existing component or when Mobbin is unavailable. Do **not** block on Mobbin failures — degrade to drawing from the component library alone.
 
 ### Component Library Reference
 
