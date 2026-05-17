@@ -6,12 +6,10 @@ Use for Figma design-system sync and front-end-ready Figma mockups.
 
 1. Load Vorbit durable rules before doing anything else.
 2. Verify Figma MCP connection before any Figma read or write. If unavailable, stop and ask user to reconnect.
-3. Load Figma MCP companion skills. These are declared MANDATORY by the Figma MCP server and are the main reason `generate_figma_design` produces orphan frames when skipped:
-   - `figma-use` before any Figma write or unique Figma read
-   - `figma-generate-design` before generating screens or mockups
-   - `figma-generate-library` before syncing or building a design system from code
-4. Work incrementally. Never batch unrelated Figma mutations into one step.
-5. Validate major Figma changes with metadata and screenshot checks when tools support them.
+3. Do NOT depend on the Figma MCP's "MANDATORY companion skills" (`figma-use`, `figma-generate-design`) as the binding mechanism. They are declared in the MCP server instructions but are not installed as `Skill`-callable entries in most environments. Use the inline pre-write contract below instead.
+4. **Pre-write contract** — before any call to `generate_figma_design` or `use_figma`, the working context must contain a live `get_libraries` result, a real component key from `search_design_system` for every component need, a real variable ID from `get_variable_defs` for every token need, AND those keys/IDs must appear verbatim in the prompt body sent to the write tool. Naming a component without its key tells the tool nothing — it draws a fresh primitive.
+5. Work incrementally. Never batch unrelated Figma mutations into one step.
+6. Validate major Figma changes with metadata and screenshot checks when tools support them.
 
 ## Shared Mindset
 
@@ -59,7 +57,7 @@ Use this path when the user asks for Figma mockups, screens, pages, or journey-i
 7. Present the mockup plan with frame names, sections, the actual component keys and variable IDs bound to each slot, and states. Get user confirmation before creating screens.
 8. Generate with the keys, not the names. When calling `generate_figma_design`, pass the component keys and variable IDs in the prompt/payload so the tool instances them instead of drawing fresh primitives. Naming a component without its key tells the tool nothing — it draws a rectangle and labels it.
 9. Name frames by page, route, section, and state so frontend implementation is obvious.
-10. Validate each generated page with `get_metadata` and `get_screenshot`. Orphan-frame check: scan metadata for nodes that should be library instances but have no `componentKey`. If found, stop, report, and re-generate with the keys explicitly bound.
+10. Validate each generated page with `get_metadata` and `get_screenshot`. Orphan-frame check is mandatory and blocking: scan metadata for child nodes whose names suggest library components (Button, NavItem-*, Card, Input, Sidebar) but appear as `<frame>` rather than `<instance>`. Also flag any `<text>` node containing emoji characters — that almost always means an icon component wasn't looked up. If any orphan is found, STOP, do not present the result as done, report the orphan list, and re-generate that section with explicit keys in the prompt.
 11. Get user confirmation after each generated page or screen before continuing.
 
 ## Handoff Rules

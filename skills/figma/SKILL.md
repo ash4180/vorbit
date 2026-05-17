@@ -1,6 +1,6 @@
 ---
 name: figma
-version: 1.1.0
+version: 1.2.0
 description: Use when user says "figma", "figma it", "sync figma", "figma mockup", "create figma file", "design to figma", "figma from PRD", "figma from journey", "build in figma", "figma design system", or wants to create, sync, or update anything in Figma (design system, components, variables, mockups, or front-end-ready screens). Always checks linked Figma libraries first; asks the user when no linked library exists rather than inventing primitives.
 ---
 
@@ -26,19 +26,20 @@ Read and follow `_shared/mcp-tool-routing.md` (glob for `**/skills/_shared/mcp-t
 4. **IF verification fails:** "Figma connection expired. Run `/mcp` to reconnect, then retry." → **STOP**
 5. **Reference patterns (optional):** Run `ToolSearch` for `"mobbin"`. If Mobbin tools are available, note this — they'll be used in Phase 4B to fetch real-world UI references before drawing each new screen. If absent, continue without reference patterns (do **not** block).
 
-## Phase 0.5: Load Figma MCP Companion Skills
+## Phase 0.5: Pre-Write Contract
 
-The Figma MCP server ships its own skills that prepare write operations to honor linked libraries. They are declared **MANDATORY** by the MCP server itself — skipping them is the main reason `generate_figma_design` produces orphan frames instead of library-bound instances.
+⚠ **Do not depend on the Figma MCP's "MANDATORY companion skills" (`figma-use`, `figma-generate-design`).** They are declared in the MCP server instructions but are NOT installed as `Skill`-callable entries in most environments. Earlier versions of this skill relied on loading them — that protection silently failed and produced orphan frames. The contract below replaces that reliance with inline requirements using tools that are confirmed to work.
 
-Before any Figma write, invoke via the `Skill` tool:
+Before ANY call to `generate_figma_design`, `use_figma`, or another Figma write tool, the working context MUST contain:
 
-1. **`figma-use`** — MANDATORY before calling `use_figma`. Loads the procedures that bind edits to the active file's linked library.
-2. **`figma-generate-design`** — load before `generate_figma_design`. Required when translating an app page or layout into Figma.
-3. **`figma-generate-library`** — load before building a design system in Figma from code (Phase 4A).
-4. **`figma-use-figjam`** — load before any FigJam write.
-5. **`figma-generate-diagram`** — MANDATORY before calling `generate_diagram`.
+1. **A live `mcp__figma__get_libraries` result** for the target file, in this conversation. Stale knowledge from earlier sessions does not count.
+2. **For every component need surfaced in Phase 3: a real component key** returned by `mcp__figma__search_design_system`. Not a guessed name. Not a placeholder. Not "TBD."
+3. **For every token need: a real variable ID** returned by `mcp__figma__get_variable_defs`. Not a hex value. Not a CSS-style string like `var(--foreground)`. The literal Figma variable identifier.
+4. **The component keys and variable IDs MUST appear verbatim in the prompt body passed to the write tool.** Naming a component without including its key in the prompt is equivalent to not using it — `generate_figma_design` will draw fresh primitives.
 
-If a companion skill is unavailable, continue — but record this in the discovery findings (Phase 1) so the user knows generations may not bind to the linked library.
+If any of (1)–(4) is missing, return to Phase 1 step 6 to run the discovery tools. Do not call any write tool until the contract is satisfied.
+
+**Why this contract exists:** A real test on 2026-05-17 showed `generate_figma_design` producing 100% orphan frames (zero `<instance>` nodes) even when the linked library was rich (shadcn/ui kit). Root cause: the write call received only natural-language descriptions of components, not their actual keys. Including the keys in the prompt is the difference between "draw a rectangle labeled Button" and "instance component key `comp:abc123`."
 
 ## Phase 1: Discovery
 
@@ -138,8 +139,8 @@ Use this path when the user asks to create, sync, or reconcile Figma design-syst
 Use this path when the user asks for Figma mockups, screens, pages, or journey-informed designs.
 
 **Pre-flight (gate the whole phase):**
-- `figma-generate-design` companion skill must be loaded (Phase 0.5).
-- Phase 3 mapping must have real component keys and variable IDs — not names. If any row in the mapping table has a blank "Figma key/ID" column, return to Phase 1 step 6 before drawing.
+- Phase 0.5 Pre-Write Contract must be satisfied — `get_libraries` ran this session, every Phase 3 row has a real component key from `search_design_system`, every token need has a real variable ID from `get_variable_defs`.
+- The prompt you are about to send to `generate_figma_design` must include those keys and IDs as literal strings in the body. If they're not there, the tool can't bind them — it will draw fresh primitives.
 
 1. Present the mockup plan:
    - Frame names
@@ -153,7 +154,11 @@ Use this path when the user asks for Figma mockups, screens, pages, or journey-i
 5. Do not hardcode styling when a token or component exists. Bind variables by ID; do not write hex codes inline.
 6. Name frames by page, route, section, and state.
 7. Use auto-layout and stable frame hierarchy so frontend implementation is obvious.
-8. Validate each generated page with `get_metadata` and `get_screenshot`. **Orphan-frame check**: scan the metadata for nodes whose `componentId` / `componentKey` is empty when the Phase 3 mapping says they should be a library instance. If you find orphans, stop, report them to the user, and re-generate that section with the keys explicitly bound.
+8. Validate each generated page with `get_metadata` and `get_screenshot`. **Orphan-frame check is mandatory and blocking** — run after every `generate_figma_design` call, no exceptions:
+   - Pull `get_metadata` for the new node.
+   - For each child whose name matches a Phase 3 component need (e.g. `Button`, `NavItem-*`, `Card`, `Input`, `Sidebar`), verify the metadata shows it as an `<instance>` element with a `componentKey` matching a key returned by `search_design_system`. Plain `<frame>` elements where instances were expected are orphans.
+   - Scan for `<text>` nodes containing emoji characters (👤 🔔 💳 etc.) — these almost always indicate the agent substituted emoji for icon components because no icon component was looked up.
+   - **If any orphan is found**: STOP. Do not present the result as done. Report the orphan list to the user with each frame's id and name, and re-generate that section with the explicit keys in the prompt. Re-running the same prompt without explicit keys will reproduce the same orphans.
 9. **Use AskUserQuestion** after each generated page/screen before continuing.
 
 ## Handoff Rules
@@ -172,8 +177,9 @@ Final report must include:
 
 - Creating screens before confirming the page inventory
 - Drawing hardcoded rectangles when linked components or tokens exist
-- **Skipping the Figma MCP companion skills (`figma-use`, `figma-generate-design`)** — these are declared MANDATORY by the Figma MCP server. Without them, `generate_figma_design` produces orphan frames because no library context is bound.
+- **Depending on the Figma MCP companion skills (`figma-use`, `figma-generate-design`) as the binding mechanism** — they're declared MANDATORY by the MCP server but are NOT installed as `Skill`-callable entries in most environments. The binding must be inlined: explicit `search_design_system` keys in the write prompt, plus a blocking `get_metadata` orphan check after.
 - **Treating component names as keys** — writing "Button / Primary" in the mapping without the actual key from `search_design_system` means you didn't look it up. Generation will fall back to a fresh rectangle.
+- **Substituting emoji for icon components** — using 👤 🔔 💳 etc. as text nodes is a tell that no icon component was looked up. Search the linked library for icon components first; emoji are never the answer when a real icon component exists.
 - **Inventing primitives when the linked library is missing the asset** — always STOP and ASK the user. Silent invention fragments the design system over time.
 - **Treating "no linked library" as permission to create custom primitives** — ask the user how to proceed (link a library, request library updates, or explicitly approve custom work) before drawing anything
 - **Fetching from an empty Figma file in a loop** — if the file or frame is blank, switch to push mode (`generate_figma_design`) and seed it first
