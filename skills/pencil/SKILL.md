@@ -74,7 +74,10 @@ Read the detection tables at `skills/pencil/references/detection.md`.
    - **For marketing/social:** use the "Common Marketing / Custom Sizes" table from `detection.md`. No safe areas, no bone needed (single canvas).
 
    **Step 2 — Select design system from Pencil** `[Pencil]`:
-   Since there's no codebase to extract tokens from, use Pencil's built-in style guides as the token source:
+   Since there's no codebase to extract tokens from, use Pencil's built-in style guides as the token source.
+
+   **Before asking the user**, read `_shared/design-knowledge/references/aesthetic-direction.md` `[Skill ref]` and skim `_shared/design-knowledge/data/styles.csv` for named UI styles + product types. These give you concrete aesthetic vocabulary (restraint, clarity, functional minimalism) so the question below is grounded, not "pick from a tag cloud."
+
    1. Call `mcp__pencil__get_style_guide_tags` to get available style tags
    2. **Use AskUserQuestion** `[User]` — present the tags and ask:
       ```

@@ -90,6 +90,7 @@ Rules:
 2. Reuse linked-library assets when they match the need; reuse local existing assets when no linked match exists.
 3. **If a needed asset is missing from the linked library, STOP and ASK the user**: add it to the library, point to a different linked library, or explicitly approve a custom primitive. Never invent primitives silently.
 4. Stop and ask if no linked design system exists at all — do not fall back to "create custom primitives" without explicit user approval.
+   - **Before asking**, read `_shared/design-knowledge/references/aesthetic-direction.md` `[Skill ref]` so the question is grounded in concrete aesthetic vocabulary (committed direction, restraint, clarity). Skim `_shared/design-knowledge/data/styles.csv` and `colors.csv` if proposing palette or style options.
 5. Stop and ask if code and Figma disagree on tokens, components, or naming.
 
 Present the mapping and **use AskUserQuestion** to confirm before writing anything.

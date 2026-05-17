@@ -63,21 +63,28 @@ This syncs Vorbit skills into `~/.gemini/skills/`.
 ## Repository Layout
 ```text
 vorbit/
-├── vorbit_core/               # Shared Python library (config)
-├── skills/                    # Claude Code skills
-├── commands/                  # Claude Code slash commands
-├── hooks/                     # Claude Code hooks
+├── vorbit_core/                       # Shared Python library (config)
+├── skills/                            # Claude Code skills
+│   └── _shared/
+│       ├── mcp-tool-routing.md        # Shared MCP routing reference
+│       └── design-knowledge/          # Adapted design references (see Credits)
+│           ├── references/            # Aesthetic, visual, UX strategy guides
+│           ├── LICENSE
+│           └── ATTRIBUTIONS.md
+├── commands/                          # Claude Code slash commands
+├── hooks/                             # Claude Code hooks
 ├── codex/
-│   └── skills/                # Codex CLI skills
+│   └── skills/                        # Codex CLI skills
 ├── gemini/
-│   └── skills/                # Gemini CLI skills
+│   └── skills/                        # Gemini CLI skills
+├── ClaudeApp/                         # Claude desktop app skill copies
 ├── scripts/
-│   ├── sync-codex-skills.sh   # Install Codex skills
-│   └── sync-gemini-skills.sh  # Install Gemini skills
-├── tests/                     # Tests for vorbit_core
-├── CLAUDE.md                  # Claude Code plugin development guide
-├── AGENTS.md                  # Codex CLI instructions
-├── dev-setup.sh               # Claude Code plugin install
+│   ├── sync-codex-skills.sh           # Install Codex skills
+│   └── sync-gemini-skills.sh          # Install Gemini skills
+├── tests/                             # Tests for vorbit_core
+├── CLAUDE.md                          # Claude Code plugin development guide
+├── AGENTS.md                          # Codex CLI instructions
+├── dev-setup.sh                       # Claude Code plugin install
 └── README.md
 ```
 
@@ -100,6 +107,10 @@ pip install -e ".[dev]"
 # Run all tests
 pytest
 ```
+
+## Credits
+
+Some design knowledge in `skills/_shared/design-knowledge/` is adapted from [design-expert-skill](https://github.com/Opikat/design-expert-skill) by Ekaterina Pykhova, used under the MIT License. See `skills/_shared/design-knowledge/LICENSE` and `ATTRIBUTIONS.md` for full terms.
 
 ## License
 
