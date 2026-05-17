@@ -12,7 +12,7 @@ Transform User Stories (from PRD) into executable Engineering Tasks (Epics/Issue
 - Each sub-issue references parent epic's acceptance criteria
 - File paths are specified with exact locations
 - Existing code patterns and constants are identified for reuse
-- UI sub-issues include reminder for implementer to use ui-patterns skill
+- UI sub-issues include reminder for implementer to read the ui-patterns reference
 - Visual dependency tree shows implementation order by phase
 
 ## Step 1: Detect Platform & Verify Connection
@@ -127,7 +127,7 @@ If prototype exists with mock data:
 
 ### 4.5 Detect UI Work
 If feature includes UI components:
-- Add note in sub-issue: "⚠️ Implementer: Use `/vorbit:design:ui-patterns` skill"
+- Add note in sub-issue: "⚠️ Implementer: Read `skills/_shared/frontend-knowledge/ui-patterns.md`"
 - Identify existing UI patterns to follow
 
 ## Step 5: Create Technical Plan (SDD)
@@ -410,8 +410,8 @@ US-XXX: As a [user], I want [goal]...
 
 | Skill | Path | Why |
 |-------|------|-----|
-| `react-best-practices` | `skills/react-best-practices/SKILL.md` | Performance patterns, waterfall elimination |
-| `ui-patterns` | `skills/ui-patterns/SKILL.md` | Accessibility, Tailwind, animation rules |
+| `react-best-practices` | `skills/_shared/frontend-knowledge/react-best-practices/index.md` | Performance patterns, waterfall elimination |
+| `ui-patterns` | `skills/_shared/frontend-knowledge/ui-patterns.md` | Accessibility, Tailwind, animation rules |
 
 *(Remove rows not applicable to this sub-issue)*
 
@@ -437,7 +437,7 @@ US-XXX: As a [user], I want [goal]...
 ⚠️ **New constants:** Add to `src/constants/[category].ts`, don't hardcode.
 
 **UI Patterns (if applicable):**
-⚠️ Implementer: Use `/vorbit:design:ui-patterns` skill when implementing.
+⚠️ Implementer: Read `skills/_shared/frontend-knowledge/ui-patterns.md` when implementing.
 
 ## File Changes
 

@@ -57,7 +57,7 @@ If present:
 1. **Similar features** → Open and study these files FIRST
 2. **Utilities** → Use these, DO NOT recreate
 3. **Constants** → Use these, NO magic numbers allowed
-4. **UI Patterns** → If present, invoke `/vorbit:design:ui-patterns`
+4. **UI Patterns** → If present, read `skills/_shared/frontend-knowledge/ui-patterns.md`
 
 ### Check "File Changes"
 If present:
@@ -69,7 +69,7 @@ If present:
 ### Detect UI Work
 If issue involves UI components:
 - Check for ui-patterns reference in issue
-- If UI work detected, use ui-patterns skill for constraints
+- If UI work detected, read `skills/_shared/frontend-knowledge/ui-patterns.md` for constraints
 - Follow: Tailwind, motion/react, accessibility primitives
 
 ## Step 4: Learn Codebase Style

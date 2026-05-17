@@ -245,9 +245,9 @@ This skill works standalone or chains with other vorbit commands:
 
 | Flow | Description |
 |------|-------------|
-| Standalone (Figma) | `/vorbit:design:webflow [figma-url]` |
-| Standalone (Direct) | `/vorbit:design:webflow [description]` |
-| From PRD | PRD → `/vorbit:design:webflow` |
+| Standalone (Figma) | `/vorbit:implement:webflow [figma-url]` |
+| Standalone (Direct) | `/vorbit:implement:webflow [description]` |
+| From PRD | PRD → `/vorbit:implement:webflow` |
 
 ## Rules
 

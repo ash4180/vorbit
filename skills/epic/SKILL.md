@@ -16,7 +16,7 @@ Transform User Stories (from PRD) into executable Engineering Tasks (Epics/Issue
 - Each sub-issue references related PRD flow steps
 - File paths are specified with exact locations
 - Existing code patterns and constants are identified for reuse
-- UI components reference the ui-patterns skill
+- UI sub-issues reference `skills/_shared/frontend-knowledge/ui-patterns.md`
 - Visual dependency tree shows implementation order by phase
 
 ## Step 1: Verify Linear Connection
@@ -124,7 +124,7 @@ If prototype exists with mock data:
 
 ### 4.5 Detect UI Work
 If feature includes UI components:
-- Note: "Reference `/vorbit:design:ui-patterns` skill"
+- Note: "Read `skills/_shared/frontend-knowledge/ui-patterns.md`"
 - Identify existing UI patterns to follow
 
 ### 4.6 Map Coupled File Paths (Required)
@@ -357,7 +357,7 @@ US-XXX: As a [user], I want [goal]...
 ⚠️ **New constants:** Add to `src/constants/[category].ts`, don't hardcode.
 
 **UI Patterns (if applicable):**
-Run `/vorbit:design:ui-patterns` before implementing UI components.
+Read `skills/_shared/frontend-knowledge/ui-patterns.md` before implementing UI components.
 
 ## File Changes
 | Action | File Path | Purpose |

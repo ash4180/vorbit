@@ -111,7 +111,7 @@ If PRD exists from Step 2:
 - FigJam flow created: Yes (with URL)
 - PRD updated: Yes/No (with URL)
 - Node count: X nodes, Y decisions, Z error paths
-- Next: `/vorbit:design:prototype` or `/vorbit:implement:epic`
+- Next: `/vorbit:implement:prototype` or `/vorbit:implement:epic`
 
 ---
 

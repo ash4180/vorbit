@@ -1,14 +1,8 @@
----
-name: ui-patterns
-version: 1.0.0
-description: Use when implementing UI components, building interfaces, creating forms, or any frontend work. Provides opinionated constraints for accessible, performant, consistent UI based on ui-skills.com patterns.
----
-
-# UI Patterns Skill
+# UI Patterns
 
 Opinionated constraints for building better interfaces. Based on [ui-skills.com](https://ui-skills.com).
 
-**When to use:** Any UI component implementation, form building, layout work.
+**When to read:** Before any UI component implementation, form building, or layout work. Other skills (`epic`, `implement`) reference this document so implementers consult it before writing UI code.
 
 ## Core Stack Requirements
 
@@ -165,7 +159,7 @@ Before marking UI work done:
 ## Integration with Epic/Implement
 
 When sub-issue has "UI Patterns" reference:
-1. This skill is auto-invoked
+1. Read this document end-to-end
 2. Follow all constraints above
 3. Use the "Reuse & Patterns" section for existing components
 4. Verify checklist before marking done
