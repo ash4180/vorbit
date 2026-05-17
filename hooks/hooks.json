@@ -24,6 +24,15 @@
             "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/pre_push_warning.py"
           }
         ]
+      },
+      {
+        "matcher": "mcp__figma__use_figma",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/skills/figma/hooks/pre_use_figma_validate.py"
+          }
+        ]
       }
     ],
     "Stop": [

@@ -1,6 +1,6 @@
 ---
 name: figma
-version: 1.3.0
+version: 1.4.0
 description: Use when user says "figma", "figma it", "sync figma", "figma mockup", "create figma file", "design to figma", "figma from PRD", "figma from journey", "build in figma", "figma design system", or wants to create, sync, or update anything in Figma (design system, components, variables, mockups, or front-end-ready screens). Always checks linked Figma libraries first; asks the user when no linked library exists rather than inventing primitives. Uses `use_figma` (Plugin API JavaScript) as the writer.
 ---
 
@@ -65,9 +65,19 @@ Read and follow `_shared/mcp-tool-routing.md` (glob for `**/skills/_shared/mcp-t
    - If `search_design_system` returns no match for a need, mark it as a **gap** for Phase 3 to resolve with the user. Never silently substitute a custom primitive.
 7. **Mobbin reference research — collaborative with user (MANDATORY when Mobbin connected, one search per screen, no exceptions):**
    - Why upstream: library tells you *which components exist*; Mobbin shows *how real apps compose them*. That decision shapes the inventory and state model — locking the plan first means Mobbin is too late.
-   - For each anticipated screen, call `mcp__mobbin__search_screens({ query: "<screen purpose>", platform: "<ios|web>", limit: 5, mode: "deep" })`.
-   - Present top 3 results per screen alongside the matched library components from step 6. **Use AskUserQuestion** to let the user pick direction: pattern, state model, copy tone, edge cases. These choices feed Phase 2 + 3.
-   - **Task list MUST contain a "Mobbin reference: \<screen>" task per anticipated screen, before any Phase 2/4B task.** Missing = silent skip; user audits the list directly.
+   - **a. Search.** For each anticipated screen, call `mcp__mobbin__search_screens({ query: "<screen purpose>", platform: "<ios|web>", limit: 5, mode: "deep" })`.
+   - **b. Report findings to the user as a chat message — BEFORE any AskUserQuestion.** This is a visible deliverable, not an internal note. Use this exact template, one block per screen:
+
+     ```
+     **Mobbin findings — <screen name>**
+     1. <App name> — <screen title> — <one-line pattern note> (mobbin: <id or url>)
+     2. <App name> — <screen title> — <one-line pattern note> (mobbin: <id or url>)
+     3. <App name> — <screen title> — <one-line pattern note> (mobbin: <id or url>)
+     ```
+
+     If a screen returns fewer than 3 results, list what came back and say so. If a screen returns nothing, write `No Mobbin matches for <screen> — proceeding from library only.`
+   - **c. Ask.** After the report is posted, **use AskUserQuestion** to let the user pick direction: pattern, state model, copy tone, edge cases. Reference the report items by number in the question. These choices feed Phase 2 + 3.
+   - **Task list MUST contain TWO tasks per anticipated screen, in order, before any Phase 2/4B task:** `Mobbin search: <screen>` then `Report Mobbin findings: <screen>`. Missing the report task = silent skip; user audits the list directly.
    - The only legitimate skip is "Mobbin not connected" (record as gap). No "direct re-skin" escape.
 8. Present consolidated findings — library names, component keys, variable IDs, Mobbin picks per screen, gaps — and **use AskUserQuestion** to confirm before Phase 2.
 
@@ -143,7 +153,7 @@ Use this path when the user asks for Figma mockups, screens, pages, or journey-i
 **Pre-flight (gate the phase):**
 - Phase 2 inventory done + user-confirmed. Phase 3 mapping has a real key/ID in every row. Mockup plan drafted.
 - Phase 0.5 done — `figma-use` guidance loaded. Writer = `use_figma` (default); `generate_figma_design` only as web-app screenshot reference.
-- The JavaScript you pass to `use_figma` MUST call `figma.importComponentByKeyAsync(key)` for each Phase 3 key, then `.createInstance()`. Naming components without importing them draws primitives.
+- **Import contract — enforced by hook.** The PreToolUse hook `skills/figma/hooks/pre_use_figma_validate.py` blocks any `use_figma` call whose JS contains `.createInstance(` without `importComponentByKeyAsync(`. To pass: for every Phase 3 component key, call `await figma.importComponentByKeyAsync("<key>")` before any `.createInstance()`. Bind variables via `figma.variables.getVariableByIdAsync("<var-id>")` — no inline hex. A `<frame>` named "Button / Primary" is the failure mode this hook exists to prevent. See `figma-use` guidance (Phase 0.5) for the full Plugin API skeleton.
 
 If any pre-flight item is incomplete, return to that earlier phase.
 
@@ -177,6 +187,8 @@ Final report must include:
 - Creating screens before confirming the page inventory.
 - **Using `generate_figma_design` as the main writer** — it's reserved for web-app screenshot reference. `use_figma` is the default writer; wrong tool was the v1.0–v1.2 root cause of orphan frames.
 - **Calling `use_figma` without loading `figma-use` first** — covers Plugin API gotchas that cause silent JavaScript failures.
+- **Running Mobbin searches without reporting findings to chat** — the report block (Phase 1 step 7b) is the deliverable. AskUserQuestion alone is not a substitute; the user needs to see what was returned before picking direction.
+- **Listing Phase 3 component keys in JS comments without `importComponentByKeyAsync` calls** — the PreToolUse hook (`skills/figma/hooks/pre_use_figma_validate.py`) will block this. If you see the hook fire, fix the JS, don't try to bypass it.
 - **Substituting emoji for icon components** — tells that no icon component was imported. Search the library for real icons.
 - **Inventing primitives when the library is missing the asset or no library exists** — STOP and ASK the user (link a library, update it, or explicitly approve custom work). Silent invention fragments the design system.
 - **Fetching from an empty Figma file in a loop** — if blank, push mode (`generate_figma_design`) seeds it first.
