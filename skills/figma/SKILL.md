@@ -28,10 +28,12 @@ Read and follow `_shared/mcp-tool-routing.md` (glob for `**/skills/_shared/mcp-t
 
 ## Phase 0.5: Load Writer Guidance
 
-**Default writer is `mcp__figma__use_figma`** — runs JavaScript via the Figma Plugin API, imports library components by key, creates real instances. Before calling it, load `figma-use` guidance (covers Plugin API gotchas):
+The default writer is `mcp__figma__use_figma`. Before calling it, load the figma-use guidance.
 
-1. Try `Skill` tool → load `figma-use`.
-2. If not registered, fall back to `ReadMcpResourceTool` with URI `skill://figma/figma-use/SKILL.md`.
+- If `figma:figma-use` is in this session's available-skills list → call `Skill` with `figma:figma-use`.
+- Otherwise → call `ReadMcpResourceTool` with `server: figma`, `uri: skill://figma/figma-use/SKILL.md`.
+
+Both load the same content. Pick whichever exists.
 
 
 ## Phase 1: Discovery
