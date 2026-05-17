@@ -26,6 +26,20 @@ Read and follow `_shared/mcp-tool-routing.md` (glob for `**/skills/_shared/mcp-t
 4. **IF verification fails:** "Figma connection expired. Run `/mcp` to reconnect, then retry." → **STOP**
 5. **Reference patterns (optional):** Run `ToolSearch` for `"mobbin"`. If Mobbin tools are available, note this — they'll be used in Phase 4B to fetch real-world UI references before drawing each new screen. If absent, continue without reference patterns (do **not** block).
 
+## Phase 0.5: Load Figma MCP Companion Skills
+
+The Figma MCP server ships its own skills that prepare write operations to honor linked libraries. They are declared **MANDATORY** by the MCP server itself — skipping them is the main reason `generate_figma_design` produces orphan frames instead of library-bound instances.
+
+Before any Figma write, invoke via the `Skill` tool:
+
+1. **`figma-use`** — MANDATORY before calling `use_figma`. Loads the procedures that bind edits to the active file's linked library.
+2. **`figma-generate-design`** — load before `generate_figma_design`. Required when translating an app page or layout into Figma.
+3. **`figma-generate-library`** — load before building a design system in Figma from code (Phase 4A).
+4. **`figma-use-figjam`** — load before any FigJam write.
+5. **`figma-generate-diagram`** — MANDATORY before calling `generate_diagram`.
+
+If a companion skill is unavailable, continue — but record this in the discovery findings (Phase 1) so the user knows generations may not bind to the linked library.
+
 ## Phase 1: Discovery
 
 **Goal**: Understand the product flow, implementation surface, and existing design system before creating anything.
@@ -44,13 +58,18 @@ Read and follow `_shared/mcp-tool-routing.md` (glob for `**/skills/_shared/mcp-t
    - Existing UI components and import aliases
    - Data-loading boundaries and page states
 5. Inspect Figma:
-   - Pages and existing frames
-   - Local and linked variables
+   - Pages and existing frames (`get_metadata`)
+   - Local and linked variables (`get_variable_defs`)
    - Components and component sets
    - Text styles and effect styles
    - **Empty-file check**: if the target file or frame is blank (screenshot returns nothing, `get_design_context` reports "nothing selected"), the file has not been seeded yet. Do NOT keep fetching — switch to **code→design push mode** and use `generate_figma_design` (or equivalent write tool) to push the current UI/intent into Figma first, then continue from a populated frame.
-6. Search linked Figma libraries for relevant components, variables, and styles before creating anything custom.
-7. Present discovery findings and **use AskUserQuestion** to confirm before planning.
+6. **Discover linked libraries — executable, not aspirational:**
+   - Call `mcp__figma__get_libraries` to list every library connected to the target file. Record library names, IDs, and whether each is enabled.
+   - **IF the result is empty:** the file has no linked library. STOP here and ask the user (link a library, point to a different file, or explicitly approve custom primitives). Do not skip ahead to drawing.
+   - For each component/variable need surfaced in step 4, call `mcp__figma__search_design_system` with a concrete query (e.g. `"button primary"`, `"card surface"`). Record the returned component key, node ID, and library source.
+   - Call `mcp__figma__get_variable_defs` to capture token IDs for colors, spacing, radii, and typography. These IDs — not hex codes — are what `generate_figma_design` needs to bind tokens.
+   - If `search_design_system` returns no match for a need, mark it as a **gap** for Phase 3 to resolve with the user. Never silently substitute a custom primitive.
+7. Present discovery findings (including library names, matched component keys, captured variable IDs, and any gaps) and **use AskUserQuestion** to confirm before planning.
 
 ## Phase 2: Page Inventory
 
