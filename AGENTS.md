@@ -1,5 +1,14 @@
 # Global Output Guidelines
 
+## Before Coding
+
+**Don't assume. Don't hide confusion. Surface tradeoffs.**
+
+- State assumptions explicitly. If uncertain, ask — don't guess.
+- If multiple interpretations exist, present them. Don't pick silently.
+- If a simpler approach exists, say so. Push back when warranted.
+- If something is unclear, stop. Name what's confusing. Ask.
+
 ## Philosophy
 
 ### Core Beliefs
@@ -13,6 +22,7 @@
 - Avoid premature abstractions
 - No clever tricks - choose the boring solution
 - If you need to explain it, it's too complex
+- No error handling for impossible scenarios
 
 ### Key Expressions
 - "Why are you making this complicated?"
@@ -37,15 +47,10 @@
 - Do not move on to the next test until the current test is complete.
 - If the test fails, consider checking if the test is structured correctly before deciding we need to refactor the codebase.
 - Tests to be verbose so we can use them for debugging.
-
-## CRITICAL: Code Reuse Rules (ALWAYS CHECK FIRST)
-**BEFORE WRITING ANY CODE:**
-1. **SEARCH FIRST** - Use Grep/Glob to find if the function/component already exists
-2. **REUSE EXISTING** - If it exists, USE IT. Do NOT create duplicates
-3. **MODIFY IF NEEDED** - Edit existing functions rather than creating new ones
+- Reframe tasks as tests when possible: "Fix bug" → "Write a failing test that reproduces it, then make it pass". Strong success criteria let the agent loop without constant clarification.
 
 ## Absolute Rules (Never Override)
-1. CHECK FOR EXISTING CODE FIRST - Creating duplicates = immediate failure
+1. CHECK FOR EXISTING CODE FIRST — Grep/Glob before writing. If it exists, reuse or modify it. Creating duplicates = immediate failure
 2. NO PARTIAL IMPLEMENTATION
 3. NO "simplified for now" placeholder code
 4. NO DEAD CODE - use it or delete it
@@ -57,6 +62,7 @@
 10. SEPARATE CONCERNS properly
 11. NO RESOURCE LEAKS
 12. NEVER modify files you haven't read. Always Read or Grep first.
+13. NO DRIVE-BY EDITS — every changed line must trace directly to the user's request. Don't refactor adjacent code, reformat untouched lines, or "improve" things you weren't asked to change.
 
 ---
 Note: Project-specific CLAUDE.md files should EXTEND these principles, not contradict them.
