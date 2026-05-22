@@ -66,3 +66,33 @@ Canonical map of every MCP-using vorbit skill — source of truth for plugin/too
 | `vorbit:implement:verify` | `mcp__plugin_linear_linear__*` (optional) | `get_issue` | `mcp__figma__*` (for UI sub-issue screenshot comparison) |
 
 Note: specialized external plugin skills (`webflow-skills:*`, `pr-review-toolkit:*`, `security-review`, `frontend-design:frontend-design`) are user-invoked entry points with their own scope — vorbit does not delegate to them mid-task.
+
+## Namespace disambiguation — Linear, Notion, Figma
+
+Multiple MCP servers may be configured for the same platform. Vorbit skills always use the plugin namespace shipped with vorbit; other namespaces are for direct/outside-skill use.
+
+### Linear
+
+| Namespace | Source | Use for |
+|-----------|--------|---------|
+| `mcp__plugin_linear_linear__*` | Ships with vorbit plugin | **All vorbit skills use this** — canonical for /epic, /prd, /implement, /verify, /prepare-pr, /implement-loop, /cleanup-mocks |
+| `mcp__linear-server__*` | Locally configured Linear MCP (per `settings.local.json`) | Direct Linear operations outside vorbit skill flows |
+| `mcp__claude_ai_Linear__*` | Claude.ai OAuth integration | Last resort — only `list_teams` is pre-approved |
+
+### Notion
+
+| Namespace | Source | Use for |
+|-----------|--------|---------|
+| `mcp__plugin_Notion_notion__*` (capital N in `Notion`) | Ships with vorbit plugin | **All vorbit skills use this** — `notion-find`, `notion-update-page`, `notion-fetch` |
+| `mcp__notion__*` | Locally configured Notion MCP | Sometimes available; for direct Notion operations |
+| `mcp__claude_ai_Notion__*` | Claude.ai OAuth integration | Fallback only; can't access user's personal Notion workspace |
+
+### Figma
+
+| Namespace | Source | Use for |
+|-----------|--------|---------|
+| `mcp__figma__*` | Figma's official MCP | **Canonical for vorbit skills** — `use_figma`, `get_design_context`, `get_screenshot`, `get_libraries`, `search_design_system`, `get_variable_defs` |
+| `mcp__plugin_figma_figma__*` | Figma plugin variant | Has tools not in bare server (`generate_diagram` — currently unused after /ux Step 5 removal). Use only for those tools. |
+| `mcp__plugin_figma_figma-desktop__*` | Figma Desktop variant | Used by /webflow for desktop-app-specific tools |
+
+**Rule for all vorbit skills:** prefer the namespace listed in the Plugin Tool Index above. If only a non-canonical variant is connected at runtime, fall back gracefully (most tools work across variants). Don't mix namespaces within one skill invocation.

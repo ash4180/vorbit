@@ -21,12 +21,8 @@ Create reusable UI prototypes that become production code. Frontend devs swap mo
 ## Phase 0: Detect Platform & Verify Connection
 
 ### Pencil Check
-Before starting, check if Pencil MCP is available and configured:
-1. Run `ToolSearch` for `"pencil"` — if Pencil tools exist:
-2. Check if `.claude/rules/pencil.md` exists (Glob for it)
-3. **IF Pencil available but no pencil.md:** Use `AskUserQuestion`: "Pencil is connected but not configured for this project. Run `/vorbit:design:pencil` first to sync your design tokens and components? (Recommended)" with options: "Run pencil first (Recommended)", "Skip — continue without sync"
-4. **IF user chooses to sync:** Stop and tell them to run `/vorbit:design:pencil`, then come back
-5. **IF pencil.md exists:** Read it — use detected stack, tokens, and component inventory to inform prototype decisions
+
+Follow `_shared/pencil-check.md` — shared 6-step procedure that detects Pencil connection, checks for `.claude/rules/pencil.md`, and routes the user through `/vorbit:design:pencil` sync if needed. The same procedure is used by `/vorbit:implement:webflow`; keeping it shared prevents drift.
 
 ### Platform Discovery
 Read and follow `_shared/mcp-tool-routing.md`. Discover connected platforms, ask user which to use, and verify connection.

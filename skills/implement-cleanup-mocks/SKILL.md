@@ -32,10 +32,11 @@ Read and follow `_shared/mcp-tool-routing.md`. Discover connected platforms, ask
 **Registry format:**
 ```json
 {
-  "version": "1.0",
+  "version": "1.1",
   "mocks": [
     {
       "feature": "user-profile",
+      "type": "file",
       "path": "src/pages/UserProfile/mocks/user.json",
       "endpoint": "GET /api/users/:id",
       "createdBy": "prototype",
@@ -98,7 +99,16 @@ Read and follow `_shared/mcp-tool-routing.md`. Discover connected platforms, ask
 **Used by:** [List components that import this mock]
 ```
 
-## Step 4: Present API Contract for Review
+## Step 4: Collect Open Questions for Backend
+
+Before assembling the contract, ask the user via `AskUserQuestion` whether there are open questions or decisions the backend team needs to make. Examples:
+- "Should this endpoint paginate? If yes, cursor or offset?"
+- "Authorization: per-user only, or also per-org?"
+- "Soft-delete or hard-delete for the DELETE endpoint?"
+
+If the user has nothing, drop the "Questions for Backend" section from the contract template. Don't auto-populate it with guesses — vague questions are worse than no questions. This step closes the gap where no upstream skill writes that section; without asking here, it stays empty.
+
+## Step 5: Present API Contract for Review
 
 **Show complete API contract document:**
 
@@ -126,7 +136,7 @@ Generated from frontend mock data for backend implementation.
 
 **Wait for confirmation before proceeding.**
 
-## Step 5: Save API Contract to PRD
+## Step 6: Save API Contract to PRD
 
 ### If Notion PRD:
 1. Use `notion-fetch` to get current PRD content
@@ -145,7 +155,7 @@ Generated from frontend mock data for backend implementation.
 1. Create local file: `docs/api-contracts/[feature-name].md`
 2. Report file location
 
-## Step 6: Clean Up Mock Files and State
+## Step 7: Clean Up Mock Files and State
 
 **For each mock in cleanup scope:**
 
@@ -209,7 +219,7 @@ Generated from frontend mock data for backend implementation.
 ### 6.3 Update Registry
 - Remove cleaned entries from `.claude/mock-registry.json`
 
-## Step 7: Report
+## Step 8: Report
 
 **Present summary:**
 

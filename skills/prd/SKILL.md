@@ -26,6 +26,14 @@ The goal is a drafted PRD before touching Linear. Connection problems must never
 1. Use the pasted text directly as input — the skill's Linear-only `allowed-tools` cannot fetch external docs
 2. Ask the user for any sections they referenced but did not paste, then restructure as above
 
+**IF the source is an `/explore` exploration document** (User Flow + Step-mapped Reference Patterns format from `/vorbit:design:explore`):
+1. Convert the User Flow from linear numbered steps to PRD's Entry→Exit prose form:
+   - `/explore` writes: `1. User opens the alert detail page / 2. Taps "Escalate" / 3. Picks escalation level...`
+   - `/prd` expects: `**Entry:** Alert detail page → User taps Escalate → Picks escalation level → System updates status → **Exit:** Alert list with "Escalated" status visible`
+   - The step content stays identical — only the formatting changes (numbered list → arrow-separated prose with Entry/Exit anchors)
+2. Promote the explore doc's Recommendation into the PRD's Description + first User Story
+3. Keep the explore doc's Reference Patterns block as context (link or inline) but don't restate it in the PRD body — PRD is implementation spec, not exploration artifact
+
 **IF conversation already covers the feature:** use that context as input.
 
 **IF starting fresh:** proceed to Step 2.
@@ -210,6 +218,8 @@ When asked to review whether sub-issues fulfill a parent PRD ticket:
 ---
 
 # Schema & Validation
+
+**Read this section before drafting in Step 3.** Without these required sections and validation rules, the PRD ticket doesn't carry the structure that `/vorbit:implement:epic` needs to break it into traceable sub-issues. A passing draft skips no required section and trips no validation rule below.
 
 ## Required Sections
 

@@ -8,6 +8,8 @@ description: Use when user says "create user flow", "user journey", "flow diagra
 
 Create user journey diagrams in Excalidraw with an inline animated preview, then publish to excalidraw.com for a shareable URL.
 
+**Why Excalidraw, not Figma:** Excalidraw's MCP exposes both an inline-preview API (`create_view` — renders in chat with streaming animation; user validates before publishing) and a publish-to-URL step (`export_to_excalidraw` — returns a shareable `excalidraw.com` link). Figma's `generate_diagram` doesn't produce a shareable URL — it requires opening the Figma file. Excalidraw is also lighter for quick flow visualization than Figma's full design canvas. `/journey` is the canonical flow-visualization skill in vorbit; other skills (e.g., /ux) defer to it rather than draw diagrams themselves.
+
 > **MCP namespace**: This skill uses `mcp__claude_ai_Excalidraw__create_view` (inline preview) and `mcp__claude_ai_Excalidraw__export_to_excalidraw` (publish). See `_shared/mcp-tool-routing.md` for the Plugin Tool Index and the announce-the-plugin rule.
 
 > **Locate `_shared/`**: This skill ships as a plugin, so `_shared/` files live in the plugin cache, not your project. Before reading any `_shared/...` path below, run `ls -d ~/.claude/plugins/cache/local/vorbit/*/skills/_shared 2>/dev/null | head -1` and use the output as the absolute base for every `_shared/...` reference.

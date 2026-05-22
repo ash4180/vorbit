@@ -148,6 +148,8 @@ For branches without design files, the skill still handles PR body generation an
 
 **Skip this phase if no `designs/` directory exists, or if `--skip-designs` flag is set.**
 
+**Convention**: Design files (`.pen` files from `/vorbit:design:pencil` work) live at `designs/{issue-id}/` during development. This is a **manual designer convention** — `/pencil` writes to the Pencil app's internal storage; the designer copies/exports the `.pen` file into `designs/{issue-id}/` and commits it on the feature branch so teammates can review. The path is also documented in the [Pencil Design Files in Git Management Standard](https://www.notion.so/vibranium-labs/Pencil-Design-Files-in-Git-Management-Standard-313477245840818dbf27dcc2d6774bde).
+
 **Goal**: Strip design files and record the recovery reference. The recovery hash is captured BEFORE stripping because it points to the last commit where the files still exist — this is the only way to recover them later.
 
 1. **Record the recovery hash** — this MUST happen before any `git rm`:
