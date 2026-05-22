@@ -76,7 +76,6 @@ vorbit/
 │   └── skills/                        # Codex CLI skills
 ├── gemini/
 │   └── skills/                        # Gemini CLI skills
-├── ClaudeApp/                         # Claude desktop app skill copies
 ├── scripts/
 │   ├── sync-codex-skills.sh           # Install Codex skills
 │   └── sync-gemini-skills.sh          # Install Gemini skills

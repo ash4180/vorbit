@@ -7,14 +7,16 @@
 # Dependencies
 node_modules/
 
-# Vorbit working state
-.vorbit/
-vorbit-architecture.html
-
 # Python bytecode cache
 __pycache__/
 
-# Skill eval workspaces (iteration outputs)
+# Pytest runtime cache (regenerates on next test run)
+.pytest_cache/
+
+# Ruby LSP cache (regenerates when the editor reopens the project)
+.ruby-lsp/
+
+# Skill eval workspaces (iteration outputs from skill-creator)
 *-workspace/
 
 # Loop state and mock registry (runtime only, not committed)

@@ -117,6 +117,17 @@ else
   echo "  Warning: pip not found — run 'pip install pytest' manually to install pytest"
 fi
 
+# 9. Sweep stale dev caches (__pycache__/, .pytest_cache/, .ruby-lsp/).
+# When .py scripts are deleted, their .pyc files in __pycache__/ stick around as
+# orphans (the directory survives even when no source remains). Past audits found
+# .pyc files for deleted scripts (e.g. codex-stop.py, gemini-session-end.py).
+# .pytest_cache/ is a runtime cache pytest writes between runs.
+# .ruby-lsp/ is a runtime cache the Ruby language server writes.
+# All three are safe to delete — they regenerate from real source on next use.
+echo "→ Sweeping stale dev caches (__pycache__, .pytest_cache, .ruby-lsp)..."
+find "$PLUGIN_SOURCE" -type d \( -name __pycache__ -o -name .pytest_cache -o -name .ruby-lsp \) -not -path "*/.git/*" -exec rm -rf {} + 2>/dev/null || true
+echo "  Done."
+
 echo ""
 echo "Done! Restart Claude Code to load $PLUGIN_NAME."
 echo "\${CLAUDE_PLUGIN_ROOT} → $CACHE_VERSION_DIR (real dir, contents symlinked to $PLUGIN_SOURCE)"
