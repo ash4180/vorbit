@@ -51,18 +51,18 @@ Canonical map of every MCP-using vorbit skill — source of truth for plugin/too
 
 | Vorbit skill | Primary namespace | Key tools | Optional plugins |
 |---|---|---|---|
-| `vorbit:design:figma` | `mcp__figma__*` | `use_figma`, `get_design_context`, `get_libraries`, `search_design_system`, `get_screenshot` | `mcp__mobbin__search_screens` (research) |
+| `vorbit:design:figma` | `mcp__figma__*` (canonical) — fallback `mcp__plugin_figma_figma__*` if only plugin variant connected | `use_figma`, `get_design_context`, `get_libraries`, `search_design_system`, `get_screenshot` | `mcp__mobbin__search_screens` (research) |
 | `vorbit:design:pencil` | `mcp__pencil__*` | `batch_get`, `get_variables`, `set_variables`, `get_style_guide` | `mcp__mobbin__search_screens` (patterns) |
 | `vorbit:design:journey` | `mcp__claude_ai_Excalidraw__*` | `read_me` (load once), `create_view` (inline preview), `export_to_excalidraw` (publish to shareable URL) | — |
 | `vorbit:design:explore` | `mcp__mobbin__*` | `search_screens` | `mcp__claude-in-chrome__*` (live screenshot) |
 | `vorbit:design:prd` | `mcp__plugin_linear_linear__*` | `save_issue`, `list_teams`, `list_projects` | — |
 | `vorbit:implement:epic` | `mcp__plugin_linear_linear__*` | `save_issue`, `list_issues`, `list_issue_statuses` | — |
-| `vorbit:implement:implement` | `mcp__plugin_linear_linear__*` | `get_issue`, `update_issue`, `list_comments` | — |
+| `vorbit:implement:implement` | `mcp__plugin_linear_linear__*` | `get_issue`, `update_issue`, `list_comments` | `mcp__figma__*` (for UI sub-issues — `get_design_context`, `get_screenshot`) |
 | `vorbit:implement:implement-loop` | `mcp__plugin_linear_linear__*` | `list_issues` (parentId), `update_issue` | — |
 | `vorbit:implement:webflow` | `mcp__webflow__*` | `element_builder`, `style_tool`, `component_builder`, `data_cms_tool` | `mcp__figma__get_design_context` (ref) |
 | `vorbit:implement:prototype` | — (no required MCP) | — | `mcp__figma__get_design_context`, `mcp__pencil__*` (refs) |
 | `vorbit:implement:prepare-pr` | `mcp__plugin_linear_linear__*` (optional) | `get_issue`, `update_issue`, `save_comment` | — |
 | `vorbit:implement:cleanup-mocks` | `mcp__plugin_linear_linear__*` (optional) | `update_issue` | — |
-| `vorbit:implement:verify` | `mcp__plugin_linear_linear__*` (optional) | `get_issue` | — |
+| `vorbit:implement:verify` | `mcp__plugin_linear_linear__*` (optional) | `get_issue` | `mcp__figma__*` (for UI sub-issue screenshot comparison) |
 
 Note: specialized external plugin skills (`webflow-skills:*`, `pr-review-toolkit:*`, `security-review`, `frontend-design:frontend-design`) are user-invoked entry points with their own scope — vorbit does not delegate to them mid-task.

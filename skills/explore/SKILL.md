@@ -12,6 +12,8 @@ Quick idea exploration before PRD creation. Output stays at the UX/product level
 
 > **Locate `_shared/`**: This skill ships as a plugin, so `_shared/` files live in the plugin cache, not your project. Before reading any `_shared/...` path below, run `ls -d ~/.claude/plugins/cache/local/vorbit/*/skills/_shared 2>/dev/null | head -1` and use the output as the absolute base for every `_shared/...` reference.
 
+> **UX patterns reference**: Senior UX product designer knowledge lives in `_shared/ux-knowledge/`. When sharpening Step 4 compare-and-contrast prompts, consult `question-matrix.md` for question categories. When checking whether Step 6 options cover edge cases, consult `edge-case-catalog.md`. When user is unsure between approaches, consult `ux-philosophy.md` for decision frameworks. Read directly — no need to invoke `/vorbit:design:ux` for these lookups.
+
 ## Scope Rules
 
 Exploration is for **UX/product direction**, not implementation. The output document MUST NOT contain frontend file paths, line numbers, LOC estimates, "PR #1 / PR #2" breakdowns, code snippets, Tailwind/CSS classes, component prop names, hex colors, or token IDs. Implementation specifics belong in `/vorbit:design:prd` or `/vorbit:implement:implement`. If they surface during exploration, capture them in a single "Follow-up questions for PRD" line and move on.

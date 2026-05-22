@@ -10,6 +10,10 @@ Create a Linear ticket that captures a product requirement. No fluff, just what 
 
 > **Linear MCP namespace**: All Linear calls in this skill use `mcp__plugin_linear_linear__*` (the namespace shipped with the vorbit plugin). Bare verb names below (`get_user`, `list_teams`, `save_issue`, etc.) refer to the corresponding `mcp__plugin_linear_linear__<verb>` tool.
 
+> **Locate `_shared/`**: This skill ships as a plugin, so `_shared/` files live in the plugin cache, not your project. Before reading any `_shared/...` path below, run `ls -d ~/.claude/plugins/cache/local/vorbit/*/skills/_shared 2>/dev/null | head -1` and use the output as the absolute base for every `_shared/...` reference.
+
+> **UX patterns reference**: Senior UX product designer knowledge lives in `_shared/ux-knowledge/`. When building Step 2 clarifying questions, consult `question-matrix.md` (14 categories). When checking AC completeness in Step 3, consult `edge-case-catalog.md`. When phrasing ACs (verbatim user-words rule), consult `ux-philosophy.md`. Read directly — no need to invoke `/vorbit:design:ux` unless requirements are deeply vague.
+
 ## Step 1: Gather Context (Draft First)
 
 The goal is a drafted PRD before touching Linear. Connection problems must never block drafting.

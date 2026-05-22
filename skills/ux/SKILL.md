@@ -1,14 +1,16 @@
 ---
 name: ux
-version: 1.0.0
-description: This skill should be used when ANY skill needs to clarify user experience requirements through exhaustive questioning. Invoked by PRD, Epic, or Implement skills when UX details are unclear. Transforms vague requirements into precise acceptance criteria.
+version: 2.0.0
+description: Senior UX product designer knowledge layer. Called by /explore, /prd, /journey, /figma, /epic, /implement, /verify when they need to clarify UX requirements, check edge-case coverage, validate state design, or look up decision frameworks. Transforms vague requirements into precise acceptance criteria via exhaustive questioning, and serves as the canonical reference for UX patterns across the design chain.
 ---
 
 # UX Clarification Skill
 
-Exhaustive UX questioning to transform vague requirements into precise, testable acceptance criteria.
+Senior-UX-designer knowledge: exhaustive question matrix, edge-case catalog, decision frameworks. Other vorbit skills consult `_shared/ux-knowledge/` directly when they need UX patterns. This skill itself is the **workflow** for exhaustive Q&A → verbatim ACs.
 
 **Core Principle:** Ask questions → User answers → Answers become acceptance criteria (verbatim).
+
+> **Locate `_shared/`**: This skill ships as a plugin, so `_shared/` files live in the plugin cache, not your project. Before reading any `_shared/...` path below, run `ls -d ~/.claude/plugins/cache/local/vorbit/*/skills/_shared 2>/dev/null | head -1` and use the output as the absolute base for every `_shared/...` reference.
 
 ---
 
@@ -16,9 +18,15 @@ Exhaustive UX questioning to transform vague requirements into precise, testable
 
 | Calling Skill | Trigger |
 |---------------|---------|
-| **PRD** | Building each user story |
-| **Epic** | No PRD exists, need to gather requirements |
-| **Implement** | Requirements unclear, edge cases undefined |
+| **/explore** | Sharpening compare-and-contrast prompts; checking edge-case coverage before drafting options |
+| **/prd** | Building each user story; AC quality (verbatim user words rule); flow/error gaps |
+| **/journey** | Flow patterns (entry/exit, decisions, errors) — what to ask about per question-matrix |
+| **/figma** | UI state patterns (empty/loading/error/disabled), accessibility, microcopy decisions |
+| **/epic** | No PRD exists; need to gather requirements before sub-issue planning |
+| **/implement** | Requirements unclear, edge cases undefined mid-implementation |
+| **/verify** | Looking up what to check (state design, accessibility, edge cases per category) |
+
+Each calling skill may consult `_shared/ux-knowledge/` directly without invoking this full workflow — see "Direct Reference Access" below.
 
 ---
 
@@ -34,7 +42,7 @@ Receive from calling skill:
 
 ### Step 1: Load Question Matrix
 
-**>>> READ `references/question-matrix.md` NOW <<<**
+**>>> READ `_shared/ux-knowledge/question-matrix.md` NOW <<<**
 
 This file contains 14 question categories. Use ALL relevant categories.
 
@@ -57,7 +65,7 @@ Use `AskUserQuestion` with 2-4 questions per batch. Go through each category:
 
 ### Step 3: Cross-Check Edge Cases
 
-**>>> READ `references/edge-case-catalog.md` NOW <<<**
+**>>> READ `_shared/ux-knowledge/edge-case-catalog.md` NOW <<<**
 
 After user answers:
 1. Compare answers against catalog entries
@@ -66,7 +74,7 @@ After user answers:
 
 ### Step 4: Resolve Uncertainty
 
-**>>> READ `references/ux-philosophy.md` WHEN USER IS UNSURE <<<**
+**>>> READ `_shared/ux-knowledge/ux-philosophy.md` WHEN USER IS UNSURE <<<**
 
 If user says "I don't know" or "whatever you think":
 1. Read philosophy file for decision frameworks
@@ -86,7 +94,7 @@ Return structured UX content to calling skill:
 [User's description of ideal experience - their exact words]
 
 ### User Flow
-[Generate FigJam diagram if complex, or describe flow]
+[Describe textually in Entry → step → step → Exit form. For published diagrams, recommend `/vorbit:design:journey`.]
 
 ### Acceptance Criteria
 
@@ -120,25 +128,14 @@ Return structured UX content to calling skill:
 
 ---
 
-## Flow Diagram Generation
+## Flow Diagrams — Delegate to /journey
 
-For complex flows, use `mcp__plugin_figma_figma__generate_diagram`:
+`/ux` does NOT generate flow diagrams. If the user needs a visual flow during clarification:
 
-```mermaid
-flowchart LR
-    A(["Entry"]):::startend --> B["Action"]:::action
-    B --> C{"Decision?"}:::decision
-    C -->|"Yes"| D["Success"]:::positive
-    C -->|"No"| E["Error"]:::negative
+- Describe the flow textually in the output (Entry → step → step → Exit form)
+- Suggest `/vorbit:design:journey` for a published Excalidraw diagram with shareable URL
 
-    classDef startend fill:#CBD5E1,color:#334155,stroke:#94A3B8
-    classDef action fill:#BAE6FD,color:#0c4a6e,stroke:#7DD3FC
-    classDef decision fill:#FED7AA,color:#7c2d12,stroke:#FDBA74
-    classDef positive fill:#A7F3D0,color:#14532d,stroke:#6EE7B7
-    classDef negative fill:#FECDD3,color:#881337,stroke:#FB7185
-```
-
-**Rules:** Max 15 nodes, LR direction, all text in quotes, no emojis.
+Single canonical tool for flow visualization (`/journey` → Excalidraw) avoids duplicate-artifact problems.
 
 ---
 
@@ -163,10 +160,14 @@ For simple tasks (< 3 acceptance criteria needed):
 
 ---
 
-## Reference Files
+## Direct Reference Access (for consumer skills)
 
-| File | When to Read | Purpose |
-|------|--------------|---------|
-| `references/question-matrix.md` | Step 1 | All questions by category |
-| `references/edge-case-catalog.md` | Step 3 | Cross-check for gaps |
-| `references/ux-philosophy.md` | Step 4 | Decision frameworks when user unsure |
+`/explore`, `/prd`, `/journey`, `/figma`, `/epic`, `/implement`, and `/verify` can read `_shared/ux-knowledge/` files directly without invoking this full skill. Each file is self-contained and serves a specific purpose:
+
+| File | When to Read | Purpose | Used by |
+|------|--------------|---------|---------|
+| `_shared/ux-knowledge/question-matrix.md` | Designing questions for a feature | All 14 question categories with prompts | /explore, /prd, /journey, /ux |
+| `_shared/ux-knowledge/edge-case-catalog.md` | Checking edge-case coverage | Concrete edge cases per input/state/network/auth/device | /prd, /figma, /implement, /verify, /ux |
+| `_shared/ux-knowledge/ux-philosophy.md` | Making UX trade-off decisions | Decision frameworks (block vs warn, auto-save vs manual, etc.) + state design principles | /explore, /prd, /figma, /verify, /ux |
+
+**Rule for consumer skills:** Direct read = quick lookup. Full /ux invocation = exhaustive Q&A producing structured ACs. Use direct read when you know what you need (e.g., "what does the catalog say about empty states?"). Use full /ux invocation when the requirements are vague and you need the whole question-batch ritual.

@@ -12,6 +12,8 @@ Create user journey diagrams in Excalidraw with an inline animated preview, then
 
 > **Locate `_shared/`**: This skill ships as a plugin, so `_shared/` files live in the plugin cache, not your project. Before reading any `_shared/...` path below, run `ls -d ~/.claude/plugins/cache/local/vorbit/*/skills/_shared 2>/dev/null | head -1` and use the output as the absolute base for every `_shared/...` reference.
 
+> **UX patterns reference**: Senior UX product designer knowledge lives in `_shared/ux-knowledge/`. When drafting Step 3 questions about flow entry/exit/decisions/errors, consult `question-matrix.md` (categories 1, 4, 9, 12 are most relevant for flows). When checking whether the flow covers concurrent/error/recovery cases in Step 4 draft, consult `edge-case-catalog.md`. Read directly — no need to invoke `/vorbit:design:ux`.
+
 ## Step 1: Detect Platform & Verify Connection
 
 Read and follow `_shared/mcp-tool-routing.md`. Discover connected platforms, ask user which to use, and verify connection.

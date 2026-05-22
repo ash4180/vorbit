@@ -12,6 +12,8 @@ Create Figma design-system assets and front-end-ready mockups that engineers can
 
 > **Locate `_shared/`**: This skill ships as a plugin, so `_shared/` files live in the plugin cache, not your project. Before reading any `_shared/...` path below, run `ls -d ~/.claude/plugins/cache/local/vorbit/*/skills/_shared 2>/dev/null | head -1` and use the output as the absolute base for every `_shared/...` reference.
 
+> **UX patterns reference**: Senior UX product designer knowledge lives in `_shared/ux-knowledge/`. When designing UI states in Phase 2 (Page Inventory), consult `ux-philosophy.md` for empty/loading/error state design principles. When checking accessibility, edge cases, or input validation patterns in Phase 4B (Mockup Creation), consult `edge-case-catalog.md`. When defining microcopy for buttons/errors/empty states, consult `ux-philosophy.md → Error States` and the verbatim-words rule. Read directly — no need to invoke `/vorbit:design:ux`.
+
 ## Core Principles
 
 - **Think like the implementer**: Break flows into pages, routes, components, states, and data boundaries before drawing, ask questions to understand the user flow logic if any unclear.
@@ -170,7 +172,7 @@ Rules:
    - Explicitly approve a custom primitive (rare; only when no other option fits).
    Never invent primitives silently inside the mockup.
 4. Stop and ask if no linked design system exists at all — do not fall back to "create custom primitives" without explicit user approval.
-   - **Before asking**, read `_shared/design-knowledge/references/aesthetic-direction.md` `[Skill ref]` so the question is grounded in concrete aesthetic vocabulary (committed direction, restraint, clarity). Skim `_shared/design-knowledge/data/styles.csv` and `colors.csv` if proposing palette or style options.
+   - **Before asking**, read `_shared/design-knowledge/references/aesthetic-direction.md` `[Skill ref]` so the question is grounded in concrete aesthetic vocabulary (committed direction, restraint, clarity).
 5. Stop and ask if code and Figma disagree on tokens, components, or naming.
 
 Present the mapping and **use AskUserQuestion** to confirm before writing anything.

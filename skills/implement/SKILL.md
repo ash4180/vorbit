@@ -10,6 +10,8 @@ A disciplined, Test-Driven Development (TDD) workflow for implementing features 
 
 > **Linear MCP namespace**: All Linear calls in this skill use `mcp__plugin_linear_linear__*` (the namespace shipped with the vorbit plugin). Bare verb names below (`list_issues`, `update_issue`, etc.) refer to the corresponding `mcp__plugin_linear_linear__<verb>` tool.
 
+> **Figma MCP namespace**: For UI/design-driven sub-issues, bare Figma verbs below (`get_design_context`, `get_metadata`, `get_screenshot`) refer to `mcp__figma__<verb>` (canonical per `_shared/mcp-tool-routing.md`). If only the plugin variant is connected, `mcp__plugin_figma_figma__<verb>` works equivalently.
+
 > **Locate `_shared/`**: This skill ships as a plugin, so `_shared/` files live in the plugin cache, not your project. Before reading any `_shared/...` path below, run `ls -d ~/.claude/plugins/cache/local/vorbit/*/skills/_shared 2>/dev/null | head -1` and use the output as the absolute base for every `_shared/...` reference.
 
 ## Handle Loop Mode
@@ -102,18 +104,21 @@ If the issue includes UI/design-driven work:
 
 **Rule**: Consistency > Novelty. This ensures code matches team's style.
 
-### Step 4.1: FE Architecture Blueprint Before Coding
+### Step 4.1: FE Architecture Blueprint — Read from Issue, Don't Rebuild
 
-If the task touches UI, layout, component composition, or user-visible state, produce this blueprint before implementation:
+If the task touches UI, layout, component composition, or user-visible state:
 
-1. **Reuse/create matrix:** Map every mockup block to `Reuse`, `Adapt`, or `Create` with exact file/component/hook paths. Search before choosing `Create`.
-2. **Component hierarchy:** Parent container, child components in render order, composition boundaries, and which component owns each interaction.
-3. **Data/API contract:** Data needed per block, existing API/client/hook to use, new API shape if required, loading/error/empty states.
-4. **State ownership:** URL state, server state, local UI state, form state, optimistic updates, reset behavior.
-5. **Design-system mapping:** Existing UI primitives, tokens, icons, responsive rules, accessibility requirements, and i18n keys.
-6. **Test seams:** Unit/component/integration tests, browser/screenshot verification, and edge states.
+1. **Find the FE Architecture Blueprint section** in the sub-issue body (per `skills/epic/output-schema.md`). `/epic` is responsible for writing this — it's a 6-area table covering reuse/create matrix, component hierarchy, data/API contract, state ownership, design-system mapping, and test seams. The full structure is defined in `_shared/frontend-knowledge/architecture-blueprint.md`.
+2. **Read it as the implementation plan.** The blueprint is the contract `/epic` made with you. Don't rebuild it from scratch — that drifts from the plan and wastes work.
+3. **If the blueprint is missing or has gaps**, stop and ask the user. Don't paper over with guesses. Options:
+   - Ask `/epic` to update the sub-issue (preferred — keeps the plan in Linear)
+   - Confirm a specific gap inline and proceed, noting the decision in your implementation comment
+4. **Validate the blueprint against reality** as you code:
+   - When the blueprint says `Reuse src/components/Button.tsx`, confirm that file actually exists and the import works
+   - When the blueprint says `Adapt` an existing hook, check the existing hook for whether adaptation is sane
+   - When the blueprint says `Create`, search first to confirm nothing similar already exists — `Create` is the last resort
 
-If you cannot complete the blueprint from the issue + Figma + code search, stop and ask before coding.
+If the blueprint is unfillable from Figma + PRD + code search at planning time, that's `/epic`'s problem to resolve. At implementation time, treat the blueprint as authoritative.
 
 ## Step 4.5: Detect i18n/Localization Requirements
 

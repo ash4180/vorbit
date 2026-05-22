@@ -32,7 +32,7 @@ Before starting, check if Pencil MCP is available and configured:
 Read and follow `_shared/mcp-tool-routing.md`. Discover connected platforms, ask user which to use, and verify connection.
 
 **IF Figma URL provided:**
-1. Use `mcp__plugin_figma_figma__get_design_context` to fetch the design
+1. Use `mcp__figma__get_design_context` to fetch the design (canonical per `_shared/mcp-tool-routing.md`). `mcp__plugin_figma_figma__get_design_context` also works if the bare server isn't connected.
 2. **IF fails:** "Figma connection failed. Run `/mcp` to reconnect, then retry." → **STOP**
 3. **IF succeeds:** extract design specs
 
