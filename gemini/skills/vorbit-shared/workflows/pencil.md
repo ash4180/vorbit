@@ -2,6 +2,8 @@
 
 Use for syncing design tokens, components, and conventions to Pencil.
 
+> **MCP namespace**: This workflow uses `mcp__pencil__*` and optionally `mcp__mobbin__search_screens` for reference patterns. See `vorbit-shared/references/mcp-tool-routing.md` for the Plugin Tool Index and the announce-the-plugin rule.
+
 1. Load Vorbit durable rules before doing anything else.
 2. Verify Pencil MCP connection. If unavailable, stop and ask user to reconnect.
 3. Phase 1 — Codebase scan: detect framework, styling, component library, icon library, platform/screen sizes from `package.json` and config files. If no codebase, ask user for platform and select design system from Pencil's style guides.

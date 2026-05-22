@@ -8,6 +8,10 @@ description: Use when user says "build in Webflow", "create Webflow page", "deve
 
 Develop Webflow pages, templates, and components. Optionally use Figma designs as reference, or build directly in Webflow from requirements.
 
+> **MCP namespace**: This skill uses `mcp__webflow__*` and optionally `mcp__figma__get_design_context` for design reference. See `_shared/mcp-tool-routing.md` for the Plugin Tool Index and the announce-the-plugin rule.
+
+> **Locate `_shared/`**: This skill ships as a plugin, so `_shared/` files live in the plugin cache, not your project. Before reading any `_shared/...` path below, run `ls -d ~/.claude/plugins/cache/local/vorbit/*/skills/_shared 2>/dev/null | head -1` and use the output as the absolute base for every `_shared/...` reference.
+
 ## Core Concept
 
 This skill treats Webflow as the **development platform**. Two modes supported:

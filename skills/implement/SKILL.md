@@ -10,6 +10,8 @@ A disciplined, Test-Driven Development (TDD) workflow for implementing features 
 
 > **Linear MCP namespace**: All Linear calls in this skill use `mcp__plugin_linear_linear__*` (the namespace shipped with the vorbit plugin). Bare verb names below (`list_issues`, `update_issue`, etc.) refer to the corresponding `mcp__plugin_linear_linear__<verb>` tool.
 
+> **Locate `_shared/`**: This skill ships as a plugin, so `_shared/` files live in the plugin cache, not your project. Before reading any `_shared/...` path below, run `ls -d ~/.claude/plugins/cache/local/vorbit/*/skills/_shared 2>/dev/null | head -1` and use the output as the absolute base for every `_shared/...` reference.
+
 ## Handle Loop Mode
 
 **If `--loop` or `--cancel` in arguments:**
@@ -19,7 +21,7 @@ Use the **implement-loop** skill for loop state management and sub-issue trackin
 
 ## Step 1: Detect Platform & Verify Connection
 
-Read and follow `_shared/mcp-tool-routing.md` (glob for `**/skills/_shared/mcp-tool-routing.md`). Discover connected platforms, ask user which to use, and verify connection. If no PRD is needed, skip this step.
+Read and follow `_shared/mcp-tool-routing.md`. Discover connected platforms, ask user which to use, and verify connection. If no PRD is needed, skip this step.
 
 ## Step 2: Determine Context
 
@@ -57,7 +59,8 @@ If present:
 1. **Similar features** → Open and study these files FIRST
 2. **Utilities** → Use these, DO NOT recreate
 3. **Constants** → Use these, NO magic numbers allowed
-4. **UI Patterns** → If present, read `skills/_shared/frontend-knowledge/ui-patterns.md`
+4. **UI Patterns** → If present, read `_shared/frontend-knowledge/ui-patterns.md`
+5. **If `react` is in `package.json`** → also read `_shared/frontend-knowledge/react-best-practices/index.md` for performance rules
 
 ### Check "File Changes"
 If present:
@@ -69,8 +72,24 @@ If present:
 ### Detect UI Work
 If issue involves UI components:
 - Check for ui-patterns reference in issue
-- If UI work detected, read `skills/_shared/frontend-knowledge/ui-patterns.md` for constraints
+- If UI work detected, read `_shared/frontend-knowledge/ui-patterns.md` for constraints
+- If `react` is in `package.json`, also read `_shared/frontend-knowledge/react-best-practices/index.md` for performance rules
 - Follow: Tailwind, motion/react, accessibility primitives
+
+### Check "Design Source of Truth" and "Screenshot Evidence"
+If the issue includes UI/design-driven work:
+1. Fetch the primary Figma node with `get_design_context`; use `get_metadata` only for hierarchy, then return to `get_design_context`.
+2. Capture the Figma reference screenshot with `get_screenshot` or the screenshot returned by `get_design_context`.
+3. Build a short structure/flow summary before coding:
+   - Parent frame/page and nearest meaningful ancestor
+   - Selected node boundary and child blocks in render order
+   - What is inside vs outside implementation scope
+   - Entry action, visible result, and exit state
+4. If the Figma structure or interaction flow is unclear, stop and ask before implementing.
+5. Start the local app if needed and capture a browser/app screenshot of the implemented surface after changes.
+6. Compare screenshots against the issue's Design Source of Truth. Fix visible mismatches unless the issue explicitly marks them out of scope.
+7. If the issue says "match Figma" but does not name an exact node, stop and ask for the node before implementing.
+8. If ticket text and Figma disagree, stop and ask which source wins before coding.
 
 ## Step 4: Learn Codebase Style
 
@@ -82,6 +101,19 @@ If issue involves UI components:
 4. **Note 2-3 example files** - Use as style reference
 
 **Rule**: Consistency > Novelty. This ensures code matches team's style.
+
+### Step 4.1: FE Architecture Blueprint Before Coding
+
+If the task touches UI, layout, component composition, or user-visible state, produce this blueprint before implementation:
+
+1. **Reuse/create matrix:** Map every mockup block to `Reuse`, `Adapt`, or `Create` with exact file/component/hook paths. Search before choosing `Create`.
+2. **Component hierarchy:** Parent container, child components in render order, composition boundaries, and which component owns each interaction.
+3. **Data/API contract:** Data needed per block, existing API/client/hook to use, new API shape if required, loading/error/empty states.
+4. **State ownership:** URL state, server state, local UI state, form state, optimistic updates, reset behavior.
+5. **Design-system mapping:** Existing UI primitives, tokens, icons, responsive rules, accessibility requirements, and i18n keys.
+6. **Test seams:** Unit/component/integration tests, browser/screenshot verification, and edge states.
+
+If you cannot complete the blueprint from the issue + Figma + code search, stop and ask before coding.
 
 ## Step 4.5: Detect i18n/Localization Requirements
 
@@ -225,6 +257,7 @@ For each task:
 - [ ] **Used utilities/constants from "Reuse & Patterns"** (no magic numbers, no recreated functions)
 - [ ] **No dead code or leftover TODOs**
 - [ ] **i18n complete** (if project has localization): All user-facing strings use translation system, keys added to ALL locale files
+- [ ] **Screenshot evidence complete** (if UI/design-driven): Figma reference screenshot captured, browser/app screenshot captured after implementation, and mismatches resolved or documented as intentional
 
 ## Step 7: On Task Completion
 
@@ -265,4 +298,3 @@ For simple tasks (< 30 lines):
 - Just implement it
 - Run existing tests
 - Skip memory.md
-

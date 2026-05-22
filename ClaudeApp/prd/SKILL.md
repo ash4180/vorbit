@@ -9,6 +9,8 @@ Create complete Product Requirements Documents through exhaustive questioning. U
 
 **Key Principle:** Ask questions, capture answers, answers become acceptance criteria. Never assume.
 
+> **MCP namespace**: `mcp__plugin_linear_linear__*` (Linear writes), plus `mcp__notion__*` or `mcp__anytype__*` (PRD writes when user picks one). Announce the plugin+tool in chat once per session on the first MCP call (e.g. "Using `mcp__plugin_linear_linear__save_issue` to create the PRD ticket"). Re-announce only when the namespace prefix changes.
+
 ---
 
 ## Step 1: Problem & Users (Quick Context)

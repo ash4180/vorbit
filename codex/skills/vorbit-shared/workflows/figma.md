@@ -2,6 +2,8 @@
 
 Use for Figma design-system sync and front-end-ready Figma mockups.
 
+> **MCP namespace**: This workflow uses `mcp__figma__*` (primary writer is `use_figma`) and optionally `mcp__mobbin__search_screens` for competitor research. See `vorbit-shared/references/mcp-tool-routing.md` for the Plugin Tool Index and the announce-the-plugin rule.
+
 ## Required Setup
 
 1. Load Vorbit durable rules before doing anything else.
@@ -30,7 +32,8 @@ Use for Figma design-system sync and front-end-ready Figma mockups.
 5. Discover linked libraries — executable, not aspirational:
    - Call `get_libraries` to list every library connected to the target file. Record library names and IDs.
    - If the result is empty, stop and ask the user (link a library, point to a different file, or explicitly approve custom primitives). Do not skip ahead to drawing.
-   - For each component need, call `search_design_system` with a concrete query (e.g. "button primary", "card surface"). Record the returned component key and library source.
+   - **Discover compositions by library structure, not by name.** Naming conventions vary by team (slashes, spaces, prefixes, none). Libraries are organized by page or folder much more reliably — atoms on one page, composed templates on another. After `get_libraries`, surface each library's page/folder structure, report it to the user, and ask: "These are the pages in your library: [list]. Which contain composed/template components I should reuse before atoms — or does your library not use compositions?" Search user-named composition pages first for each need. A composition supersedes the atoms it would replace — record only the composition key, not its child atoms. If the user says no compositions exist, proceed straight to atomic search.
+   - For each remaining need not satisfied by a composition, call `search_design_system` with a concrete query (e.g. "button primary", "card surface"). Record the returned component key and library source.
    - Call `get_variable_defs` to capture token IDs for colors, spacing, radii, and typography. These IDs — not hex codes — are what `generate_figma_design` needs to bind tokens.
    - If `search_design_system` returns no match for a need, mark it as a gap. Never silently substitute a custom primitive.
 6. Mobbin reference research — flow-first, then per-screen, MANDATORY when Mobbin is connected. Mobbin belongs in Discovery, not at draw time: the library tells you which components exist; Mobbin shows how real shipped apps compose them. For requests that span multiple connected screens, the WHOLE-FLOW pattern matters more than per-screen patterns — picking screens from different apps produces incoherent UX.
@@ -69,7 +72,12 @@ Use this path when the user asks for Figma mockups, screens, pages, or journey-i
 8. Build with `use_figma`, not `generate_figma_design`. Pass Phase 3 component keys and variable IDs in the JavaScript code body. The code must call `figma.importComponentByKeyAsync(key)` for each component and bind variables via `figma.variables.getVariableByIdAsync` + `setBoundVariable`. `generate_figma_design` is reserved for web-app screenshot capture only — for PRD or non-web targets, skip it.
    - **Mobbin reference rule — borrow concept, use library.** Pull the Mobbin screen(s) picked in Discovery step 6 for layout, flow, density, hierarchy, and copy register ONLY. Build the mockup using OUR linked library components and variables — never copy Mobbin's colors, fonts, or specific components. If the Mobbin concept needs an element not in the library: either flag it as a Phase 4A library addition, OR create a sibling frame named `[Reference / Gap] <element>` next to the mockup so the user sees the gap. Never invent primitives inside the main mockup.
 9. Name frames by page, route, section, and state so frontend implementation is obvious.
-10. Validate each generated page with `get_metadata` and `get_screenshot`. Orphan-frame check is mandatory and blocking: scan metadata for child nodes whose names suggest library components (Button, NavItem-*, Card, Input, Sidebar) but appear as `<frame>` rather than `<instance>`. Also flag any `<text>` node containing emoji characters — that almost always means an icon component wasn't imported. If any orphan is found, STOP, do not present the result as done, report the orphan list, and re-run `use_figma` with JavaScript that explicitly imports each missing component via `figma.importComponentByKeyAsync`.
+10. Validate each generated page with `get_metadata` and `get_screenshot`. `get_metadata` is the source of truth, not the JS you wrote. Post-write checks (all mandatory, all blocking):
+    - **Orphan frames**: child nodes whose names suggest library components (Button, NavItem-*, Card, Input, Sidebar) appearing as `<frame>` rather than `<instance>`. `<text>` nodes containing emoji where icon components should be.
+    - **Variant match**: every instance's `mainComponent.name` (full path including variant) matches the exact Phase 3 row. `Button / Primary` ≠ `Button / Secondary` — right component, wrong variant still fails.
+    - **Token bindings**: every fill, stroke, effect, and text-style property on a Phase-3-token-mapped node has `boundVariables` set in metadata. SOLID fill with a raw color where a variable was declared = silent override.
+    - **Inline-override drift**: scan each instance's `overrides`; flag any that change fills, strokes, corner radius, or padding to non-Phase-3 values.
+    - **If any check fails**: STOP, do not present as done, report the failing nodes, and re-run `use_figma` with corrective JS — re-import via `figma.importComponentByKeyAsync`, re-bind via `figma.variables.getVariableByIdAsync` + `setBoundVariable`, or strip overrides.
 11. Get user confirmation after each generated page or screen before continuing.
 
 ## Handoff Rules

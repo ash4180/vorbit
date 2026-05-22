@@ -7,6 +7,8 @@ description: Use when user says "create issues", "break down PRD", "set up epic"
 
 Transform User Stories (from PRD) into executable Engineering Tasks (Epics/Issues) in Linear.
 
+> **MCP namespace**: `mcp__plugin_linear_linear__*` (Linear writes), plus `mcp__notion__*` or `mcp__anytype__*` (PRD reads when user provides a URL). Announce the plugin+tool in chat once per session on the first MCP call (e.g. "Using `mcp__plugin_linear_linear__save_issue` to create the parent epic"). Re-announce only when the namespace prefix changes.
+
 **Key Features:**
 - Sub-issues include plain-language "Why" section
 - Each sub-issue references parent epic's acceptance criteria

@@ -36,7 +36,22 @@ Use `AskUserQuestion`, batch related unknowns together, max 3 rounds. Focus on:
 3. **Scope** — what is in and what is out
 4. **Constraints** — compliance, timing, platform, integration limits
 5. **Edge cases** — failure paths and unusual but realistic usage
-6. **Success metrics** — measurable outcomes
+6. **Design source** — for UI work, exact Figma/file/mockup nodes and which node is source of truth
+7. **Success metrics** — measurable outcomes
+
+### Design-source rules
+
+If the feature changes UI, layout, visual hierarchy, component composition, or user-visible states:
+- Ask for the exact Figma URL and node ID for each affected surface. Do not accept "like the mockup" as sufficient.
+- Identify whether the node is a page, frame, component, variant, or nested card/block.
+- Ask for the parent frame/user-flow context when a node is only a nested block and the surrounding flow is unclear.
+- Ask which node wins when written ticket text conflicts with the mockup.
+- Capture responsive behavior, states/variants, empty/error/loading states, and explicitly out-of-scope design pieces.
+- If no mockup exists, ask whether the agent should use existing product patterns or wait for design. Mark unresolved design as `TBD-design`.
+
+For API/backend-only work:
+- Do not require a Figma node unless the API response directly controls user-visible fields, state, copy, or layout.
+- If the API supports a designed UI, capture the design-derived contract: fields, states, ordering, error cases, and copy the UI needs.
 
 For anything still unknown:
 1. Mark it `TBD` inline where it would appear in the PRD
@@ -56,6 +71,7 @@ Use the template below. Match VIB-2978's prose style — no big tables.
 - Problem: 1-2 short paragraphs, no tech detail
 - User Stories: `US-001`, `US-002`, ... each with `AC-N` items
 - User Flows: at least one happy flow in prose Entry/Exit form
+- Design Source of Truth: required for UI/design work, optional otherwise
 - Constraints
 - Success Criteria with numbers
 
@@ -73,6 +89,18 @@ After showing the draft, ask: **"Does this look good? Ready to create the Linear
 ## Problem
 
 [1-2 short paragraphs explaining user pain and why this matters]
+
+## Design Source of Truth
+
+Required only when UI, layout, component composition, or visual states are in scope.
+
+* **Primary Figma node:** [URL with exact `node-id`, or `N/A` for non-UI work]
+* **Parent flow/frame:** [Figma parent frame/page/user flow that explains where this node lives]
+* **Implementation target:** [screen/pane/component/block the node applies to]
+* **States/variants required:** [default, empty, loading, error, selected, responsive breakpoints]
+* **Interaction flow:** [entry point, user action, visible result, exit state]
+* **Design conflicts:** [which source wins if ticket text and Figma disagree]
+* **Out of scope:** [nearby mockup parts that should not be implemented]
 
 ## User Stories
 
@@ -186,6 +214,7 @@ When asked to review whether sub-issues fulfill a parent PRD ticket:
 | Title (H1) | Yes | 3-8 words, no jargon. Becomes Linear ticket title. |
 | Description | Yes | 1-2 short sentences, no tech detail |
 | Problem | Yes | 1-2 short paragraphs, user pain not tech gap |
+| Design Source of Truth | If UI work | Exact Figma node(s), target surface, states, conflicts, exclusions |
 | User Stories | Yes | `As a [user], I want ..., so ...` plus `AC-N` items |
 | User Flows | Yes | At least one happy flow in Entry/Exit prose form |
 | Constraints | Yes | Limits the implementation must respect |
@@ -196,6 +225,7 @@ When asked to review whether sub-issues fulfill a parent PRD ticket:
 - **Title**: 3-8 words, no jargon
 - **Description**: short, plain English, no tech detail
 - **Problem**: describes user pain, not the technical fix
+- **Design Source of Truth**: required for UI work. Include exact Figma node IDs and what each node controls. If missing, ask before creating the ticket or mark `TBD-design` after a question attempt.
 - **User Stories**: `As a [user], I want [goal], so [benefit]`. Each story has at least one `AC-N`
 - **User Flows**: at least one. Use Entry/Exit anchors. 3-8 arrows per flow is the sweet spot
 - **AC coverage**: every `AC-N` should be reflected in at least one flow step
@@ -210,3 +240,4 @@ When asked to review whether sub-issues fulfill a parent PRD ticket:
 | "Users should be happy with login" | "90% of users complete login in under 10 seconds" | Success criteria need real numbers |
 | "OAuth2 JWT Token Auth Implementation" | "User Login and Signup" | Title avoids jargon |
 | Flow as steps only (`User → API → DB → API → User`) | `Entry: Login → Click Submit → Loading → Token returned → Exit: Home` | Flows describe what the user sees, with Entry/Exit anchors |
+| "Match Figma" | "Example: Implement Figma node `<primary-node-id>` exactly for `<target surface>`; `<reference-node-id>` is reference only; `<specific layout/state rule>` must come from the primary node" | Agents need a concrete source of truth and conflict rule |

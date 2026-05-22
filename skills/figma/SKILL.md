@@ -1,12 +1,16 @@
 ---
 name: figma
-version: 1.4.0
-description: Use when user says "figma", "figma it", "sync figma", "figma mockup", "create figma file", "design to figma", "figma from PRD", "figma from journey", "build in figma", "figma design system", or wants to create, sync, or update anything in Figma (design system, components, variables, mockups, or front-end-ready screens). Always checks linked Figma libraries first; asks the user when no linked library exists rather than inventing primitives. Uses `use_figma` (Plugin API JavaScript) as the writer.
+version: 1.5.0
+description: Use when user says "figma", "figma it", "sync figma", "figma mockup", "create figma file", "design to figma", "figma from PRD", "figma from journey", "build in figma", or "figma design system" — anything that creates, syncs, or updates Figma design systems, components, variables, mockups, or front-end-ready screens. Always checks linked Figma libraries first; asks the user when none exists rather than inventing primitives.
 ---
 
 # Figma Skill
 
 Create Figma design-system assets and front-end-ready mockups that engineers can implement without guessing.
+
+> **MCP namespace**: This skill uses `mcp__figma__*` (primary writer is `use_figma`) and optionally `mcp__mobbin__search_screens` for competitor research. See `_shared/mcp-tool-routing.md` for the Plugin Tool Index and the announce-the-plugin rule.
+
+> **Locate `_shared/`**: This skill ships as a plugin, so `_shared/` files live in the plugin cache, not your project. Before reading any `_shared/...` path below, run `ls -d ~/.claude/plugins/cache/local/vorbit/*/skills/_shared 2>/dev/null | head -1` and use the output as the absolute base for every `_shared/...` reference.
 
 ## Core Principles
 
@@ -16,11 +20,9 @@ Create Figma design-system assets and front-end-ready mockups that engineers can
 - **Confirm every phase**: Discovery, page inventory, design-system mapping, mockup plan, and each generated page/screen.
 - **Use Figma app logic**: Use Figma plugin, MCP Tools, linked-library behavior, metadata checks, and screenshot validation.
 
-When this skill says **use AskUserQuestion**, use the host runtime's structured question tool. If no structured question tool exists, ask the exact question in chat and wait for the user's answer before continuing.
-
 ## Phase 0: Verify Figma Connection
 
-Read and follow `_shared/mcp-tool-routing.md` (glob for `**/skills/_shared/mcp-tool-routing.md`).
+Read and follow `_shared/mcp-tool-routing.md`.
 
 1. Run `ToolSearch` for `"figma"` to check if Figma MCP tools are available.
 2. **IF no Figma tools found:** "No Figma connection found. Run `/mcp` to connect, then retry." → **STOP**
@@ -33,14 +35,7 @@ Read and follow `_shared/mcp-tool-routing.md` (glob for `**/skills/_shared/mcp-t
 
 ## Phase 0.5: Load Writer Guidance
 
-The default writer is `mcp__figma__use_figma`. Before calling it, load the figma-use guidance.
-
-Phase 0 already verified the Figma MCP is connected. The Figma MCP exposes the figma-use content as a resource — read it directly:
-
-Call `ReadMcpResourceTool` with `server: figma`, `uri: skill://figma/figma-use/SKILL.md`.
-
-Do not call the `Skill` tool for figma-use. `Skill(figma:figma-use)` needs the separate `figma@claude-plugins-official` Claude Code plugin (different from the Figma MCP), and that plugin's install state is unreliable — `Skill` calls there frequently error with `Unknown skill: figma:figma-use`. The MCP resource path doesn't depend on that plugin and always works.
-
+Before calling `use_figma`, load the figma-use guidance via `ReadMcpResourceTool` (`server: figma`, `uri: skill://figma/figma-use/SKILL.md`). Do not use the `Skill` tool for figma-use — the MCP resource path is the supported route.
 
 ## Phase 1: Discovery
 
@@ -69,11 +64,11 @@ Do not call the `Skill` tool for figma-use. `Skill(figma:figma-use)` needs the s
 6. **Discover linked libraries — executable, not aspirational:**
    - Call `mcp__figma__get_libraries` to list every library connected to the target file. Record library names, IDs, and whether each is enabled.
    - **IF the result is empty:** the file has no linked library. STOP here and ask the user (link a library, point to a different file, or explicitly approve custom primitives). Do not skip ahead to drawing.
-   - For each component/variable need surfaced in step 4, call `mcp__figma__search_design_system` with a concrete query (e.g. `"button primary"`, `"card surface"`). Record the returned component key, node ID, and library source.
+   - **Discover compositions by library structure, not by name.** Naming conventions vary by team (slashes, spaces, prefixes, none). Libraries are organized by **page or folder** much more reliably — atoms on one page, composed templates on another. After `get_libraries`, surface each library's page/folder structure (via `mcp__figma__search_design_system` with broad queries or library metadata), report the page list to the user, and **use AskUserQuestion**: "These are the pages in your library: [list]. Which contain composed/template components I should reuse before atoms — or does your library not use compositions?" Search the user-named composition pages first for each Phase 2 need. A composition supersedes the atoms it would replace — record only the composition key, not its child atoms. If the user says no compositions exist, skip composition search and proceed straight to atomic search.
+   - For each remaining need not satisfied by a composition, call `mcp__figma__search_design_system` with a concrete query (e.g. `"button primary"`, `"card surface"`). Record the returned component key, node ID, and library source.
    - Call `mcp__figma__get_variable_defs` to capture token IDs for colors, spacing, radii, and typography. These IDs — not hex codes — are what `generate_figma_design` needs to bind tokens.
    - If `search_design_system` returns no match for a need, mark it as a **gap** for Phase 3 to resolve with the user. Never silently substitute a custom primitive.
-7. **Mobbin reference research — flow-pattern first, then per-screen (MANDATORY when Mobbin connected):**
-   - Why upstream: library tells you *which components exist*; Mobbin shows *how real apps compose them*. For requests that span multiple connected screens (e.g. billing + plans + invoices, or signup → profile → first-task), the **whole-flow pattern matters more than per-screen patterns** — picking screens from different apps produces incoherent UX. Flow first, screens second.
+7. **Mobbin reference research — flow-pattern first, then per-screen (MANDATORY when Mobbin connected).** See `_shared/mobbin-research.md` for the full per-screen synthesis format (bullets, app attribution, URL coverage rules). The figma-specific steps below cover the flow-pattern discovery layer that sits on top of that shared workflow.
 
    - **a. Flow-pattern discovery (run FIRST when the request spans multiple screens).** Use the Mobbin capability mode recorded in Phase 0:
      - If Mobbin exposes a dedicated flow search tool, use it.
@@ -102,28 +97,7 @@ Do not call the `Skill` tool for figma-use. `Skill(figma:figma-use)` needs the s
 
      If a flow-pattern candidate was chosen in step a, prefer results from that app/pattern when interpreting which patterns to highlight. Still mention stronger outside matches when they solve a screen better.
 
-   - **c. Report per-screen findings to the user as a chat message — synthesize patterns AND include the Mobbin URLs, do NOT dump a bare result list. BEFORE any AskUserQuestion.** Look at the returned Mobbin screens, identify the recurring design elements, and write 4–7 bullets per screen. Each bullet names a specific design element + a brief reason or context + app attribution + **the Mobbin URL(s) so the user can click through to verify**. Use markdown link format `[App](URL)` inline. Distinguish "universal pattern" / "every app includes this" from "X did it first" from "combines X with Y". Use this template, one block per screen:
-
-     ```
-     **Screen <N> — <screen name>**
-     - <design element>: <brief reason or context> ([<App>](<mobbin URL>))
-     - <design element>: <brief reason or context> — universal pattern, e.g. [<App>](<mobbin URL>)
-     - <design element>: <brief reason or context> ([<App1>](<URL1>), [<App2>](<URL2>))
-     - <design element>: <brief reason or context> ([<App>](<mobbin URL>))
-     ```
-
-     Example (KYC flow, Screen 2 — Document Scan):
-     ```
-     **Screen 2 — Document Scan**
-     - 3-step stepper (Choose ID → Scan ID → Selfie) with green checkmark for completed steps — pulled directly from [Neo Financial's Berbix integration](https://mobbin.com/screens/xxxxx)
-     - Dashed accent-colored capture frame with corner brackets — universal pattern, e.g. [Chime](https://mobbin.com/screens/xxxxx)
-     - "Make sure that" checklist — not expired, in frame, clear, readable ([Monzo](https://mobbin.com/screens/xxxxx))
-     - Primary "Open camera" + secondary "Upload from library" dual action ([Qantas](https://mobbin.com/screens/xxxxx), [QuestMobile](https://mobbin.com/screens/xxxxx))
-     ```
-
-     The Mobbin URLs come from each search result — the MCP returns them alongside the screen images. Every claim should be backed by a clickable link so the user can verify.
-
-     If a screen returns no usable references, write `No Mobbin matches for <screen> — proceeding from library only.`
+   - **c. Report per-screen findings** following the synthesis format in `_shared/mobbin-research.md` (4–7 bullets per screen, `[App](URL)` in every bullet, distinguish universal vs app-specific). If a screen returns no usable references, write `No Mobbin matches for <screen> — proceeding from library only.`
 
    - **d. Evidence rules.** Every Mobbin-derived recommendation must include:
      - App name.
@@ -223,14 +197,11 @@ Use this path when the user asks to create, sync, or reconcile Figma design-syst
 
 Use this path when the user asks for Figma mockups, screens, pages, or journey-informed designs.
 
-⚠ **This phase IS design, not tooling execution.** Mobbin references must already exist from Phase 1 step 7. Page inventory (Phase 2), mapping with real keys (Phase 3), mockup plan (step 1 below), and per-screen confirmations (steps 2, 8) are non-skippable.
-
-⚠ **Task list is the proof.** Before any build task, your task list MUST contain: Phase 1 Mobbin flow-pattern/per-screen tasks + Phase 2 inventory + Phase 3 mapping + Phase 4B plan + per-screen build/confirm. A list with only "Build X / Y / Z" — or build tasks before discovery — is visible evidence the process was skipped.
-
 **Pre-flight (gate the phase):**
-- Phase 2 inventory done + user-confirmed. Phase 3 mapping has a real key/ID in every row. Mockup plan drafted.
+- Phase 1 step 7 Mobbin references gathered. Phase 2 inventory done + user-confirmed. Phase 3 mapping has a real key/ID in every row. Mockup plan drafted.
 - Phase 0.5 done — `figma-use` guidance loaded. Writer = `use_figma` (default); `generate_figma_design` only as web-app screenshot reference.
-- **Import contract:** for every Phase 3 component key, the JS passed to `use_figma` must call `await figma.importComponentByKeyAsync("<key>")` before any `.createInstance()`. Bind variables via `figma.variables.getVariableByIdAsync("<var-id>")` — no inline hex. A `<frame>` named "Button / Primary" is the failure pattern this rule prevents. See `figma-use` guidance (Phase 0.5) for the full Plugin API skeleton.
+- **Import contract:** for every Phase 3 component key, the JS passed to `use_figma` must call `await figma.importComponentByKeyAsync("<key>")` before any `.createInstance()`. Bind variables via `figma.variables.getVariableByIdAsync("<var-id>")` — no inline hex. See `figma-use` guidance (Phase 0.5) for the full Plugin API skeleton.
+- **Task list check:** Phase 1 Mobbin + Phase 2 inventory + Phase 3 mapping + Phase 4B plan + per-screen build/confirm tasks all present. Build-only task lists are a process-skip signal.
 
 If any pre-flight item is incomplete, return to that earlier phase.
 
@@ -248,10 +219,12 @@ If any pre-flight item is incomplete, return to that earlier phase.
 4. Bind variables by ID (`figma.variables.getVariableByIdAsync` + `setBoundVariable`); no inline hex.
 5. Name frames by page, route, section, state.
 6. Use auto-layout and stable hierarchy.
-7. Validate with `get_metadata` and `get_screenshot`. **Orphan-frame check (mandatory, blocking):**
-   - Children whose names match a Phase 3 need but appear as `<frame>` not `<instance>` = orphans.
-   - `<text>` nodes with emoji where icon components should be = orphans.
-   - **If found**: STOP, report the list, re-run with explicit `importComponentByKeyAsync` calls.
+7. Validate with `get_metadata` and `get_screenshot`. **Post-write checks (mandatory, blocking) — `get_metadata` is the source of truth, not the JS you wrote:**
+   - **Orphan frames**: children whose names match a Phase 3 need but appear as `<frame>` not `<instance>`. `<text>` nodes with emoji where icon components should be.
+   - **Variant match**: every instance's `mainComponent.name` (full path including variant) matches the exact Phase 3 row. `Button / Primary` ≠ `Button / Secondary` — right component, wrong variant still fails.
+   - **Token bindings**: every fill, stroke, effect, and text-style property on a node mapped to a Phase 3 token row has `boundVariables` set in metadata. A SOLID fill with a raw `{r,g,b}` color where a variable was declared = silent override.
+   - **Inline-override drift**: scan each instance's `overrides`; flag any that change fills, strokes, corner radius, or padding to non-Phase-3 values.
+   - **If any check fails**: STOP, report the failing nodes, re-run `use_figma` with corrective JS — re-import via `importComponentByKeyAsync`, re-bind via `getVariableByIdAsync` + `setBoundVariable`, or strip overrides.
 8. **Use AskUserQuestion** after each page before continuing.
 
 ## Handoff Rules
@@ -270,7 +243,7 @@ Final report must include:
 
 - **Treating "tooling works" as permission to skip the design process** — `use_figma` succeeding is the floor. Without inventory, mapping, Mobbin, and confirmations, the output is shapes-with-keys, not design.
 - Creating screens before confirming the page inventory.
-- **Using `generate_figma_design` as the main writer** — it's reserved for web-app screenshot reference. `use_figma` is the default writer; wrong tool was the v1.0–v1.2 root cause of orphan frames.
+- **Using `generate_figma_design` as the main writer** — it's reserved for web-app screenshot reference. `use_figma` is the default writer.
 - **Calling `use_figma` without loading `figma-use` first** — covers Plugin API gotchas that cause silent JavaScript failures.
 - **Running Mobbin searches without reporting findings to chat** — the flow-pattern and per-screen report blocks are the deliverable. AskUserQuestion alone is not a substitute; the user needs to see what was returned before picking direction.
 - **Listing Phase 3 component keys in JS comments without `importComponentByKeyAsync` calls** — the keys must appear in actual `importComponentByKeyAsync(...)` calls in the JS body, not just in comments or the `description` parameter. Otherwise the library components aren't imported and the result is orphan frames named like the components but unlinked.

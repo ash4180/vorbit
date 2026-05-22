@@ -16,6 +16,8 @@ Create reusable UI prototypes that become production code. Frontend devs swap mo
 - **Single mock import**: Each component imports mock at top of file, with `// TODO: Replace with real API`.
 - **Use TaskCreate/TaskUpdate**: Track progress through all phases.
 
+> **Locate `_shared/`**: This skill ships as a plugin, so `_shared/` files live in the plugin cache, not your project. Before reading any `_shared/...` path below, run `ls -d ~/.claude/plugins/cache/local/vorbit/*/skills/_shared 2>/dev/null | head -1` and use the output as the absolute base for every `_shared/...` reference.
+
 ## Phase 0: Detect Platform & Verify Connection
 
 ### Pencil Check
@@ -27,7 +29,7 @@ Before starting, check if Pencil MCP is available and configured:
 5. **IF pencil.md exists:** Read it — use detected stack, tokens, and component inventory to inform prototype decisions
 
 ### Platform Discovery
-Read and follow `_shared/mcp-tool-routing.md` (glob for `**/skills/_shared/mcp-tool-routing.md`). Discover connected platforms, ask user which to use, and verify connection.
+Read and follow `_shared/mcp-tool-routing.md`. Discover connected platforms, ask user which to use, and verify connection.
 
 **IF Figma URL provided:**
 1. Use `mcp__plugin_figma_figma__get_design_context` to fetch the design

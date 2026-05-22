@@ -2,6 +2,8 @@
 
 Use for developing Webflow pages, templates, and components.
 
+> **MCP namespace**: This workflow uses `mcp__webflow__*` and optionally `mcp__figma__get_design_context` for design reference. See `vorbit-shared/references/mcp-tool-routing.md` for the Plugin Tool Index and the announce-the-plugin rule.
+
 1. Load Vorbit durable rules before doing anything else.
 2. Gather inputs: target Webflow site, output type (Page/Template/Component), optional Figma URL.
 3. Get design context: if Figma provided, fetch via Figma MCP. If direct build, gather requirements (sections, layout pattern, styling, references).
