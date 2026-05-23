@@ -9,7 +9,8 @@ Reference for `/vorbit:design:explore` (see SKILL.md for the imperative flow). *
 | Context Summary | Yes | 10+ Q&A insights required. Constraints and Competitors sub-lines optional — omit cleanly if not raised. |
 | Problem Statement | Yes | One sentence, root cause focus |
 | User Flow | Yes | Linear happy path. 3-8 steps. Plain English. Each step = one user action OR one system response. |
-| Reference Patterns | If Mobbin ran | Step blocks map 1:1 to User Flow steps. Main screen reference per step + optional specific element bullets. |
+| Reference Patterns | If Mobbin ran | Step blocks map 1:1 to User Flow steps. Main screen reference per step + optional specific element bullets. (Flow-organized; complementary to Blocks Mined.) |
+| **Blocks Mined** | If references gathered | **Block-organized table** with grain, embedded screenshot, source URL, note, proposed_block_name. This is the structured handoff to `/vorbit:design:prd`'s Component Mapping Intent. |
 | Recommendation | Yes | Direction + why, UX/product level |
 | Follow-up Questions for PRD | Optional | Implementation specifics that surfaced — deferred to PRD |
 
@@ -49,6 +50,19 @@ When Step 3 ran, Reference Patterns map **1:1 to User Flow steps**. Each Step bl
 
 If the anchor world has no screen for a user-facing step, write `Main screen: no match in [anchor world] — treat as gap` rather than reaching into a different flow for the main screen.
 
+## Blocks Mined Format
+
+A complementary block-organized view of references (Reference Patterns is the flow-organized view). Each row is one mined block that may feed `/vorbit:design:prd`'s Component Mapping Intent.
+
+| Field | Rules |
+|-------|-------|
+| `proposed_block_name` | Short kebab-case identifier (e.g. `search-with-filters`). Becomes the key in `/prd`'s Component Mapping Intent. |
+| `grain` | One of: `section`, `pattern`, `component`, `page-archetype`, `flow`. Tells `/figma`'s Phase 2 how to use this block. |
+| `screenshot` | Embedded image (Mobbin URL or captured screenshot for non-Mobbin sources). Required when sourceable. |
+| `source` | Clickable `[App](URL)` linking to the original Mobbin / Dribbble / Pinterest reference. |
+| `note` | 1–2 sentences describing what's interesting about this block. |
+| `governing_user_flow_steps` | Optional — which User Flow step(s) this block informs. |
+
 ## Validation Rules
 
 - Context includes 10+ Q&A insights
@@ -62,9 +76,15 @@ If the anchor world has no screen for a user-facing step, write `Main screen: no
   - Main screen references come from the anchor world — no exceptions
   - Specific element bullets stay within the anchor world by default; cross-world borrows must include `(Borrowed from [App](URL) — [reason])`
   - Specific element bullets capped at ~5 per step — quality over volume
+- If Blocks Mined present:
+  - Every block has a `grain` tag from the allowed set
+  - Every block has a `proposed_block_name` (kebab-case, unique within the doc)
+  - Screenshots embedded for every block with a visual source (Mobbin URL or browser-captured); blocks without a sourceable visual marked `screenshot: missing`
+  - `[App](URL)` source citation on every block
 - Every URL is a clickable `[App](URL)`
 - Recommendation addresses constraints from Context
 - **Scope check**: NO frontend file paths, line numbers, LOC estimates, PR breakdowns, code snippets, Tailwind/CSS classes, hex colors, or i18n keys. Move them to "Follow-up Questions for PRD".
+- **No lo-fi mockups**: NO drawn rectangles, placeholder boxes, or invented layouts. Only embedded screenshots of shipped references. Lo-fi was dropped in the 2026-05 redesign because with a complete linked DS, lo-fi adds no value.
 
 ## Template
 
@@ -117,6 +137,28 @@ Specific elements to borrow:
 - [Button copy "X"]: [why clearer than alternatives] (Borrowed from [App](URL) — anchor world uses vaguer term)
 
 Gaps: [steps where anchor world has no main-screen match]
+
+## Blocks Mined
+
+Block-organized view — each block here may become a row in `/prd`'s Component Mapping Intent.
+
+**`search-with-filters`** · grain: `pattern`
+[embedded screenshot from Linear inbox]
+Source: [Linear](https://mobbin.com/screens/...)
+Note: search input with inline filter chips, multi-select with removable badges
+Governing User Flow steps: 2, 3
+
+**`empty-state-onboarding`** · grain: `section`
+[embedded screenshot from Notion onboarding]
+Source: [Notion](https://mobbin.com/screens/...)
+Note: empty hero + illustration + primary CTA copy "Add your first item"
+Governing User Flow steps: 1
+
+**`activity-timeline`** · grain: `component`
+screenshot: missing — no Mobbin match, may need a custom DS component proposal
+Source: (none)
+Note: vertical activity feed with relative timestamps and avatar groups
+Governing User Flow steps: 5
 
 ## Recommendation
 [Direction + why, addressing constraints. Names what to build first.]

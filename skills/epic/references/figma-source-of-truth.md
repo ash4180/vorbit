@@ -12,6 +12,18 @@ This file covers:
 
 The PRD must name an exact Figma node ID for any UI work. The phrasing the user chose doesn't matter — "match Figma", "like the mockup", "same as X's design", a screenshot without a URL, a description with no link, etc., all need to resolve to a concrete node before sub-issues can be created. If the PRD doesn't supply one, stop and ask.
 
+## Consuming `/figma` v1.6.0+ structured outputs
+
+When the Figma file was produced by `/vorbit:design:figma` v1.6.0 or later, it carries three structured outputs that materially change how /epic should consume it. Prefer these over re-deriving from frame inspection — re-derivation is the failure mode the v1.6.0 redesign was built to eliminate.
+
+| Output | Where to read it | How /epic uses it |
+|--------|------------------|-------------------|
+| **`mapping_table[]`** (approved block→DS-component resolution from /figma's Phase 2 mapping gate) | Returned by /figma's Phase 2 signoff; persisted in /figma's output. Each row: `block_name → DS resolution` with status `approved` or `propose-new`. | Seeds the FE Architecture Blueprint Reuse/Create matrix in sub-issues (see SKILL.md Step 3.3). `approved` rows become `Reuse`; `propose-new` rows become `Create`. |
+| **Flow Page frame** (single frame at the file root named `Flow` or `Flow Page`) | Read via `get_metadata`; surface its text content (ordered steps with `[AC-X]` tags). | Use as the canonical journey for sub-issue "Related Flow Steps" — don't infer flow from frame names or page hierarchy. |
+| **Dev Mode `implements: AC-X` annotations** | Read via `get_metadata`'s `annotations` field (per `[[reference_figma_metadata_authoritative_fields]]`). Every interactive element should carry one. | Populates sub-issue "Design Source of Truth → states / target surface / conflicts". Annotations are ground truth for which frame implements which AC. Pin-style canvas annotations don't work — only Dev Mode does. |
+
+If any of these outputs is missing from a Figma file the user expects to be v1.6.0+, the file was either produced by older /figma or the validator missed a check. Surface the gap with `AskUserQuestion` rather than silently falling back to frame-inspection inference.
+
 ## The 10-step procedure
 
 1. Fetch every referenced Figma node with `get_design_context`. Use `get_metadata` only for hierarchy inspection, then return to `get_design_context` for implementation context.

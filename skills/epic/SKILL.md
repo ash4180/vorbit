@@ -1,7 +1,7 @@
 ---
 name: epic
-version: 1.6.0
-description: Transform a PRD's user stories into Linear epics and sub-issues. Use whenever the user wants to break down a PRD, create Linear tickets, plan a sprint, decompose a feature into tasks, set up an epic, or convert a user story into implementation work — even if they don't say "epic" explicitly. Common triggers include "create issues", "break down PRD", "set up epic", "epic from VIB-XXX", "create Linear tasks", "plan sprint", "decompose this feature", "sub-issues for this story", "turn this PRD into tickets".
+version: 1.7.0
+description: Transform a PRD's user stories into Linear epics and sub-issues. Use whenever the user wants to break down a PRD, create Linear tickets, plan a sprint, decompose a feature into tasks, set up an epic, or convert a user story into implementation work — even if they don't say "epic" explicitly. Common triggers include "create issues", "break down PRD", "set up epic", "epic from VIB-XXX", "create Linear tasks", "plan sprint", "decompose this feature", "sub-issues for this story", "turn this PRD into tickets". Consumes the redesigned PRD + Figma schemas (AC-*, F*-S* flow_steps, state_list, component_mapping_intent from PRD; Flow Page, approved mapping_table, Dev Mode `implements: AC-X` annotations from Figma) without re-asking — output schema for sub-issues is unchanged.
 ---
 
 # Epic Planning Skill
@@ -18,7 +18,13 @@ Transform User Stories (from PRD) into executable Engineering Tasks (Epics/Issue
 
 **IF Linear ticket URL or ID provided:**
 1. Use `get_issue` to fetch the parent ticket
-2. Extract user stories (`US-*` IDs), acceptance criteria (`AC-*` IDs), user flows, constraints, and success criteria from the description
+2. Extract from the description (PRD v2.1.0+ schema, see `/vorbit:design:prd`):
+   - User stories (`US-*` IDs)
+   - Acceptance criteria (`AC-*` IDs, numbered globally across the PRD)
+   - User Flows — ordered steps with `F*-S*` IDs and `[AC-X]` tags per step (Notion-doc format). These become "Related Flow Steps" in sub-issues.
+   - **State List** — text-only enumeration of every UI state (default / empty / loading / error / permission-denied / etc.) tagged by the governing AC. Feeds sub-issue "Design Source of Truth → states" directly; do NOT infer states from PRD prose if the State List exists.
+   - **Component Mapping Intent** — per-block intent (what kind of component each block needs, no concrete DS name). /figma's Phase 2 resolves intent → concrete DS in the mapping_table; if a Figma file is linked, prefer Figma's resolved table (see Step 3.7).
+   - Constraints and success criteria
 
 **IF feature name provided (no ticket ID):**
 1. Use `list_issues` scoped to the team with a title-based filter
@@ -95,7 +101,9 @@ Pattern-first, paths-second:
 ### 3.3 Create FE Architecture Blueprint (required for UI work)
 Before creating UI/component/composition sub-issues, build the blueprint following the structure in `_shared/frontend-knowledge/architecture-blueprint.md`. It defines the six required areas (reuse/create matrix, component hierarchy, data/API contract, state ownership, design-system mapping, test seams) and explains why each one matters.
 
-If the blueprint cannot be filled from Figma + PRD + codebase search, ask the user before creating implementation-ready issues. A "needs user input" entry is more useful than a confident wrong guess.
+**Seed the Reuse/Create matrix from `/figma`'s approved `mapping_table[]`** (see Step 3.7). Each row in the mapping_table — `block_name → DS resolution` (concrete component) — becomes a row in the Reuse/Create matrix with status `Reuse`. Blocks marked `propose new DS component` in the mapping_table become `Create` rows. This eliminates the failure mode where /epic re-derives components from the lo-fi or hi-fi mockup and reaches for generic names instead of the DS-resolved ones the user already signed off on.
+
+If the blueprint cannot be filled from Figma's mapping_table + PRD + codebase search, ask the user before creating implementation-ready issues. A "needs user input" entry is more useful than a confident wrong guess.
 
 ### 3.4 Discover Constants (NO MAGIC NUMBERS)
 ```bash
@@ -121,7 +129,12 @@ For UI, layout, component, composition, or block build-up work, read `references
 - Conflict, structure/flow, API/backend contract, and mockup-missing rules
 - When a Figma node ID is required regardless of how the PRD references the design
 
-Apply every step in that file. If any element is unclear from Figma + PRD, ask the user before creating UI sub-issues.
+**Consume `/figma` v1.6.0+ structured outputs (the redesigned Figma chain produces these):**
+- **`mapping_table[]`** — the user-approved block→DS-component resolution from /figma's Phase 2 mapping gate. This is the source of truth for concrete DS names; use it to seed the FE Architecture Blueprint Reuse/Create matrix (see Step 3.3). NOT re-derived from frame inspection — that's how the v1.5.0 ignore-DS failure leaked.
+- **Flow Page frame** — one dedicated frame at the file root named `Flow` (or `Flow Page`) listing the canonical journey with `[AC-X]` tags per step. Read it via `mcp__figma__get_metadata` and use the steps directly as "Related Flow Steps" in sub-issues (instead of inferring from frame names or page hierarchy).
+- **Dev Mode `implements: AC-X` annotations** — every interactive element in the Figma file should have one. Read them via `get_metadata`'s `annotations` field (per `[[reference_figma_metadata_authoritative_fields]]`). Use them to populate sub-issue "Design Source of Truth → states / target surface / conflicts" — annotations are the ground truth for which frame implements which AC. **Pin-style canvas annotations don't work**; only Dev Mode does.
+
+Apply every step in `figma-source-of-truth.md`. If any element is unclear from Figma + PRD, ask the user before creating UI sub-issues.
 
 ## Step 4: Map Coupled File Paths (Required)
 

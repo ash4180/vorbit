@@ -1,18 +1,17 @@
 ---
 name: prd
-version: 2.0.0
-description: Use when user says "write PRD", "create requirements", "define feature", "document requirements", "product spec", "create ticket", or wants to capture a feature spec as a single Linear ticket. Creates a Linear ticket directly with user stories, acceptance criteria, user flows, constraints, and success criteria.
----
+version: 2.1.0
+description: Use when user says "write PRD", "create requirements", "define feature", "document requirements", "product spec", "create ticket", or wants to capture a feature spec as a single Linear ticket. Creates a Linear ticket carrying numbered AC-* acceptance criteria, ordered flow steps with F*-S* IDs + AC tags (Notion-doc format), component mapping intent (kind-of-component per block, NOT concrete DS names — that's /figma's job), state list (empty/loading/error/etc. as TEXT, not mockups), constraints, and success criteria. Treats PRD as agent contract first, engineering spec second.
 
 # PRD Skill
 
-Create a Linear ticket that captures a product requirement. No fluff, just what needs building.
+Create a Linear ticket that captures a product requirement. **PRD is the agent contract** — Figma is the visual contract, annotations are the bridge. Per the three-artifact convention (see `[[reference_three_artifact_convention]]`), PRD owns *intent + requirements*: numbered `AC-*`, ordered flow steps, state list, component mapping intent. Figma owns *the look*. Don't put visuals here; don't put rules in Figma.
 
 > **Linear MCP namespace**: All Linear calls in this skill use `mcp__plugin_linear_linear__*` (the namespace shipped with the vorbit plugin). Bare verb names below (`get_user`, `list_teams`, `save_issue`, etc.) refer to the corresponding `mcp__plugin_linear_linear__<verb>` tool.
 
 > **Locate `_shared/`**: This skill ships as a plugin, so `_shared/` files live in the plugin cache, not your project. Before reading any `_shared/...` path below, run `ls -d ~/.claude/plugins/cache/local/vorbit/*/skills/_shared 2>/dev/null | head -1` and use the output as the absolute base for every `_shared/...` reference.
 
-> **UX patterns reference**: Senior UX product designer knowledge lives in `_shared/ux-knowledge/`. When building Step 2 clarifying questions, consult `question-matrix.md` (14 categories). When checking AC completeness in Step 3, consult `edge-case-catalog.md`. When phrasing ACs (verbatim user-words rule), consult `ux-philosophy.md`. Read directly — no need to invoke `/vorbit:design:ux` unless requirements are deeply vague.
+> **UX patterns reference**: Senior UX product designer knowledge lives in `_shared/ux-knowledge/`. When building Step 2 clarifying questions, consult `question-matrix.md` (14 categories). When checking AC + state completeness in Step 3, consult `edge-case-catalog.md`. When phrasing ACs (verbatim user-words rule), consult `ux-philosophy.md`. Read directly — no need to invoke `/vorbit:design:ux` unless requirements are deeply vague.
 
 ## Step 1: Gather Context (Draft First)
 
@@ -26,13 +25,13 @@ The goal is a drafted PRD before touching Linear. Connection problems must never
 1. Use the pasted text directly as input — the skill's Linear-only `allowed-tools` cannot fetch external docs
 2. Ask the user for any sections they referenced but did not paste, then restructure as above
 
-**IF the source is an `/explore` exploration document** (User Flow + Step-mapped Reference Patterns format from `/vorbit:design:explore`):
-1. Convert the User Flow from linear numbered steps to PRD's Entry→Exit prose form:
-   - `/explore` writes: `1. User opens the alert detail page / 2. Taps "Escalate" / 3. Picks escalation level...`
-   - `/prd` expects: `**Entry:** Alert detail page → User taps Escalate → Picks escalation level → System updates status → **Exit:** Alert list with "Escalated" status visible`
-   - The step content stays identical — only the formatting changes (numbered list → arrow-separated prose with Entry/Exit anchors)
-2. Promote the explore doc's Recommendation into the PRD's Description + first User Story
-3. Keep the explore doc's Reference Patterns block as context (link or inline) but don't restate it in the PRD body — PRD is implementation spec, not exploration artifact
+**IF the source is an `/explore` exploration document** (visual moodboard with `blocks_mined[]`, `flow_steps[]`, `references[]`, `recommended_direction` from `/vorbit:design:explore`):
+1. **Consume the structured fields directly** — don't re-ask what /explore already captured:
+   - `flow_steps[]` → seeds the User Flows section. /explore writes plain-English ordered steps; /prd assigns `F*-S*` IDs (Flow-N, Step-M) and adds `[AC-X]` tags as ACs get written in Step 3.
+   - `blocks_mined[]` (grain-tagged, with embedded screenshots) → seeds the **Component Mapping Intent** section. Each block becomes one row; PRD records the *intent* ("what kind of component this block needs"), NOT a concrete DS name. /figma's Phase 2 resolves intent → DS later.
+   - `recommended_direction` → seeds the Description and first User Story.
+   - `references[]` → kept as a link or short attribution block; not restated in the PRD body. PRD is implementation spec, not research artifact.
+2. **No `lo_fi_figma_url` is expected.** Earlier /explore versions produced lo-fi mockups — that's been dropped in the 2026-05 redesign because lo-fi adds no value when a complete linked DS is available. If a lo-fi URL appears in an older /explore output, ignore it.
 
 **IF conversation already covers the feature:** use that context as input.
 
@@ -81,9 +80,11 @@ Use the template below. Match VIB-2978's prose style — no big tables.
 - Feature name (3-8 words, no jargon) — this becomes the Linear ticket **title**
 - Description: one short paragraph under the H1
 - Problem: 1-2 short paragraphs, no tech detail
-- User Stories: `US-001`, `US-002`, ... each with `AC-N` items
-- User Flows: at least one happy flow in prose Entry/Exit form
-- Design Source of Truth: required for UI/design work, optional otherwise
+- **User Stories**: `US-001`, `US-002`, ... each with `AC-N` items (numbered globally across the PRD so /figma annotations can reference them as `implements: AC-X`)
+- **User Flows**: at least one flow with **`F*-S*` step IDs** and `[AC-X]` tags per step (Notion-doc format — see template). Entry/Exit anchors kept for human scanning.
+- **State List**: ordered list of every UI state the feature touches (default / loading / empty / error / permission-denied / etc.) tagged with the AC each state is governed by. **Text only — no mockups.** Figma stays happy-path.
+- **Component Mapping Intent**: per block from `/explore`, declare the *kind* of component needed (intent), NOT the concrete DS name. /figma's Phase 2 resolves intent → DS.
+- Design Source of Truth: lighter than before — for UI work, the *target surface* and *conflict rule*, but not "what to design" prose (the lo-fi flow / blocks_mined already describes it).
 - Constraints
 - Success Criteria with numbers
 
@@ -136,17 +137,46 @@ As a [user], I want [goal], so [benefit].
 
 ## User Flows
 
-### Flow 1: [Name] (Happy flow)
+Use the Notion-doc format: each step has an `F*-S*` ID and `[AC-X]` tags. Keep Entry/Exit anchors at the flow level for human scanning, but make the per-step format machine-parseable so `/vorbit:design:figma` (Flow Page generation) and `/vorbit:implement:epic` (Related Flow Steps) can consume it without inference.
 
-**Entry:** [Start screen] → [Step] → [Step] → [Step] → **Exit:** [End state]
+### Flow F1: [Name] (Happy flow)
 
-### Flow 2: [Name] (Happy flow, second main path)
+**Entry:** [Start screen]
+**Exit:** [End state]
 
-**Entry:** [Start] → [Step] → [Step] → **Exit:** [End]
+- **F1-S1**: [Surface] → [User action] → [Visible result] [AC-1, AC-2]
+- **F1-S2**: [Surface] → [User action] → [Visible result] [AC-3]
+- **F1-S3**: [Surface] → [User action] → [Visible result] [AC-4]
 
-### Flow 3: [Name] (alternate / error)
+### Flow F2: [Name] (Second main path or alternate)
 
-Entry: [Start] → [Step] → Server returns error → Error toast, values preserved → Exit: [State]
+**Entry:** [Start]
+**Exit:** [End]
+
+- **F2-S1**: [Surface] → [User action] → [Visible result] [AC-5]
+- **F2-S2**: Server returns error → Error toast, values preserved [AC-6]
+
+## State List
+
+Every UI state the feature touches, tagged by the AC governing it. **Text only — Figma stays happy-path; /implement renders each state per AC.**
+
+| State | Triggers | Governing AC |
+|-------|----------|--------------|
+| Default (happy) | First load, data present | AC-1 |
+| Empty | User has no items yet | AC-7 |
+| Loading | API in flight (>200ms) | AC-8 |
+| Error | API returns 5xx or network fails | AC-9 |
+| Permission denied | User lacks `read:foo` scope | AC-10 |
+
+## Component Mapping Intent
+
+For each block surfaced by `/explore`'s `blocks_mined[]`, declare the *kind of component* the block needs. **No concrete DS names** — `/vorbit:design:figma`'s Phase 2 resolves intent → DS using the linked library inventory.
+
+| Block (from /explore) | Intent (what kind of component) | Governing AC |
+|-----------------------|----------------------------------|--------------|
+| `search-with-filters` (Linear inbox pattern) | Search input with inline filter chips, multi-select | AC-1, AC-2 |
+| `empty-state-onboarding` (Notion onboarding pattern) | Empty hero + illustration + primary CTA | AC-7 |
+| `activity-timeline` (custom) | Vertical activity feed with timestamps; no DS match anticipated — /figma may propose new DS component | AC-11 |
 
 ## Constraints
 
@@ -162,11 +192,11 @@ Entry: [Start] → [Step] → Server returns error → Error toast, values prese
 ### Flow rules
 
 - Every PRD needs at least one happy flow
-- Flow steps use prose `Entry: X → step → step → **Exit:** Y` form
+- Each step gets an `F*-S*` ID and ends with `[AC-X]` tags listing every AC the step touches. This is what `/figma`'s Flow Page mirrors and what `/epic` puts in sub-issue "Related Flow Steps".
 - Each step names what the user does, the surface they touch, and the visible result
 - Add a separate flow for any materially different path (second happy path, alternate, error)
-- Every user story should be covered by at least one flow step
-- Keep flows ticket-sized: typically 3-8 arrows per flow
+- Every AC should appear in at least one step's `[AC-X]` tag — orphan ACs are a coverage gap
+- Keep flows ticket-sized: typically 3-8 steps per flow
 
 ### TBD rules
 
@@ -228,9 +258,11 @@ When asked to review whether sub-issues fulfill a parent PRD ticket:
 | Title (H1) | Yes | 3-8 words, no jargon. Becomes Linear ticket title. |
 | Description | Yes | 1-2 short sentences, no tech detail |
 | Problem | Yes | 1-2 short paragraphs, user pain not tech gap |
-| Design Source of Truth | If UI work | Exact Figma node(s), target surface, states, conflicts, exclusions |
-| User Stories | Yes | `As a [user], I want ..., so ...` plus `AC-N` items |
-| User Flows | Yes | At least one happy flow in Entry/Exit prose form |
+| Design Source of Truth | If UI work | Target surface + conflict rule. Light. The visual contract lives in Figma; PRD doesn't replicate it. |
+| User Stories | Yes | `As a [user], I want ..., so ...` plus `AC-N` items, numbered globally |
+| User Flows | Yes | At least one flow in **Notion-doc format** — `F*-S*` step IDs + `[AC-X]` tags per step, Entry/Exit anchors at flow level |
+| State List | Yes (UI work) | Every UI state (default/loading/empty/error/etc.) as text, tagged by governing AC. NOT mockups. |
+| Component Mapping Intent | Yes (UI work) | Per block from /explore, intent only (kind of component). No concrete DS names. |
 | Constraints | Yes | Limits the implementation must respect |
 | Success Criteria | Yes | Measurable with numbers |
 
@@ -239,10 +271,12 @@ When asked to review whether sub-issues fulfill a parent PRD ticket:
 - **Title**: 3-8 words, no jargon
 - **Description**: short, plain English, no tech detail
 - **Problem**: describes user pain, not the technical fix
-- **Design Source of Truth**: required for UI work. Include exact Figma node IDs and what each node controls. If missing, ask before creating the ticket or mark `TBD-design` after a question attempt.
-- **User Stories**: `As a [user], I want [goal], so [benefit]`. Each story has at least one `AC-N`
-- **User Flows**: at least one. Use Entry/Exit anchors. 3-8 arrows per flow is the sweet spot
-- **AC coverage**: every `AC-N` should be reflected in at least one flow step
+- **Design Source of Truth**: required for UI work — target surface and conflict rule. Doesn't replicate the visual; that's Figma's job.
+- **User Stories**: `As a [user], I want [goal], so [benefit]`. Each story has at least one `AC-N`. AC numbering is **global** across the PRD (`AC-1` through `AC-N`), not per-story — so `/figma` annotations and `/epic` sub-issues can reference any AC unambiguously.
+- **User Flows**: at least one. Notion-doc format: `F*-S*` step IDs + `[AC-X]` tags per step. 3-8 steps per flow is the sweet spot.
+- **AC coverage**: every `AC-N` should appear in at least one step's `[AC-X]` tag AND in the State List (if it governs a state) — orphan ACs are a coverage gap caught at /verify time.
+- **State List**: every UI state the feature touches, text only, tagged by AC. No state mockups in Figma.
+- **Component Mapping Intent**: each block from /explore gets a row with the intent string; never a concrete DS component name.
 - **Success Criteria**: contain real numbers (percentages, times, counts)
 - **TBD**: allowed in Constraints, Success Criteria numbers, and flow details only — never in Problem, Users, or User Stories. Every `TBD` must have a matching `AskUserQuestion` attempt
 
@@ -253,5 +287,7 @@ When asked to review whether sub-issues fulfill a parent PRD ticket:
 | "We need JWT auth" | "Users cannot access personalized features without accounts" | Problem describes user pain, not the technical fix |
 | "Users should be happy with login" | "90% of users complete login in under 10 seconds" | Success criteria need real numbers |
 | "OAuth2 JWT Token Auth Implementation" | "User Login and Signup" | Title avoids jargon |
-| Flow as steps only (`User → API → DB → API → User`) | `Entry: Login → Click Submit → Loading → Token returned → Exit: Home` | Flows describe what the user sees, with Entry/Exit anchors |
+| Flow as system trace (`User → API → DB → API → User`) | `**F1-S1**: Login screen → Click Submit → Loading state → Token returned [AC-1, AC-2]` | Flows describe what the user sees, with `F*-S*` IDs and `[AC-X]` tags per step |
+| `component_mappings: ShadcnInput + Badge` | `component_mapping_intent: "search input with inline filter chips, multi-select"` | PRD declares intent; /figma's Phase 2 resolves to concrete DS names from the linked library |
+| Empty state in Design Source of Truth as a Figma node | Empty state in **State List** as text + governing AC | States are PRD concerns (text); Figma stays happy-path; code renders each state per AC |
 | "Match Figma" | "Example: Implement Figma node `<primary-node-id>` exactly for `<target surface>`; `<reference-node-id>` is reference only; `<specific layout/state rule>` must come from the primary node" | Agents need a concrete source of truth and conflict rule |

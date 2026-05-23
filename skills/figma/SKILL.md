@@ -1,7 +1,7 @@
 ---
 name: figma
-version: 1.5.0
-description: Use when user says "figma", "figma it", "sync figma", "figma mockup", "create figma file", "design to figma", "figma from PRD", "figma from journey", "build in figma", or "figma design system" — anything that creates, syncs, or updates Figma design systems, components, variables, mockups, or front-end-ready screens. Always checks linked Figma libraries first; asks the user when none exists rather than inventing primitives.
+version: 1.6.0
+description: Use when user says "figma", "figma it", "sync figma", "figma mockup", "create figma file", "design to figma", "figma from PRD", "figma from journey", "build in figma", or "figma design system" — anything that creates, syncs, or updates Figma design systems, components, variables, mockups, or front-end-ready screens. Always enumerates the linked Figma library FIRST (library-driven discovery, not per-need search), produces a block→DS mapping table for user signoff before any write, and adds a Flow Page + Dev Mode `implements: AC-X` annotations so downstream engineering can trace every interactive element back to a PRD acceptance criterion.
 ---
 
 # Figma Skill
@@ -44,12 +44,11 @@ Before calling `use_figma`, load the figma-use guidance via `ReadMcpResourceTool
 **Goal**: Understand the product flow, implementation surface, and existing design system before creating anything.
 
 1. Create todo list with all phases.
-2. Gather source context:
-   - PRD or requirements
-   - Journey / user flow
-   - Existing Figma file URL or target file
-   - Screenshots or reference frames
-   - Codebase routes/pages/components
+2. Gather source context. In **mockup mode (Phase 4B path)** the skill consumes structured fields from the upstream design chain — do NOT re-ask what's already captured:
+   - **From `/vorbit:design:prd`** — `acceptance_criteria[]` (`AC-*`), `flow_steps[]` (with `F*-S*` IDs + screen refs + AC tags in Notion-doc format), `state_list[]`, `component_mapping_intent[]` (block + intent description, no concrete DS name — that's *this* skill's Phase 3 job). PRD is authoritative for *rules*; Figma is authoritative for *visual*.
+   - **From `/vorbit:design:explore`** — `blocks_mined[]` (grain-tagged: `section` / `pattern` / `component` / `page-archetype` / `flow`, with embedded reference screenshots), `references[]`. These ground Phase 3's DS resolution in evidence, not the agent's training-data defaults.
+   - **Target Figma file URL** — where hi-fi composition lands. If the file is empty, follow the empty-file rule in step 5.
+   - **Codebase context** — only when in **Phase 4A** (DS sync mode); routes/pages/components/tokens. Mockup mode uses /prd + /explore as primary input, NOT the codebase.
 3. If journey context exists, use it only to understand flow and page needs.
 4. Inspect the codebase:
    - Framework and routing
@@ -63,13 +62,25 @@ Before calling `use_figma`, load the figma-use guidance via `ReadMcpResourceTool
    - Text styles and effect styles
    - **Empty-file check**: if the target file or frame is blank (screenshot returns nothing, `get_design_context` reports "nothing selected"), the file has not been seeded yet. Do NOT keep fetching — switch to **code→design push mode** and use `generate_figma_design` (or equivalent write tool) to push the current UI/intent into Figma first, then continue from a populated frame.
      - Before calling `generate_figma_design`, load its companion guidance: `ReadMcpResourceTool` with `server: figma`, `uri: skill://figma/figma-generate-design/SKILL.md`.
-6. **Discover linked libraries — executable, not aspirational:**
+6. **Discover linked libraries — library-driven, not need-driven.** The agent must see what *exists* before deciding what to *use*; per-need searches alone find confirmation of what the agent already imagined and miss the compositions/blocks it didn't think to search for. This is the single biggest lever for stopping the "agent ignores the linked DS" failure mode.
    - Call `mcp__figma__get_libraries` to list every library connected to the target file. Record library names, IDs, and whether each is enabled.
    - **IF the result is empty:** the file has no linked library. STOP here and ask the user (link a library, point to a different file, or explicitly approve custom primitives). Do not skip ahead to drawing.
-   - **Discover compositions by library structure, not by name.** Naming conventions vary by team (slashes, spaces, prefixes, none). Libraries are organized by **page or folder** much more reliably — atoms on one page, composed templates on another. After `get_libraries`, surface each library's page/folder structure (via `mcp__figma__search_design_system` with broad queries or library metadata), report the page list to the user, and **use AskUserQuestion**: "These are the pages in your library: [list]. Which contain composed/template components I should reuse before atoms — or does your library not use compositions?" Search the user-named composition pages first for each Phase 2 need. A composition supersedes the atoms it would replace — record only the composition key, not its child atoms. If the user says no compositions exist, skip composition search and proceed straight to atomic search.
-   - For each remaining need not satisfied by a composition, call `mcp__figma__search_design_system` with a concrete query (e.g. `"button primary"`, `"card surface"`). Record the returned component key, node ID, and library source.
-   - Call `mcp__figma__get_variable_defs` to capture token IDs for colors, spacing, radii, and typography. These IDs — not hex codes — are what `generate_figma_design` needs to bind tokens.
-   - If `search_design_system` returns no match for a need, mark it as a **gap** for Phase 3 to resolve with the user. Never silently substitute a custom primitive.
+   - **Full library enumeration pass (NEW — required before per-need searches).** For each enabled library, surface its **page/folder structure** (via `mcp__figma__search_design_system` with broad queries or library metadata). Then call `mcp__figma__search_design_system` with a wildcard / broad query (e.g. empty string, `"*"`, or one query per library page) to capture every available component key. Build a structured inventory the agent can refer back to during Phase 3 mapping:
+
+     ```
+     library_inventory = [
+       { name: "Button / Primary", key: "comp:abc123", category: "atom",  variants: ["sm", "md", "lg"] },
+       { name: "SearchInput",      key: "comp:def456", category: "atom",  variants: ["with-icon", "with-clear"] },
+       { name: "EmptyState",       key: "comp:ghi789", category: "block", variants: ["illustration", "icon", "text"] },
+       …
+     ]
+     ```
+
+     This inventory is what Phase 3 maps `/prd`'s `component_mapping_intent` against. Without it, Phase 3 is guesswork dressed as a table.
+   - **Discover compositions by library structure, not by name.** Naming conventions vary by team (slashes, spaces, prefixes, none). Libraries are organized by **page or folder** much more reliably — atoms on one page, composed templates on another. After the inventory pass, report the page list to the user, and **use AskUserQuestion**: "These are the pages in your library: [list]. Which contain composed/template components I should prefer over atoms — or does your library not use compositions?" Search the user-named composition pages first for each Phase 2 need. A composition supersedes the atoms it would replace — record only the composition key, not its child atoms. If the user says no compositions exist, skip composition search and proceed straight to atomic search.
+   - For each remaining need not satisfied by a composition, refine the inventory match with `mcp__figma__search_design_system` and a concrete query (e.g. `"button primary"`, `"card surface"`). Record the returned component key, node ID, and library source.
+   - Call `mcp__figma__get_variable_defs` to capture token IDs for colors, spacing, radii, and typography. These IDs — not hex codes — are what `use_figma` / `generate_figma_design` need to bind tokens.
+   - If neither the full inventory nor a refined search returns a match for a need, mark it as a **gap** for Phase 3 to resolve with the user. Never silently substitute a custom primitive.
 7. **Mobbin reference research — flow-pattern first, then per-screen (MANDATORY when Mobbin connected).** See `_shared/mobbin-research.md` for the full per-screen synthesis format (bullets, app attribution, URL coverage rules). The figma-specific steps below cover the flow-pattern discovery layer that sits on top of that shared workflow.
 
    - **a. Flow-pattern discovery (run FIRST when the request spans multiple screens).** Use the Mobbin capability mode recorded in Phase 0:
@@ -207,7 +218,7 @@ Use this path when the user asks for Figma mockups, screens, pages, or journey-i
 
 If any pre-flight item is incomplete, return to that earlier phase.
 
-1. Present the mockup plan: frame names, routes, sections, **reused assets listed with actual keys/IDs from Phase 3**, required states.
+1. Present the mockup plan: frame names, routes, sections, **reused assets listed with actual keys/IDs from Phase 3**, **Flow Page contents** (ordered journey steps from `/prd`'s `flow_steps[]`, each line tagged with `[AC-X]`), **Dev Mode annotation plan** (which interactive elements get `implements: AC-X` annotations referencing which AC), required states *as text references to /prd's `state_list[]`* (not as separate mockup frames — see step 7).
 2. **Use AskUserQuestion** to confirm.
 3. **Build with `use_figma`.** Pass Phase 3 keys to `code`; JS calls `figma.importComponentByKeyAsync(key)` then `.createInstance()`. For web-app pixel-perfect copies, run `generate_figma_design` in parallel as a screenshot reference, refine `use_figma` to match, then delete the screenshot output. For PRD/intent/iOS/Android, skip `generate_figma_design`.
    - **If using `generate_figma_design`**, load its companion guidance first: `ReadMcpResourceTool` with `server: figma`, `uri: skill://figma/figma-generate-design/SKILL.md`.
@@ -218,32 +229,48 @@ If any pre-flight item is incomplete, return to that earlier phase.
    - **If the Mobbin concept needs an element our library doesn't have**, choose one of these — never invent primitives in the main mockup:
      - **a. Add to library**: if the element is good enough to belong in the design system, mark it as a Phase 4A task for the user to approve. Skip the element from this mockup until added.
      - **b. Sibling reference frame**: create a separate frame next to the mockup, named `[Reference / Gap] <element name>`, showing what's needed. This makes the gap visible without polluting the mockup with custom primitives. User decides next steps.
-4. Bind variables by ID (`figma.variables.getVariableByIdAsync` + `setBoundVariable`); no inline hex.
-5. Name frames by page, route, section, state.
-6. Use auto-layout and stable hierarchy.
-7. Validate with `get_metadata` and `get_screenshot`. **Post-write checks (mandatory, blocking) — `get_metadata` is the source of truth, not the JS you wrote:**
+4. **Generate the Flow Page first** (before any per-screen frames). One dedicated frame at the file root named `Flow` (or `Flow Page` per the Notion convention) listing `/prd`'s `flow_steps[]` as ordered text — no UI chrome, just steps with screen refs and `[AC-X]` tags in the exact format:
+   ```
+   Step 1: Empty Dashboard → +Add tap → Add Service modal [AC-1, AC-2]
+   Step 2: Service modal → Submit → Success toast [AC-3]
+   Step 3: Submit failure → Inline validation message [AC-4, AC-5]
+   ```
+   This frame is the canonical journey for downstream `/vorbit:implement:epic` and `/vorbit:implement:implement`. Don't add visuals; the screens themselves carry the visual.
+5. **Add Dev Mode annotations on every interactive element** (buttons, inputs, links, toggles, dropdowns, checkboxes, radios) as you build each screen. Use `data-development-annotations` containing `implements: AC-X` referencing the PRD acceptance criterion that governs the element. Pin-style canvas annotations have NOT been validated as agent-readable downstream — only Dev Mode annotations work. Per `[[reference_figma_metadata_authoritative_fields]]`, `get_metadata` will surface these in the `annotations` field, which is what `/vorbit:implement:implement` and `/vorbit:implement:verify` consume.
+6. Bind variables by ID (`figma.variables.getVariableByIdAsync` + `setBoundVariable`); no inline hex.
+7. **Happy path only — no state-variant frames.** Mock the success/default state of each screen. Do NOT create separate frames for empty/loading/error/permission-denied — those live as AC text in `/prd`'s `state_list[]` and are realized only in code per AC. Multi-state mockups duplicate spec and drift; keep Figma to the canonical happy path so the visual contract stays single-source-of-truth.
+8. Name frames by page, route, section. Use auto-layout and stable hierarchy.
+9. Validate with `get_metadata` and `get_screenshot`. **Post-write checks (mandatory, blocking) — `get_metadata` is the source of truth, not the JS you wrote:**
    - **Orphan frames**: children whose names match a Phase 3 need but appear as `<frame>` not `<instance>`. `<text>` nodes with emoji where icon components should be.
    - **Variant match**: every instance's `mainComponent.name` (full path including variant) matches the exact Phase 3 row. `Button / Primary` ≠ `Button / Secondary` — right component, wrong variant still fails.
    - **Token bindings**: every fill, stroke, effect, and text-style property on a node mapped to a Phase 3 token row has `boundVariables` set in metadata. A SOLID fill with a raw `{r,g,b}` color where a variable was declared = silent override.
    - **Inline-override drift**: scan each instance's `overrides`; flag any that change fills, strokes, corner radius, or padding to non-Phase-3 values.
-   - **If any check fails**: STOP, report the failing nodes, re-run `use_figma` with corrective JS — re-import via `importComponentByKeyAsync`, re-bind via `getVariableByIdAsync` + `setBoundVariable`, or strip overrides.
-8. **Use AskUserQuestion** after each page before continuing.
+   - **Flow Page exists (NEW):** a frame at the file root named `Flow` (or `Flow Page`) exists, containing ordered steps with `[AC-X]` tags matching `/prd`'s `flow_steps[]`. Missing or empty Flow Page = fail; regenerate.
+   - **Dev Mode annotations on interactive elements (NEW):** every `INSTANCE` node whose component category is interactive (button / input / link / toggle / dropdown / checkbox / radio) has a Dev Mode annotation containing `implements: AC-X` referencing a valid PRD acceptance-criterion ID. Missing annotation = fail; attach via `use_figma` corrective JS.
+   - **If any check fails**: STOP, report the failing nodes, re-run `use_figma` with corrective JS — re-import via `importComponentByKeyAsync`, re-bind via `getVariableByIdAsync` + `setBoundVariable`, strip overrides, or attach annotations.
+10. **Use AskUserQuestion** after each page before continuing.
 
 ## Handoff Rules
 
 Final report must include:
 
 - Figma page/frame links or IDs
+- **Flow Page frame ID and link** — downstream `/vorbit:implement:epic` reads this for the canonical journey
 - Page inventory
-- Reused design-system assets
-- Missing design-system assets
-- Confirmed states
+- Reused design-system assets (with keys from Phase 3 mapping table)
+- Missing design-system assets (gaps surfaced for the user's DS roadmap)
+- **Dev Mode annotation coverage** — count of interactive elements annotated with `implements: AC-X`, and any unannotated elements flagged
+- Confirmed states (as text references to `/prd`'s `state_list[]`, not as separate frames)
 - Frontend component boundaries
 - Next implementation steps
 
 ## Anti-Patterns
 
 - **Treating "tooling works" as permission to skip the design process** — `use_figma` succeeding is the floor. Without inventory, mapping, Mobbin, and confirmations, the output is shapes-with-keys, not design.
+- **Skipping the library-driven enumeration pass in Phase 1 step 6** — per-need searches alone confirm what the agent already imagined and miss compositions/blocks it didn't think to search for. This is the single biggest source of the "agent ignores the linked DS" failure. The inventory pass is mandatory.
+- **Mocking states as separate Figma frames** — empty/loading/error/permission-denied are PRD concerns (text in `state_list[]`), not visual concerns. Multi-state mockups duplicate spec and drift; the visual contract is the *happy path*, and code realizes states per AC.
+- **Skipping the Flow Page** — downstream `/vorbit:implement:epic` reads it for the canonical journey. Without it, /epic falls back to inferring flow from frame names, which is fragile.
+- **Using pin-style canvas annotations instead of Dev Mode annotations** — only `data-development-annotations` (`implements: AC-X`) have been validated as agent-readable downstream. Pin annotations look helpful but are invisible to `/vorbit:implement:implement` and `/vorbit:implement:verify`.
 - Creating screens before confirming the page inventory.
 - **Using `generate_figma_design` as the main writer** — it's reserved for web-app screenshot reference. `use_figma` is the default writer.
 - **Calling `use_figma` without loading `figma-use` first** — covers Plugin API gotchas that cause silent JavaScript failures.

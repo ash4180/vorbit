@@ -1,14 +1,22 @@
 ---
 name: journey
-version: 1.2.0
-description: Use when user says "create user flow", "user journey", "flow diagram", "map user steps", "Excalidraw diagram", or wants to visualize user flows. Renders the flow inline in chat with animation, then publishes a shareable Excalidraw URL.
+version: 1.3.0
+description: Use when user says "create user flow", "user journey", "flow diagram", "map user steps", "Excalidraw diagram", or wants to visualize user flows. Renders the flow inline in chat with animation, then publishes a shareable Excalidraw URL. **Optional pre-design sketch tool — NOT a chain-required step.** The vorbit designer chain (/explore → /prd → /figma) generates a Flow Page directly inside the Figma file from /prd's flow_steps; use /journey only when you want a standalone diagram for stakeholders or to sketch the flow shape before /prd is written.
 ---
 
 # Journey Skill
 
 Create user journey diagrams in Excalidraw with an inline animated preview, then publish to excalidraw.com for a shareable URL.
 
-**Why Excalidraw, not Figma:** Excalidraw's MCP exposes both an inline-preview API (`create_view` — renders in chat with streaming animation; user validates before publishing) and a publish-to-URL step (`export_to_excalidraw` — returns a shareable `excalidraw.com` link). Figma's `generate_diagram` doesn't produce a shareable URL — it requires opening the Figma file. Excalidraw is also lighter for quick flow visualization than Figma's full design canvas. `/journey` is the canonical flow-visualization skill in vorbit; other skills (e.g., /ux) defer to it rather than draw diagrams themselves.
+**Why Excalidraw, not Figma:** Excalidraw's MCP exposes both an inline-preview API (`create_view` — renders in chat with streaming animation; user validates before publishing) and a publish-to-URL step (`export_to_excalidraw` — returns a shareable `excalidraw.com` link). Figma's `generate_diagram` doesn't produce a shareable URL — it requires opening the Figma file. Excalidraw is also lighter for quick flow visualization than Figma's full design canvas.
+
+**Relationship to the designer chain (/explore → /prd → /figma):**
+- `/journey` is **optional** — not a chain-required step in the 2026-05 redesign.
+- The chain-required canonical journey lives in `/vorbit:design:figma`'s **Flow Page** (one dedicated frame inside the Figma file listing ordered steps with `[AC-X]` tags), generated from `/prd`'s `flow_steps[]`.
+- Use `/journey` when: (1) you want a standalone shareable diagram for stakeholders before mockups exist, (2) you want to sketch flow shape *before* writing the PRD, (3) the audience wants something simpler than a Figma file. The output can feed `/explore` as inspiration or `/prd` as a flow input — but downstream `/figma` and `/epic` consume the in-Figma Flow Page, not the Excalidraw diagram.
+- Don't run `/journey` "to complete the chain" — that's overhead. Run it when the standalone diagram itself is the deliverable.
+
+`/journey` is the canonical flow-visualization skill in vorbit; other skills (e.g., /ux) defer to it rather than draw diagrams themselves.
 
 > **MCP namespace**: This skill uses `mcp__claude_ai_Excalidraw__create_view` (inline preview) and `mcp__claude_ai_Excalidraw__export_to_excalidraw` (publish). See `_shared/mcp-tool-routing.md` for the Plugin Tool Index and the announce-the-plugin rule.
 
