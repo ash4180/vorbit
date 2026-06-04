@@ -13,9 +13,6 @@ __pycache__/
 # Pytest runtime cache (regenerates on next test run)
 .pytest_cache/
 
-# Ruby LSP cache (regenerates when the editor reopens the project)
-.ruby-lsp/
-
 # Skill eval workspaces (iteration outputs from skill-creator)
 *-workspace/
 
