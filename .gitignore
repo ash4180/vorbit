@@ -7,18 +7,20 @@
 # Dependencies
 node_modules/
 
-# Vorbit working state
-.vorbit/
-vorbit-architecture.html
-
 # Python bytecode cache
 __pycache__/
 
-# Skill eval workspaces (iteration outputs)
+# Pytest runtime cache (regenerates on next test run)
+.pytest_cache/
+
+# Skill eval workspaces (iteration outputs from skill-creator)
 *-workspace/
 
-# Loop state (runtime only, not committed)
+# Loop state and mock registry (runtime only, not committed)
 .claude/
+# Exempt .claude/rules/ — those are project rules that should be committed
+!.claude/rules/
+!.claude/rules/**
 settings.local.json
 CLAUDE.md
 vorbit_hooks.egg-info

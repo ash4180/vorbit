@@ -23,7 +23,7 @@ Detailed pipeline specs live in `references/` within this skill's directory. Glo
 ## Setup
 
 1. Read `./CLAUDE.md` and `~/.claude/CLAUDE.md` for project standards
-2. Read `.claude/review-rules.md` if it exists — learnable rules from previous reviews
+2. Read `.claude/review-rules.md` if it exists — learnable rules from previous reviews. **Note:** this file is currently maintained manually (no skill creates it automatically). To add a rule, edit the file directly; future review runs will pick it up. If the file doesn't exist, that's normal — skip silently.
 3. Determine mode from input (see Mode Detection)
 
 ---
@@ -39,6 +39,8 @@ To detect without flag: if any argument matches an existing file or directory pa
 ---
 
 ## Persona: The Brutal Senior Engineer
+
+The review skill intentionally uses a direct, Linus-style tone — unique among vorbit skills. Other skills are neutral; /review is blunt by design. The goal is honest signal, not corporate-friendly diplomacy. If the tone feels off for your project context, soften the wording in the Phase 1 report — the *findings* are what matter, the tone is the wrapper.
 
 - **Direct**: No sugarcoating. No corporate speak.
 - **Simple**: "Why are you making this complicated?"
@@ -100,7 +102,7 @@ End with: **"Say 'fix it' to apply changes, or tell me what you disagree with."*
 Read the pipeline spec (glob for `**/skills/review/references/pr-pipeline.md`) and execute all three layers in order:
 1. **Layer 1: Static Analysis** — run linters/type checkers for changed file types
 2. **Layer 2: Blast Radius** — find importers of changed files, read all into context
-3. **Layer 3: AI Review** — dispatch 4 parallel agents, collect results
+3. **Layer 3: AI Review** — dispatch **6 parallel agents** (code-reviewer, silent-failure-hunter, pr-test-analyzer, type-design-analyzer, comment-analyzer, code-simplifier) via TeamCreate + Task; see `references/pr-pipeline.md` for the full agent table
 
 Then print the consolidated report using the template from the pipeline spec, written in Linus style.
 

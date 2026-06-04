@@ -8,6 +8,10 @@ description: Use when user says "build in Webflow", "create Webflow page", "deve
 
 Develop Webflow pages, templates, and components. Optionally use Figma designs as reference, or build directly in Webflow from requirements.
 
+> **MCP namespace**: This skill uses `mcp__webflow__*` and optionally `mcp__figma__get_design_context` for design reference. See `_shared/mcp-tool-routing.md` for the Plugin Tool Index and the announce-the-plugin rule.
+
+> **Locate `_shared/`**: This skill ships as a plugin, so `_shared/` files live in the plugin cache, not your project. Before reading any `_shared/...` path below, run `ls -d ~/.claude/plugins/cache/local/vorbit/*/skills/_shared 2>/dev/null | head -1` and use the output as the absolute base for every `_shared/...` reference.
+
 ## Core Concept
 
 This skill treats Webflow as the **development platform**. Two modes supported:
@@ -43,12 +47,7 @@ Standalone, draggable sections that fit into page slots. Build as reusable eleme
 
 ### Step 0: Pencil Check
 
-Before starting, check if Pencil MCP is available and configured:
-1. Run `ToolSearch` for `"pencil"` — if Pencil tools exist:
-2. Check if `.claude/rules/pencil.md` exists (Glob for it)
-3. **IF Pencil available but no pencil.md:** Use `AskUserQuestion`: "Pencil is connected but not configured for this project. Run `/vorbit:design:pencil` first to sync your design tokens and components? (Recommended)" with options: "Run pencil first (Recommended)", "Skip — continue without sync"
-4. **IF user chooses to sync:** Stop and tell them to run `/vorbit:design:pencil`, then come back
-5. **IF pencil.md exists:** Read it — use detected stack, tokens, and component inventory to inform Webflow development decisions
+Follow `_shared/pencil-check.md` — shared 6-step procedure that detects Pencil connection, checks for `.claude/rules/pencil.md`, and routes the user through `/vorbit:design:pencil` sync if needed. The same procedure is used by `/vorbit:implement:prototype`; keeping it shared prevents drift.
 
 ### Step 1: Gather Inputs
 
@@ -65,8 +64,10 @@ If output type unclear, ask:
 **Mode A - With Figma:**
 Use Figma MCP to get design context:
 ```
-mcp__plugin_figma_figma__get_design_context
+mcp__figma__get_design_context
 ```
+(Canonical per `_shared/mcp-tool-routing.md`. If only the plugin variant is connected, `mcp__plugin_figma_figma__get_design_context` works equivalently.)
+
 Extract: layout structure, styling, component hierarchy, design tokens.
 
 **Mode B - Direct Build:**
@@ -113,13 +114,13 @@ Use Webflow MCP tools (see `references/mcp-tools.md` for detailed tool reference
 | `element_builder` | Create page structure (sections, containers, divs) |
 | `element_tool` | Select, modify, and configure existing elements |
 | `style_tool` | Create and apply CSS classes |
-| `component_tool` | Register components and create instances |
+| `component_builder` | Register components and create instances |
 
 **Workflow:**
 1. Use `element_builder` to create structure (max 3 levels per call)
 2. Use `style_tool` to create and configure styles
 3. Use `element_tool` to apply styles and set content
-4. Use `component_tool` to register reusable components
+4. Use `component_builder` to register reusable components
 
 **For Templates:**
 - Add Page Slot elements where content varies
@@ -245,9 +246,9 @@ This skill works standalone or chains with other vorbit commands:
 
 | Flow | Description |
 |------|-------------|
-| Standalone (Figma) | `/vorbit:design:webflow [figma-url]` |
-| Standalone (Direct) | `/vorbit:design:webflow [description]` |
-| From PRD | PRD → `/vorbit:design:webflow` |
+| Standalone (Figma) | `/vorbit:implement:webflow [figma-url]` |
+| Standalone (Direct) | `/vorbit:implement:webflow [description]` |
+| From PRD | PRD → `/vorbit:implement:webflow` |
 
 ## Rules
 

@@ -10,6 +10,12 @@ A disciplined, Test-Driven Development (TDD) workflow for implementing features 
 
 > **Linear MCP namespace**: All Linear calls in this skill use `mcp__plugin_linear_linear__*` (the namespace shipped with the vorbit plugin). Bare verb names below (`list_issues`, `update_issue`, etc.) refer to the corresponding `mcp__plugin_linear_linear__<verb>` tool.
 
+> **Figma MCP namespace**: For UI/design-driven sub-issues, bare Figma verbs below (`get_design_context`, `get_metadata`, `get_screenshot`) refer to `mcp__figma__<verb>` (canonical per `_shared/mcp-tool-routing.md`). If only the plugin variant is connected, `mcp__plugin_figma_figma__<verb>` works equivalently.
+
+> **Locate `_shared/`**: This skill ships as a plugin, so `_shared/` files live in the plugin cache, not your project. Before reading any `_shared/...` path below, run `ls -d ~/.claude/plugins/cache/local/vorbit/*/skills/_shared 2>/dev/null | head -1` and use the output as the absolute base for every `_shared/...` reference.
+
+> **UX patterns reference**: When implementing UI states (loading / empty / error / permission-denied), consult `_shared/ux-knowledge/edge-case-catalog.md` for the concrete cases to cover. Read directly — no need to invoke `/vorbit:design:ux`.
+
 ## Handle Loop Mode
 
 **If `--loop` or `--cancel` in arguments:**
@@ -19,7 +25,7 @@ Use the **implement-loop** skill for loop state management and sub-issue trackin
 
 ## Step 1: Detect Platform & Verify Connection
 
-Read and follow `_shared/mcp-tool-routing.md` (glob for `**/skills/_shared/mcp-tool-routing.md`). Discover connected platforms, ask user which to use, and verify connection. If no PRD is needed, skip this step.
+Read and follow `_shared/mcp-tool-routing.md`. Discover connected platforms, ask user which to use, and verify connection. If no PRD is needed, skip this step.
 
 ## Step 2: Determine Context
 
@@ -39,8 +45,7 @@ For Linear issues:
 - Read issue description for requirements
 - Check parent issue for SDD and style findings
 - Check linked PRD if available:
-  - **Notion PRD**: Use `notion-find` to fetch
-  - **Anytype PRD**: Use `API-get-object` to fetch
+  - **Notion PRD**: Use `notion-fetch` to fetch
 
 ## Step 3.5: Parse Enhanced Issue Format
 
@@ -57,7 +62,8 @@ If present:
 1. **Similar features** → Open and study these files FIRST
 2. **Utilities** → Use these, DO NOT recreate
 3. **Constants** → Use these, NO magic numbers allowed
-4. **UI Patterns** → If present, invoke `/vorbit:design:ui-patterns`
+4. **UI Patterns** → If present, read `_shared/frontend-knowledge/ui-patterns.md`
+5. **If `react` is in `package.json`** → also read `_shared/frontend-knowledge/react-best-practices/index.md` for performance rules
 
 ### Check "File Changes"
 If present:
@@ -69,8 +75,15 @@ If present:
 ### Detect UI Work
 If issue involves UI components:
 - Check for ui-patterns reference in issue
-- If UI work detected, use ui-patterns skill for constraints
+- If UI work detected, read `_shared/frontend-knowledge/ui-patterns.md` for constraints
+- If `react` is in `package.json`, also read `_shared/frontend-knowledge/react-best-practices/index.md` for performance rules
 - Follow: Tailwind, motion/react, accessibility primitives
+
+### Check "Design Source of Truth" and "Screenshot Evidence"
+If the issue includes UI/design-driven work, apply `_shared/figma-handoff.md` (node-ID-required, structure/flow summary, conflict rule, screenshot capture-and-compare):
+1. Fetch the primary Figma node with `get_design_context`; use `get_metadata` only for hierarchy, then return to `get_design_context`.
+2. Build the structure/flow summary and confirm a concrete node ID. If "match Figma" names no node, the structure/flow is unclear, or ticket text and Figma disagree — stop and ask before implementing.
+3. After changes, capture a browser/app screenshot and compare it against the Figma reference per `figma-handoff.md`. Fix unintended mismatches unless the issue marks them out of scope.
 
 ## Step 4: Learn Codebase Style
 
@@ -83,65 +96,25 @@ If issue involves UI components:
 
 **Rule**: Consistency > Novelty. This ensures code matches team's style.
 
+### Step 4.1: FE Architecture Blueprint — Read from Issue, Don't Rebuild
+
+If the task touches UI, layout, component composition, or user-visible state:
+
+1. **Find the FE Architecture Blueprint section** in the sub-issue body (per `skills/epic/output-schema.md`). `/epic` is responsible for writing this — it's a 6-area table covering reuse/create matrix, component hierarchy, data/API contract, state ownership, design-system mapping, and test seams. The full structure is defined in `_shared/frontend-knowledge/architecture-blueprint.md`.
+2. **Read it as the implementation plan.** The blueprint is the contract `/epic` made with you. Don't rebuild it from scratch — that drifts from the plan and wastes work.
+3. **If the blueprint is missing or has gaps**, stop and ask the user. Don't paper over with guesses. Options:
+   - Ask `/epic` to update the sub-issue (preferred — keeps the plan in Linear)
+   - Confirm a specific gap inline and proceed, noting the decision in your implementation comment
+4. **Validate the blueprint against reality** as you code:
+   - When the blueprint says `Reuse src/components/Button.tsx`, confirm that file actually exists and the import works
+   - When the blueprint says `Adapt` an existing hook, check the existing hook for whether adaptation is sane
+   - When the blueprint says `Create`, search first to confirm nothing similar already exists — `Create` is the last resort
+
+If the blueprint is unfillable from Figma + PRD + code search at planning time, that's `/epic`'s problem to resolve. At implementation time, treat the blueprint as authoritative.
+
 ## Step 4.5: Detect i18n/Localization Requirements
 
-**Check if project uses ANY localization system:**
-
-### Detection Strategy (framework-agnostic)
-
-1. **Search for common i18n patterns:**
-```bash
-# Check package.json for ANY i18n library
-grep -E "i18n|intl|locale|translation|l10n|gettext|fluent" package.json 2>/dev/null
-
-# Find locale/translation directories (check common locations)
-find . -maxdepth 3 -type d \( -name "locales" -o -name "locale" -o -name "i18n" -o -name "translations" -o -name "messages" -o -name "lang" -o -name "languages" \) 2>/dev/null
-
-# Check for translation files
-find . -maxdepth 4 -type f \( -name "*.po" -o -name "*.pot" -o -name "*.mo" -o -name "*.xliff" -o -name "*.arb" -o -name "**/en.json" -o -name "**/en-US.json" \) 2>/dev/null | head -10
-```
-
-2. **Check config files** for i18n setup:
-   - `next.config.*` (Next.js)
-   - `nuxt.config.*` (Nuxt)
-   - `angular.json` (Angular)
-   - `vue.config.*` or `vite.config.*` (Vue)
-   - `.env*` files for locale settings
-   - Any `i18n.*` config file
-
-3. **Grep for translation function usage:**
-```bash
-grep -rE "useTranslations|useIntl|useT|t\(|i18n\.|formatMessage|gettext|__|_t\(|\$t\(|trans\(" src/ app/ components/ --include="*.ts" --include="*.tsx" --include="*.js" --include="*.vue" --include="*.svelte" 2>/dev/null | head -10
-```
-
-### If i18n detected:
-
-**Document the setup (note these for later):**
-- **Translation file location**: Where are locale files stored?
-- **Supported locales**: What languages exist? (e.g., `en`, `zh`, `es`)
-- **Translation function**: How to use it? (varies by framework)
-- **Key naming convention**: What pattern does project use?
-
-### i18n Rules (universal):
-- **NO hardcoded user-facing strings** - All UI text must use the project's translation system
-- **ALL locales updated** - New keys must be added to EVERY locale file
-- **Match existing patterns** - Follow the project's key naming convention
-- **Handle plurals/interpolation** - Use the framework's syntax for dynamic content
-
-### Common Frameworks Reference
-
-| Framework | Common Library | Translation Function |
-|-----------|---------------|---------------------|
-| React/Next.js | `next-intl`, `react-intl`, `i18next` | `t()`, `useTranslations()`, `formatMessage()` |
-| Vue/Nuxt | `vue-i18n`, `@nuxtjs/i18n` | `$t()`, `t()` |
-| Angular | `@angular/localize`, `ngx-translate` | `$localize`, `translate.instant()` |
-| Svelte | `svelte-i18n` | `$_()`, `$t()` |
-| Flutter | `flutter_localizations`, `intl` | `AppLocalizations.of(context)` |
-| Python | `gettext`, `babel` | `_()`, `gettext()` |
-| Go | `go-i18n` | `localizer.Localize()` |
-| Ruby/Rails | `i18n` gem | `t()`, `I18n.t()` |
-
-**Rule**: If the project has ANY localization setup, missing translations = broken UX. This is a blocker.
+If this is UI work and the project may be localized, read `_shared/frontend-knowledge/i18n-detection.md` and run its detection strategy. If a localization system is detected, apply its universal rules to every new user-facing string — no hardcoded text, new keys added to **every** locale file, matching the project's existing key-naming convention. If the project has any localization setup, missing translations are a blocker.
 
 ## Step 5: Check for Sub-issues
 
@@ -182,37 +155,7 @@ For each task:
 - Ensure no regressions
 
 ### If Creating Mock Data During Implementation
-**Register mock in `.claude/mock-registry.json`:**
-
-**For mock files:**
-```json
-{
-  "feature": "[Feature name]",
-  "type": "file",
-  "path": "src/path/to/mock.json",
-  "endpoint": "GET /api/[resource]",
-  "createdBy": "implement",
-  "createdAt": "[ISO timestamp]",
-  "components": ["src/path/to/component.tsx"]
-}
-```
-
-**For mock state (useState, stores, context):**
-```json
-{
-  "feature": "[Feature name]",
-  "type": "state",
-  "path": "src/path/to/component.tsx",
-  "location": "useState:items (line 23)",
-  "endpoint": "GET /api/[resource]",
-  "stateType": "useState | zustand | redux | context",
-  "createdBy": "implement",
-  "createdAt": "[ISO timestamp]",
-  "components": ["src/path/to/component.tsx"]
-}
-```
-- Append to existing mocks array
-- This enables cleanup before backend handover
+Register every mock — file and state — in `.claude/mock-registry.json` with `"createdBy": "implement"` so it can be cleaned up before backend handover. See `_shared/mock-registry.md` for the schema, write templates, when to register, and what to capture. Append to the existing `mocks` array.
 
 ### Task Complete Criteria
 **ONLY mark done when:**
@@ -225,6 +168,7 @@ For each task:
 - [ ] **Used utilities/constants from "Reuse & Patterns"** (no magic numbers, no recreated functions)
 - [ ] **No dead code or leftover TODOs**
 - [ ] **i18n complete** (if project has localization): All user-facing strings use translation system, keys added to ALL locale files
+- [ ] **Screenshot evidence complete** (if UI/design-driven): Figma reference screenshot captured, browser/app screenshot captured after implementation, and mismatches resolved or documented as intentional
 
 ## Step 7: On Task Completion
 
@@ -265,4 +209,3 @@ For simple tasks (< 30 lines):
 - Just implement it
 - Run existing tests
 - Skip memory.md
-

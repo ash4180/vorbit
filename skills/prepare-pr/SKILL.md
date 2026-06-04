@@ -8,6 +8,10 @@ description: Prepare a feature branch for PR — strip design files, generate PR
 
 Finalize a feature branch for merge: run pre-flight checks, strip design files per the management standard, generate a PR body from Linear context and commit history, create the pull request, and post design file recovery references to the Linear ticket.
 
+> **MCP namespace**: This skill optionally uses `mcp__plugin_linear_linear__*` for Linear integration (skipped when no issue ID is detected). See `_shared/mcp-tool-routing.md` for the Plugin Tool Index and the announce-the-plugin rule.
+
+> **Locate `_shared/`**: This skill ships as a plugin, so `_shared/` files live in the plugin cache, not your project. Before reading any `_shared/...` path below, run `ls -d ~/.claude/plugins/cache/local/vorbit/*/skills/_shared 2>/dev/null | head -1` and use the output as the absolute base for every `_shared/...` reference.
+
 ## Why This Skill Exists
 
 Design files (`.pen`) live on feature branches during development so teammates can review them. But they must never reach `dev`, `main`, or `demo` — a CI gate (`design-files-check`) blocks PRs that contain `designs/`. This skill automates the stripping, records the recovery hash (the only way to get designs back after branch deletion), and posts references to both the PR and Linear ticket so the design is never lost.
@@ -144,6 +148,8 @@ For branches without design files, the skill still handles PR body generation an
 
 **Skip this phase if no `designs/` directory exists, or if `--skip-designs` flag is set.**
 
+**Convention**: Design files (`.pen` files from `/vorbit:design:pencil` work) live at `designs/{issue-id}/` during development. This is a **manual designer convention** — `/pencil` writes to the Pencil app's internal storage; the designer copies/exports the `.pen` file into `designs/{issue-id}/` and commits it on the feature branch so teammates can review. The path is also documented in the [Pencil Design Files in Git Management Standard](https://www.notion.so/vibranium-labs/Pencil-Design-Files-in-Git-Management-Standard-313477245840818dbf27dcc2d6774bde).
+
 **Goal**: Strip design files and record the recovery reference. The recovery hash is captured BEFORE stripping because it points to the last commit where the files still exist — this is the only way to recover them later.
 
 1. **Record the recovery hash** — this MUST happen before any `git rm`:
@@ -213,8 +219,8 @@ For branches without design files, the skill still handles PR body generation an
    [Omit this section if nothing notable]
 
    ## Related
-   - Closes [{ISSUE-ID}]({linear-issue-url})
-   [- Parent epic: [{epic-id}]({epic-url}) {epic title} if applicable]
+   - [{ISSUE-ID}]({linear-issue-url})
+   - Parent epic: [{epic-id}]({epic-url}) {epic title} if applicable
 
    ## Test plan
    - [ ] [AC 1 from Linear issue]

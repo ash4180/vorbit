@@ -1,7 +1,7 @@
 ---
 name: epic
-version: 1.4.2
-description: Use when user says "create issues", "break down PRD", "set up epic", "create Linear tasks", "plan sprint", "convert to issues", or wants to transform PRD user stories into Linear epics and sub-issues.
+version: 1.7.0
+description: Transform a PRD's user stories into Linear epics and sub-issues. Use whenever the user wants to break down a PRD, create Linear tickets, plan a sprint, decompose a feature into tasks, set up an epic, or convert a user story into implementation work — even if they don't say "epic" explicitly. Common triggers include "create issues", "break down PRD", "set up epic", "epic from VIB-XXX", "create Linear tasks", "plan sprint", "decompose this feature", "sub-issues for this story", "turn this PRD into tickets". Consumes the redesigned PRD + Figma schemas (AC-*, F*-S* flow_steps, state_list, component_mapping_intent from PRD; Flow Page, approved mapping_table, Dev Mode `implements: AC-X` annotations from Figma) without re-asking — output schema for sub-issues is unchanged.
 ---
 
 # Epic Planning Skill
@@ -10,52 +10,59 @@ Transform User Stories (from PRD) into executable Engineering Tasks (Epics/Issue
 
 > **Linear MCP namespace**: All Linear calls in this skill use `mcp__plugin_linear_linear__*` (the namespace shipped with the vorbit plugin). Bare verb names below (`get_user`, `list_teams`, `list_issues`, etc.) refer to the corresponding `mcp__plugin_linear_linear__<verb>` tool.
 
-**Key Features:**
-- Sub-issues include plain-language "Why" section
-- Each sub-issue references parent epic's acceptance criteria
-- Each sub-issue references related PRD flow steps
-- File paths are specified with exact locations
-- Existing code patterns and constants are identified for reuse
-- UI components reference the ui-patterns skill
-- Visual dependency tree shows implementation order by phase
+> **Locate `_shared/`**: This skill ships as a plugin, so `_shared/` files live in the plugin cache, not your project. Before reading any `_shared/...` path below, run `ls -d ~/.claude/plugins/cache/local/vorbit/*/skills/_shared 2>/dev/null | head -1` and use the output as the absolute base for every `_shared/...` reference.
 
-## Step 1: Verify Linear Connection
+> **Templates and standards**: All issue body templates, validation rules, the Parallel-label criteria, TDD requirements, and E2E test quality rules live in `./output-schema.md` (sibling of this file). Read it before Step 7 (Plan Epics) and Step 8 (Traceability Gate). Skipping causes a known failure mode — the agent invents its own issue templates, drops the Required Sections table, or fabricates validation rules that don't match the team's standards. The schema is what makes tickets reviewable.
 
-PRDs live as Linear tickets (see [`/vorbit:design:prd`](../../skills/prd/SKILL.md)). Confirm Linear auth before fetching the source ticket: call `get_user` with `query: "me"`. On failure, tell the user to run `/mcp` to reconnect and stop.
-
-## Step 2: Gather Context
+## Step 1: Gather Context
 
 **IF Linear ticket URL or ID provided:**
 1. Use `get_issue` to fetch the parent ticket
-2. Extract user stories (`US-*` IDs), acceptance criteria (`AC-*` IDs), user flows, constraints, and success criteria from the ticket description
+2. Extract from the description (PRD v2.1.0+ schema, see `/vorbit:design:prd`):
+   - User stories (`US-*` IDs)
+   - Acceptance criteria (`AC-*` IDs, numbered globally across the PRD)
+   - User Flows — ordered steps with `F*-S*` IDs and `[AC-X]` tags per step (Notion-doc format). These become "Related Flow Steps" in sub-issues.
+   - **State List** — text-only enumeration of every UI state (default / empty / loading / error / permission-denied / etc.) tagged by the governing AC. Feeds sub-issue "Design Source of Truth → states" directly; do NOT infer states from PRD prose if the State List exists.
+   - **Component Mapping Intent** — per-block intent (what kind of component each block needs, no concrete DS name). /figma's Phase 2 resolves intent → concrete DS in the mapping_table; if a Figma file is linked, prefer Figma's resolved table (see Step 3.7).
+   - Constraints and success criteria
 
 **IF feature name provided (no ticket ID):**
-1. Use `list_issues` scoped to the team with a title-based filter to locate the PRD ticket
-2. If multiple candidates, ask the user which one via `AskUserQuestion`
+1. Use `list_issues` scoped to the team with a title-based filter
+2. If multiple candidates, ask the user via `AskUserQuestion`
 3. Fetch with `get_issue` and extract as above
 
 **IF no PRD ticket exists:**
-1. Ask the user if they want to create the PRD first via `/vorbit:design:prd` — recommend that path so the source-of-truth lives in Linear
-2. If the user prefers to skip the PRD step, gather requirements via conversation and capture them inline so the epic still has US/AC/flow content to trace against
+1. Ask the user if they want to create the PRD first via `/vorbit:design:prd` — recommend that path so the source of truth lives in Linear
+2. If the user skips PRD, gather requirements via conversation and capture them inline so the epic still has US/AC/flow content to trace against
 
-**Traceability requirements before planning:**
-- Every user story has at least one `AC-*`
-- Every `AC-*` is reflected in at least one user flow step (the new prose flows replace the old Story-to-Flow Mapping table)
-- If any user story has no AC, or any AC has no flow coverage, use `AskUserQuestion` to resolve before Step 5
+**Traceability pre-flight (lightweight check, not the gate):**
+The authoritative validation runs in Step 8 against the matrix in `./output-schema.md → Validation Rules`. Here, just catch obvious gaps as you extract — so broken data doesn't carry through Step 3:
+- A user story missing any `AC-*` at all
+- A user story whose flows clearly don't cover its ACs
+- UI/design stories with no Figma node IDs and no `TBD-design` marker
 
-**PRD-first sequencing rule (required):**
-- Lock requirement baseline first: `US-* -> AC-* -> Flow`
+If any surface, raise immediately with `AskUserQuestion` rather than proceeding.
+
+**PRD-first sequencing rule:**
+- Lock requirement baseline first: `US-* → AC-* → Flow`
 - Do NOT start codebase analysis until the requirement baseline is complete
-- Codebase analysis is used to implement PRD requirements, not redefine them
+- Codebase analysis implements PRD requirements, it does not redefine them
 - If existing code conflicts with PRD intent, raise the conflict and resolve with user before creating issues
 
-## Step 3: Detect Team's Linear Setup
+**Design-source extraction (required for UI work):**
+- Extract every Figma URL/node ID from the PRD, parent ticket comments, and user request
+- For each visual surface, record the primary node, any reference-only nodes, and the implementation target it controls
+- If the PRD references a design without naming exact Figma node IDs (regardless of phrasing — screenshots only, "match Figma", "like the mockup", "same design as X", etc.), ask the user for the exact node before creating UI sub-issues
+- If written AC conflicts with the Figma node, stop and ask which source wins — do not silently average the two
+- For API/backend work, carry Figma references only when the API must support specific visible fields, ordering, states, errors, or copy from the design
 
-**Adapt to team's existing patterns with reliable, scoped calls.**
+## Step 2: Detect Team's Linear Setup
+
+Adapt to the team's existing patterns with reliable, scoped calls.
 
 Use Linear MCP in this order:
 1. `get_user` with `query: "me"` to verify auth/session
-2. `list_teams` (scoped `limit`, for example 10-20) to get candidates
+2. `list_teams` (scoped `limit`, e.g. 10-20) to get candidates
 3. Ask user to pick team if multiple teams exist
 4. `list_issue_statuses` with selected team
 5. `list_issue_labels` with selected team and scoped `limit`
@@ -66,70 +73,72 @@ Reliability rules:
 - Keep calls scoped with `team` and `limit`; page only when needed
 - On temporary MCP/API error: retry once with the same parameters
 - If a non-critical call still fails:
-  - statuses missing -> ask user for preferred default workflow states
-  - labels missing -> continue without labels and ask user for required labels
-  - projects missing -> ask user for project name/ID directly
+  - statuses missing → ask user for preferred default workflow states
+  - labels missing → continue without labels and ask user for required labels
+  - projects missing → ask user for project name/ID directly
 - Only block execution when auth/team resolution fails
 
 Ask user if unclear: "Which team/project?"
 
-## Step 4: Learn Codebase Style & Discover Reusables
+## Step 3: Learn Codebase Style & Discover Reusables
 
-After Step 2 requirement baseline is locked, analyze the codebase thoroughly:
+After the Step 1 requirement baseline is locked, analyze the codebase. Cover all of the following before moving on.
 
-### 4.1 Find Similar Features
+### 3.1 Find Similar Features
+Build search terms from PRD (US titles, AC nouns, flow surfaces):
 ```bash
-# Build search terms from PRD (US titles, AC nouns, flow surfaces)
 rg -n "<term1>|<term2>|<term3>" .
 ```
-- Note file structure patterns
-- Identify naming conventions
-- Find test patterns
+Note file structure patterns, naming conventions, and test patterns.
 
-### 4.2 Discover Reusable Code
-Use a **pattern-first, paths-second** strategy:
+### 3.2 Discover Reusable Code
+Pattern-first, paths-second:
+1. **Find by usage/symbol first (required):** search imports/usages from PRD flow surfaces and AC terms; search exported helpers/components/hooks/services and trace existing call sites; prefer symbols already used in similar flows.
+2. **Then scan common directories (optional):** utilities in `src/utils/`, `src/lib/`, `src/helpers/`, `shared/`, `packages/*`; UI in `src/components/ui/`, `src/components/common/`, feature-local folders. If paths don't exist, continue with repo-wide search.
+3. **Detect UI library by actual usage**, not assumptions — infer from imports (Radix/Base UI/shadcn/custom primitives) and note which primitives are standard in this repo.
+4. **Produce reusable inventory for planning** — list candidate utility/component, file path, current usages, why it fits; mark each `Reuse`, `Adapt`, or `Do not use`; include confidence and search gaps.
 
-1. **Find by usage/symbol first (required):**
-   - Search imports/usages from PRD flow surfaces and AC terms
-   - Search exported helpers/components/hooks/services, then trace existing call sites
-   - Prefer exact symbols already used in similar flows
+### 3.3 Create FE Architecture Blueprint (required for UI work)
+Before creating UI/component/composition sub-issues, build the blueprint following the structure in `_shared/frontend-knowledge/architecture-blueprint.md`. It defines the six required areas (reuse/create matrix, component hierarchy, data/API contract, state ownership, design-system mapping, test seams) and explains why each one matters.
 
-2. **Then scan common directories (optional heuristic):**
-   - Utilities candidates: `src/utils/`, `src/lib/`, `src/helpers/`, `shared/`, `packages/*`
-   - UI candidates: `src/components/ui/`, `src/components/common/`, feature-local component folders, `packages/*`
-   - If paths don't exist, continue with repo-wide search only
+**Seed the Reuse/Create matrix from `/figma`'s approved `mapping_table[]`** (see Step 3.7). Each row in the mapping_table — `block_name → DS resolution` (concrete component) — becomes a row in the Reuse/Create matrix with status `Reuse`. Blocks marked `propose new DS component` in the mapping_table become `Create` rows. This eliminates the failure mode where /epic re-derives components from the lo-fi or hi-fi mockup and reaches for generic names instead of the DS-resolved ones the user already signed off on.
 
-3. **Detect UI library by actual usage (not assumptions):**
-   - Infer from imports/usages (for example Radix/Base UI/shadcn/custom primitives)
-   - Note which primitives and wrappers are already standard in this repo
+If the blueprint cannot be filled from Figma's mapping_table + PRD + codebase search, ask the user before creating implementation-ready issues. A "needs user input" entry is more useful than a confident wrong guess.
 
-4. **Produce reusable inventory for planning:**
-   - List candidate utility/component, file path, current usages, and why it fits
-   - Mark each as `Reuse`, `Adapt`, or `Do not use`
-   - Include confidence and any search gaps (what might be missing)
-
-### 4.3 Discover Constants (NO MAGIC NUMBERS)
+### 3.4 Discover Constants (NO MAGIC NUMBERS)
 ```bash
-# Find constant files
 find . -name "constants*" -o -name "config*" | head -20
 ```
-- List relevant constants for this feature
-- Identify where new constants should go
-- **Rule:** Every hardcoded value must reference a constant
+List relevant constants. Identify where new constants should go. **Rule:** every hardcoded value must reference a constant.
 
-### 4.4 Check for Mock Data
-If prototype exists with mock data:
-- List all mock locations (`mocks/` folders)
-- Include "Swap mock to real API" as sub-issue
+### 3.5 Check for Mock Data
+If a prototype exists with mock data, list all mock locations (`mocks/` folders) and include "Swap mock to real API" as a sub-issue.
 
-### 4.5 Detect UI Work
-If feature includes UI components:
-- Note: "Reference `/vorbit:design:ui-patterns` skill"
-- Identify existing UI patterns to follow
+### 3.6 Detect UI Work
+If the feature includes UI components, queue these reads for the implementing agent:
+- `_shared/frontend-knowledge/ui-patterns.md`
+- If `react` is in `package.json`: also `_shared/frontend-knowledge/react-best-practices/index.md` for performance rules
 
-### 4.6 Map Coupled File Paths (Required)
+Identify existing UI patterns to follow.
 
-**Before creating any ticket, identify files that must change together.**
+### 3.7 Analyze Figma Source of Truth (required for UI work)
+For UI, layout, component, composition, or block build-up work, read `references/figma-source-of-truth.md` (in this skill folder) before creating issues. It covers:
+
+- The 10-step source-of-truth analysis procedure
+- The design evidence matrix shape (rendered inside tickets via `output-schema.md → Design Source of Truth`)
+- Conflict, structure/flow, API/backend contract, and mockup-missing rules
+- When a Figma node ID is required regardless of how the PRD references the design
+
+**Consume `/figma` v1.6.0+ structured outputs (the redesigned Figma chain produces these):**
+- **`mapping_table[]`** — the user-approved block→DS-component resolution from /figma's Phase 2 mapping gate. This is the source of truth for concrete DS names; use it to seed the FE Architecture Blueprint Reuse/Create matrix (see Step 3.3). NOT re-derived from frame inspection — that's how the v1.5.0 ignore-DS failure leaked.
+- **Flow Page frame** — one dedicated frame at the file root named `Flow` (or `Flow Page`) listing the canonical journey with `[AC-X]` tags per step. Read it via `mcp__figma__get_metadata` and use the steps directly as "Related Flow Steps" in sub-issues (instead of inferring from frame names or page hierarchy).
+- **Dev Mode `implements: AC-X` annotations** — every interactive element in the Figma file should have one. Read them via `get_metadata`'s `annotations` field (per `[[reference_figma_metadata_authoritative_fields]]`). Use them to populate sub-issue "Design Source of Truth → states / target surface / conflicts" — annotations are the ground truth for which frame implements which AC. **Pin-style canvas annotations don't work**; only Dev Mode does.
+
+Apply every step in `figma-source-of-truth.md`. If any element is unclear from Figma + PRD, ask the user before creating UI sub-issues.
+
+## Step 4: Map Coupled File Paths (Required)
+
+Before creating any ticket, identify files that must change together.
 
 A "coupled pair" is any two files where one file's output/format is consumed by the other. If one changes without the other, the system breaks.
 
@@ -138,79 +147,51 @@ Examples of coupling:
 - API response shape ↔ client parser
 - Config schema ↔ validator
 
-**For each coupled pair:**
+For each coupled pair:
 1. Identify the **shared contract** (exact string, format, field name, or value both sides depend on)
 2. Put both files in the **same sub-issue** — OR — add an explicit cross-reference in both tickets with the exact shared contract value
 
-**Rule:** Never split tightly coupled file changes across separate tickets without explicitly documenting the shared contract in both. Partial implementation of one ticket will break the system until the other is also done.
+**Rule:** Never split tightly coupled file changes across separate tickets without explicitly documenting the shared contract in both.
 
-**For large codebases:** If the dependency graph is unclear, spawn a team or use `/vorbit:review` to map it before planning tickets. Blast radius analysis — who imports what, what reads what — prevents silent coupling errors.
+**For large codebases:** If the dependency graph is unclear, spawn a team or use `/vorbit:review` to map it before planning tickets.
 
-## Step 5: Create Technical Plan (SDD)
+## Step 5: Create Technical Plan on Ticket (SDD)
 
-**RULE: If ANY requirement is unclear, use AskUserQuestion.**
+If any requirement is unclear at this point, stop and use `AskUserQuestion` — the SDD doc is downstream of clear requirements, not a way to make vague ones concrete.
 
-Create SDD (Specification-Driven Development) document:
-- Technical Overview
-- Flow Impact Matrix (flow step -> system/module/API/UI touchpoints)
-- PRD Compliance Check (confirm all planned changes satisfy PRD `US/AC/Flow` baseline)
-- Data Model Changes
-- API Changes
-- Component Breakdown
-- Testing Strategy
-- Risks & Unknowns
+Create the SDD following the structure in `./output-schema.md → SDD Document Structure`. It lists every required section (Technical Overview, Flow Impact Matrix, Design Evidence Matrix, FE Architecture Blueprint, PRD Compliance Check, Data Model Changes, API Changes, Component Breakdown, Testing Strategy, Risks & Unknowns) and where each one draws its content from.
 
 ## Step 6: User Review
 
 **CRITICAL: Get approval before creating issues.**
 
-Present plan and ask:
+Present the plan and ask:
 - "Does this approach make sense?"
 - "Any concerns?"
 - "Ready to create Linear issues?"
 
-**DO NOT proceed until user confirms.**
+**DO NOT proceed until the user confirms.**
 
 ## Step 7: Plan Epics from User Stories
 
-**1 User Story = 1 Epic**
+**Read `./output-schema.md` now.** It holds the Title Format table, the Epic (Parent) and Sub-issue (Child) description templates, the Required Sections table, the Priority Mapping, the Parallel Label Criteria, the TDD Requirement, and the E2E Test Quality Rules. Populate templates from there.
 
-For each User Story, create:
-- **Title**: Write a clear, human-readable epic title derived from the user story goal
-- **Description**: User story + related flow context + acceptance criteria + **test criteria (REQUIRED for TDD)**
-- **Sub-issues** (if complex): Apply **Parallel** label only when truly independent
+**1 User Story = 1 Epic.**
 
-**TDD rule:** Every issue MUST include `## Test Criteria` section. Tests are written FIRST before implementation.
+For each User Story, prepare:
+- **Title** — per the Title Format table in `output-schema.md`
+- **Description** — populate the Epic (Parent) description template with the user story, related flow context, acceptance criteria, and **Test Criteria** (required for TDD)
+- **Sub-issues** (if complex) — populate the Sub-issue (Child) description template for each. Apply the **Parallel** label only when the Parallel Label Criteria are met.
 
 **Epic planning inputs per story (required):**
 - User story ID (`US-*`)
 - Relevant AC IDs (`AC-*`)
-- Flow step IDs and surfaces from PRD (for example `F1-S3`, `API /orders`)
+- Flow step IDs and surfaces from PRD (e.g. `F1-S3`, `API /orders`)
 
 **Ticket derivation rule:**
-- Use flow steps to identify concrete technical work:
-  - UI/component changes
-  - API/service changes
-  - Data/state changes
-  - Error-path handling
+Use flow steps to identify concrete technical work — UI/component changes, API/service changes, data/state changes, error-path handling.
 
-### Sub-issue Creation Checklist
-
-For EACH sub-issue, include all these sections:
-
-| Section | Required | Purpose |
-|---------|----------|---------|
-| **Why This Is Needed** | ✅ | What it does + why it matters |
-| **Related Epic AC** | ✅ | Copy relevant ACs from parent epic |
-| **Related Flow Steps** | ✅ | Copy relevant flow step IDs + touched surfaces |
-| **Reuse & Patterns** | ✅ | Existing code, utilities, constants |
-| **File Changes** | ✅ | Exact file paths with action (CREATE/MODIFY) |
-| **Mock Data** | If UI work | Expected mocks and cleanup note |
-| **Acceptance Criteria** | ✅ | Sub-issue specific criteria |
-| **Test Criteria** | ✅ | TDD requirements |
-
-### Mapping Epic AC to Sub-issues
-
+**Mapping Epic AC to Sub-issues:**
 1. List all Epic Acceptance Criteria (`AC-*`)
 2. List all related flow steps for the story (`F*-S*`)
 3. For each sub-issue, identify which Epic ACs and flow steps it satisfies
@@ -218,230 +199,30 @@ For EACH sub-issue, include all these sections:
 5. **Rule:** Every Epic AC must be covered by at least one sub-issue
 6. **Rule:** Every in-scope flow step with implementation impact must be covered by at least one sub-issue
 
-## Step 7.5: Traceability Gate (Required)
+## Step 8: Traceability Gate (Required)
 
-Before creating Linear issues, validate this matrix:
-- `US-*` -> `AC-*`
-- `AC-*` -> `Flow step(s)` (`F*-S*`) or explicit non-journey reason
-- `Flow step(s)` -> sub-issue(s)
+**Read `./output-schema.md` → Validation Rules** and check every link in the matrix:
+- `US-*` → `AC-*`
+- `AC-*` → flow steps `F*-S*` (or explicit non-journey reason)
+- Flow steps → sub-issue(s)
+- UI flow steps → Figma source node(s) or explicit `TBD-design`
+- Every coupled file pair → either bundled in one sub-issue OR cross-referenced in both with the shared contract
 
-If any link is missing, stop and resolve via `AskUserQuestion` before Step 8.
+If any link is missing, stop and resolve via `AskUserQuestion` before Step 9.
 
-## Step 8: Create in Linear
+## Step 9: Create in Linear
 
-Using plan from Step 7:
-1. Create parent issue (epic) first
+Using the plan from Steps 7 + 8:
+1. Create the parent issue (epic) first
 2. Create sub-issues with `parentId` = epic ID
-3. Use team's existing labels/states
+3. Use the team's existing labels/states (collected in Step 2)
 
-## Step 9: Report
+## Step 10: Report
 
 Present the following:
-
 1. **Parent issue URL**
 2. **Sub-issue count:** X total (P1: Y, P2: Z, P3: W)
 3. **PRD ticket URL** (the source Linear ticket the epic was derived from)
-4. **Implementation Order** (dependency tree)
-
-### Implementation Order Format
-
-Implementation order based on dependencies:
-
-  Phase 1 (Parallel - no dependencies)
-  - ABC-101: [Issue title]
-  - ABC-102: [Issue title]
-  - ABC-103: [Issue title]
-
-  Phase 2 (depends on Phase 1)
-  - ABC-104: [Issue title]
-
-  Phase 3 (depends on Phase 2)
-  - ABC-105: [Issue title]
-  - ABC-106: [Issue title]
-
-**Rules for dependency tree:**
-- Phase 1 = issues with no dependencies (can run in parallel)
-- Each subsequent phase depends on previous phase completing
-- Show `blocked by:` for each issue with dependencies
-- Group parallel work within same phase
+4. **Implementation Order** — populate using the format in `output-schema.md → Implementation Order Format` (Phase 1/2/3 tree with `blocked by:` lines)
 
 Next: Start with Phase 1 issues using `/vorbit:implement:implement ABC-101`
-
----
-
-# Epic Schema & Standards
-
-## Title Format
-
-**Transform the User Story Goal into a clear, human-readable epic title.**
-
-| User Story | Epic Title |
-| :--- | :--- |
-| "As a user, I want to **login**..." | User Login |
-| "As an admin, I want to **manage users**..." | Admin User Management |
-
-## Issue Structure
-
-### Epic (Parent)
-
-**Description template:**
-```markdown
-## User Story
-US-XXX: As a [user], I want [goal]...
-
-## Acceptance Criteria
-- [ ] AC-1 Criterion 1
-- [ ] AC-2 Criterion 2
-
-## Related PRD Flow Context
-| Flow Step | Surface | Why it matters |
-|-----------|---------|----------------|
-| F1-S2 | UI: `CheckoutForm` | User submits payment details |
-| F1-S3 | API: `POST /payments` | Payment processing and order creation |
-
-## Test Criteria (TDD - write tests FIRST)
-
-### Unit Tests
-- [ ] Unit test: [component behavior]
-
-### E2E Tests
-- [ ] E2E: [happy path] — assert observable output, not internal signals
-- [ ] E2E: [each flow branch]
-- [ ] E2E: [negative case]
-
-## PRD Reference
-[Link]
-```
-
-### Sub-issue (Child)
-
-**Title**: `component-name` or `step-name` (use **Parallel** label, not prefix)
-
-**Description template:**
-```markdown
-## Why This Is Needed
-**What this does:** [Simple 1-sentence explanation]
-**Why it matters:** [Business/user impact - what breaks without this?]
-
-## Related Epic Acceptance Criteria
-> This sub-issue must satisfy these goals from the parent epic:
-- [ ] AC-1 [Epic AC that this sub-issue addresses]
-- [ ] AC-2 [Epic AC that this sub-issue addresses]
-
-## Related Flow Steps
-> Implementation context from PRD flow:
-- [ ] F1-S2 [UI/component step covered]
-- [ ] F1-S3 [API/service step covered]
-
-⚠️ **Before marking done:** Verify ALL checked items above are satisfied.
-
-## Reuse & Patterns
-> Existing code to reference - DO NOT recreate, NO magic numbers
-
-**Similar features to follow:**
-| Reference | Location | What to copy |
-|-----------|----------|--------------|
-| [Feature] | `src/path/file.tsx` | [Pattern to follow] |
-
-**Utilities to use (don't recreate):**
-| Function | Location | Use for |
-|----------|----------|---------|
-| `validateEmail()` | `src/utils/validation.ts` | Email validation |
-
-**Constants (NO magic numbers):**
-| Instead of | Use | Location |
-|------------|-----|----------|
-| `5` | `MAX_ATTEMPTS` | `src/constants/auth.ts` |
-| `"error"` | `MESSAGES.ERROR` | `src/constants/messages.ts` |
-
-⚠️ **New constants:** Add to `src/constants/[category].ts`, don't hardcode.
-
-**UI Patterns (if applicable):**
-Run `/vorbit:design:ui-patterns` before implementing UI components.
-
-## File Changes
-| Action | File Path | Purpose |
-|--------|-----------|---------|
-| CREATE | `src/components/feature/Component.tsx` | Main component |
-| MODIFY | `src/api/routes.ts` | Add endpoint |
-| CREATE | `src/tests/feature/component.test.ts` | Unit tests |
-
-## Mock Data (if UI work)
-| Mock File | Endpoint | Status |
-|-----------|----------|--------|
-| `src/pages/Feature/mocks/data.json` | `GET /api/resource` | Will create |
-| None expected | - | N/A |
-
-> **Handover note:** Run `/vorbit:implement:cleanup-mocks [feature]` before backend takes over.
-> Mocks will be registered in `.claude/mock-registry.json` for tracking.
-
-## Acceptance Criteria (Sub-issue specific)
-- [ ] AC-SUB-1 Criterion 1
-- [ ] AC-SUB-2 Criterion 2
-
-## Test Criteria (TDD - write tests FIRST)
-
-### Unit Tests
-- [ ] Unit test: [specific behavior]
-- [ ] Unit test: [edge case]
-
-### E2E Tests (required if feature involves scripts, hooks, or data parsing)
-- [ ] E2E: [happy path] — assert observable output ([file written / state changed]), not just exit code
-- [ ] E2E: [each code path / flow branch] — one test per distinct flow
-- [ ] E2E: [false positive / negative case] — inputs that must NOT trigger
-```
-
-**Priority Mapping**:
-- P1 (Urgent): Core / Blocker
-- P2 (High): Important
-- P3 (Normal): Standard
-
----
-
-## TDD Requirement
-
-**CRITICAL: All implementation follows Test-Driven Development.**
-
-Every issue (epic and sub-issue) MUST include `## Test Criteria` section:
-- Tests are written FIRST before implementation code
-- Implementation is only "done" when all tests pass
-- No issue is complete without corresponding tests
-
----
-
-## E2E Test Quality Rules
-
-Apply these rules when writing E2E test criteria for any sub-issue, regardless of stack (API, UI, script, service):
-
-**1. Fixtures must match the real data format**
-Before writing any E2E fixture (mock API response, database seed, file, event payload), sample the real system output first. Never hand-write fixtures based on assumptions — simplified formats hide bugs that only surface in production.
-> Verify the actual shape of the data from the real system, then write fixtures that match it exactly.
-
-**2. Assert observable output, not internal signals**
-E2E tests must assert what the end user or downstream system actually observes:
-- UI: rendered content, visible state, navigation
-- API: response body, status code, database state after the request
-- Script/service: files written, messages sent, external state changed
-
-Internal signals (exit codes, log lines, intermediate variables) are not the observable output. Always trace through to the final effect.
-
-**3. Every code path needs at least one E2E test**
-If the feature has multiple flows or branches (happy path, error path, empty state, retry), each needs its own E2E test. Coverage of one path does not imply correctness of another.
-
-**4. Assertions must be non-vacuous**
-Before asserting on the content of something (file, response, record), first assert it exists. An assertion on a missing resource trivially passes and gives false confidence.
-> Asserting "file does not contain X" when the file doesn't exist always passes — even if the code was supposed to create it.
-
-**5. Test the integrated system, not parts in isolation**
-E2E tests should exercise the full stack end-to-end — real HTTP calls, real DB writes, real file I/O. Mocking internals in an E2E test defeats the purpose. Reserve mocking for unit tests.
-
----
-
-## Parallel Label Criteria
-
-**Apply Parallel label ONLY when ALL are true:**
-1. Sub-issue has NO dependencies on other sub-issues
-2. Sub-issue does NOT block other sub-issues
-3. Works on separate files/components (no merge conflicts)
-
-**Default: Sequential.** When in doubt, don't add Parallel label.

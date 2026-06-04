@@ -16,21 +16,19 @@ Create reusable UI prototypes that become production code. Frontend devs swap mo
 - **Single mock import**: Each component imports mock at top of file, with `// TODO: Replace with real API`.
 - **Use TaskCreate/TaskUpdate**: Track progress through all phases.
 
+> **Locate `_shared/`**: This skill ships as a plugin, so `_shared/` files live in the plugin cache, not your project. Before reading any `_shared/...` path below, run `ls -d ~/.claude/plugins/cache/local/vorbit/*/skills/_shared 2>/dev/null | head -1` and use the output as the absolute base for every `_shared/...` reference.
+
 ## Phase 0: Detect Platform & Verify Connection
 
 ### Pencil Check
-Before starting, check if Pencil MCP is available and configured:
-1. Run `ToolSearch` for `"pencil"` — if Pencil tools exist:
-2. Check if `.claude/rules/pencil.md` exists (Glob for it)
-3. **IF Pencil available but no pencil.md:** Use `AskUserQuestion`: "Pencil is connected but not configured for this project. Run `/vorbit:design:pencil` first to sync your design tokens and components? (Recommended)" with options: "Run pencil first (Recommended)", "Skip — continue without sync"
-4. **IF user chooses to sync:** Stop and tell them to run `/vorbit:design:pencil`, then come back
-5. **IF pencil.md exists:** Read it — use detected stack, tokens, and component inventory to inform prototype decisions
+
+Follow `_shared/pencil-check.md` — shared 6-step procedure that detects Pencil connection, checks for `.claude/rules/pencil.md`, and routes the user through `/vorbit:design:pencil` sync if needed. The same procedure is used by `/vorbit:implement:webflow`; keeping it shared prevents drift.
 
 ### Platform Discovery
-Read and follow `_shared/mcp-tool-routing.md` (glob for `**/skills/_shared/mcp-tool-routing.md`). Discover connected platforms, ask user which to use, and verify connection.
+Read and follow `_shared/mcp-tool-routing.md`. Discover connected platforms, ask user which to use, and verify connection.
 
 **IF Figma URL provided:**
-1. Use `mcp__plugin_figma_figma__get_design_context` to fetch the design
+1. Use `mcp__figma__get_design_context` to fetch the design (canonical per `_shared/mcp-tool-routing.md`). `mcp__plugin_figma_figma__get_design_context` also works if the bare server isn't connected.
 2. **IF fails:** "Figma connection failed. Run `/mcp` to reconnect, then retry." → **STOP**
 3. **IF succeeds:** extract design specs
 
@@ -142,37 +140,7 @@ Read and follow `_shared/mcp-tool-routing.md` (glob for `**/skills/_shared/mcp-t
    - Show exact fields the UI needs (API contract)
    - If multiple components need SAME data, share the mock
 
-4. **MANDATORY**: Register mocks in `.claude/mock-registry.json`:
-
-   **For mock files:**
-   ```json
-   {
-     "feature": "[Feature name]",
-     "type": "file",
-     "path": "src/pages/Feature/mocks/data.json",
-     "endpoint": "GET /api/[resource]",
-     "createdBy": "prototype",
-     "createdAt": "[ISO timestamp]",
-     "components": ["src/pages/Feature/index.tsx"]
-   }
-   ```
-
-   **For mock state (useState, stores, context):**
-   ```json
-   {
-     "feature": "[Feature name]",
-     "type": "state",
-     "path": "src/pages/Feature/index.tsx",
-     "location": "useState:users (line 15)",
-     "endpoint": "GET /api/[resource]",
-     "stateType": "useState",
-     "createdBy": "prototype",
-     "createdAt": "[ISO timestamp]",
-     "components": ["src/pages/Feature/index.tsx"]
-   }
-   ```
-   - Create registry file if doesn't exist
-   - Append to existing mocks array if file exists
+4. **MANDATORY**: Register every mock — file and state — in `.claude/mock-registry.json` with `"createdBy": "prototype"`. See `_shared/mock-registry.md` for the schema, write templates, when to register, and what to capture. Create the registry if absent; otherwise append to the `mocks` array.
 
 5. **MANDATORY**: Every mock (file or state) MUST have TODO comment:
    ```tsx
@@ -230,7 +198,7 @@ Read and follow `_shared/mcp-tool-routing.md` (glob for `**/skills/_shared/mcp-t
 
 ---
 
-# Prototype Schema & Validation
+# Prototype Reference
 
 ## What is a Prototype?
 
@@ -260,38 +228,4 @@ src/
             └── data.json     # → swap to real API later
 ```
 
-## Prototype Checklist
-
-**Before coding:**
-- [ ] Analyzed codebase patterns (pages, components, styling)
-- [ ] Asked user about layout, fields, actions, empty states
-- [ ] Did NOT invent features user didn't request
-
-**Structure:**
-- [ ] Framework detected from codebase
-- [ ] Page structure matches existing patterns
-- [ ] **Components receive data via props (not hardcoded)**
-- [ ] **Mock import in ONE place per component**
-- [ ] Composes existing UI components (buttons, cards, inputs)
-
-**Mocks:**
-- [ ] Mock data under feature folder: `pages/Feature/mocks/`
-- [ ] Mock shows only fields UI actually uses
-- [ ] **Every mock import has `// TODO: Replace with real API` comment**
-- [ ] Components needing same data share the same mock file
-- [ ] **Mock registered in `.claude/mock-registry.json`**
-
-**Final:**
-- [ ] Page is navigable/renderable
-
-## Anti-Patterns (DON'T)
-
-- Starting to code before analyzing codebase
-- Guessing layout/fields/actions without asking
-- Adding search, filter, tabs, pagination "just in case"
-- Hardcoding data in components
-- Creating mock utilities or factories
-- Duplicating mock data across files
-- Skipping TODO comments on mock imports
-- Creating new UI components when existing ones work
-- Deviating from Figma design without asking
+The build checklist and anti-patterns live inline in Phases 3–5 (where they're actionable), so they're not repeated here.

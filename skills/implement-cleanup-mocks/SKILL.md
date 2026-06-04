@@ -12,13 +12,15 @@ Clean up mock data created during prototyping/implementation and generate API co
 
 When frontend development is ready for backend handover:
 1. Generate API contract doc from mock data shapes
-2. Update PRD in Notion or Anytype with API requirements
+2. Update PRD in Notion with API requirements
 3. Delete mock files and state
 4. Leave clean branch for backend
 
+> **Locate `_shared/`**: This skill ships as a plugin, so `_shared/` files live in the plugin cache, not your project. Before reading any `_shared/...` path below, run `ls -d ~/.claude/plugins/cache/local/vorbit/*/skills/_shared 2>/dev/null | head -1` and use the output as the absolute base for every `_shared/...` reference.
+
 ## Step 1: Detect Platform & Verify Connection
 
-Read and follow `_shared/mcp-tool-routing.md` (glob for `**/skills/_shared/mcp-tool-routing.md`). Discover connected platforms, ask user which to use, and verify connection.
+Read and follow `_shared/mcp-tool-routing.md`. Discover connected platforms, ask user which to use, and verify connection.
 
 ## Step 2: Load Mock Registry
 
@@ -27,21 +29,7 @@ Read and follow `_shared/mcp-tool-routing.md` (glob for `**/skills/_shared/mcp-t
 .claude/mock-registry.json
 ```
 
-**Registry format:**
-```json
-{
-  "version": "1.0",
-  "mocks": [
-    {
-      "feature": "user-profile",
-      "path": "src/pages/UserProfile/mocks/user.json",
-      "endpoint": "GET /api/users/:id",
-      "createdBy": "prototype",
-      "createdAt": "2024-01-15T10:00:00Z"
-    }
-  ]
-}
-```
+**Registry format:** see `_shared/mock-registry.md` for the version 1.1 schema.
 
 **IF registry exists:**
 - Load and display registered mocks grouped by feature
@@ -96,35 +84,24 @@ Read and follow `_shared/mcp-tool-routing.md` (glob for `**/skills/_shared/mcp-t
 **Used by:** [List components that import this mock]
 ```
 
-## Step 4: Present API Contract for Review
+## Step 4: Collect Open Questions for Backend
 
-**Show complete API contract document:**
+Before assembling the contract, ask the user via `AskUserQuestion` whether there are open questions or decisions the backend team needs to make. Examples:
+- "Should this endpoint paginate? If yes, cursor or offset?"
+- "Authorization: per-user only, or also per-org?"
+- "Soft-delete or hard-delete for the DELETE endpoint?"
 
-```markdown
-# API Contract - [Feature Name]
+If the user has nothing, drop the "Questions for Backend" section from the contract template. Don't auto-populate it with guesses — vague questions are worse than no questions. This step closes the gap where no upstream skill writes that section; without asking here, it stays empty.
 
-Generated from frontend mock data for backend implementation.
+## Step 5: Present API Contract for Review
 
-## Overview
-- Feature: [Feature name]
-- Generated: [Date]
-- Mock files cleaned: [Count]
-
-## Required Endpoints
-
-[Generated endpoint sections from Step 3]
-
-## Notes for Backend
-- Response shapes are based on frontend UI requirements
-- All fields shown are actively used by frontend components
-- Frontend expects these exact field names (case-sensitive)
-```
+**Show the complete API contract document**, populated with the endpoints generated in Step 3 — use the template in `./output-schema.md`.
 
 **Ask:** "Does this API contract look correct? Ready to save to PRD?"
 
 **Wait for confirmation before proceeding.**
 
-## Step 5: Save API Contract to PRD
+## Step 6: Save API Contract to PRD
 
 ### If Notion PRD:
 1. Use `notion-fetch` to get current PRD content
@@ -133,17 +110,11 @@ Generated from frontend mock data for backend implementation.
    - Find appropriate location (after User Stories or at end)
    - Insert the API contract markdown
 
-### If Anytype PRD:
-1. Use `API-get-object` to fetch current PRD content
-2. Use `API-update-object` to append API Contract section to the PRD body
-   - Find appropriate location (after User Stories or at end)
-   - Insert the API contract markdown
-
 ### If no platform detected:
 1. Create local file: `docs/api-contracts/[feature-name].md`
 2. Report file location
 
-## Step 6: Clean Up Mock Files and State
+## Step 7: Clean Up Mock Files and State
 
 **For each mock in cleanup scope:**
 
@@ -207,7 +178,7 @@ Generated from frontend mock data for backend implementation.
 ### 6.3 Update Registry
 - Remove cleaned entries from `.claude/mock-registry.json`
 
-## Step 7: Report
+## Step 8: Report
 
 **Present summary:**
 
@@ -215,7 +186,7 @@ Generated from frontend mock data for backend implementation.
 ## Mock Cleanup Complete
 
 ### API Contract
-- Saved to: [Notion PRD URL / Anytype object ID / local file path]
+- Saved to: [Notion PRD URL / local file path]
 - Endpoints documented: [count]
 
 ### Files Removed
@@ -236,122 +207,10 @@ Generated from frontend mock data for backend implementation.
 
 # Mock Registry Schema
 
-## Registry File Location
-```
-.claude/mock-registry.json
-```
-
-## Registry Format
-```json
-{
-  "version": "1.1",
-  "mocks": [
-    {
-      "feature": "string - feature/epic name",
-      "type": "file | state",
-      "path": "string - relative path to file",
-      "location": "string - for state: line number or function name",
-      "endpoint": "string - inferred API endpoint (e.g., GET /api/users)",
-      "stateType": "useState | zustand | redux | context (only for type: state)",
-      "createdBy": "string - 'prototype' | 'implement'",
-      "createdAt": "string - ISO 8601 timestamp",
-      "components": ["string - paths to components using this mock"]
-    }
-  ]
-}
-```
-
-## Registration Rules
-
-**When to register (in prototype/implement skills):**
-
-### Mock Files
-- Any file created in a `mocks/` folder
-- Any JSON file with mock data shape
-- Any file with `// TODO: Replace with real API` comment
-
-### Mock State
-- `useState` with hardcoded array/object data (not primitives)
-- Zustand/Redux store initial state with mock data
-- Context providers with mock values
-- Any state marked with `// TODO: Replace with real API`
-
-**What to capture:**
-- Feature name (from page/component folder)
-- Type: `file` or `state`
-- File path
-- Location (for state: line number, hook name, or store name)
-- Inferred endpoint
-- State type (for state: useState, zustand, redux, context)
-- Which skill created it
-- Timestamp
-- Components that use it
+See `_shared/mock-registry.md` for the `.claude/mock-registry.json` location, the version 1.1 format, registration rules, and what each entry captures.
 
 ---
 
 # API Contract Template
 
-```markdown
-# API Contract - [Feature Name]
-
-> Generated from frontend mock data for backend implementation.
-> Date: [Generated date]
-
-## Overview
-
-| Item | Value |
-|------|-------|
-| Feature | [Feature name] |
-| PRD | [Link to PRD] |
-| Frontend Status | Ready for backend |
-| Mock files | [Count] cleaned |
-
-## Required Endpoints
-
-### 1. [Endpoint Name]
-
-| Property | Value |
-|----------|-------|
-| Method | GET/POST/PUT/DELETE |
-| Path | `/api/resource/:id` |
-| Auth | Required/Optional |
-
-**Request Body (if POST/PUT):**
-```json
-{
-  "field": "type"
-}
-```
-
-**Response Shape:**
-```json
-{
-  "id": "string",
-  "name": "string"
-}
-```
-
-**Example Response:**
-```json
-{
-  "id": "123",
-  "name": "Example"
-}
-```
-
-**Used by components:**
-- `src/pages/Feature/index.tsx`
-- `src/pages/Feature/components/List.tsx`
-
----
-
-## Implementation Notes
-
-- All field names are case-sensitive
-- Frontend expects exact shapes documented above
-- Dates should be ISO 8601 format
-- IDs can be string or number (frontend handles both)
-
-## Questions for Backend
-[Any unclear requirements or decisions needed]
-```
+See `./output-schema.md` for the full API Contract Template handed to backend.
