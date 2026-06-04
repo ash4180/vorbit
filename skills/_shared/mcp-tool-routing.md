@@ -27,7 +27,7 @@ Skip entirely when no MCP tool will be called (pure git, pure filesystem, pure a
 
 When the skill needs to read from or save to an external platform and the user hasn't specified one:
 
-1. Run `ToolSearch` with broad terms (`"notion"`, `"linear"`, `"anytype"`, `"figma"`) to discover which platforms are connected
+1. Run `ToolSearch` with broad terms (`"notion"`, `"linear"`, `"figma"`) to discover which platforms are connected
 2. Use `AskUserQuestion` with only the connected platforms as options
 3. Use the selected platform for the rest of the session
 
@@ -83,7 +83,7 @@ Multiple MCP servers may be configured for the same platform. Vorbit skills alwa
 
 | Namespace | Source | Use for |
 |-----------|--------|---------|
-| `mcp__plugin_Notion_notion__*` (capital N in `Notion`) | Ships with vorbit plugin | **All vorbit skills use this** — `notion-find`, `notion-update-page`, `notion-fetch` |
+| `mcp__plugin_Notion_notion__*` (capital N in `Notion`) | Ships with vorbit plugin | **All vorbit skills use this** — `notion-fetch`, `notion-search`, `notion-update-page`, `notion-create-pages` |
 | `mcp__notion__*` | Locally configured Notion MCP | Sometimes available; for direct Notion operations |
 | `mcp__claude_ai_Notion__*` | Claude.ai OAuth integration | Fallback only; can't access user's personal Notion workspace |
 

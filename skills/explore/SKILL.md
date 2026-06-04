@@ -1,11 +1,11 @@
 ---
 name: explore
 version: 1.6.0
-description: Use when user says "explore idea", "quick exploration", "brainstorm feature", "investigate approach", or "research options". Lightweight UX/product exploration before a PRD. Block-mines references from Mobbin (and Dribbble/Pinterest via browser MCP) at multiple grains (section/pattern/component/page-archetype/flow), produces a **visual moodboard** with embedded screenshots (not text-only URLs), and saves to Notion or Anytype. Each mined block becomes a structured row that feeds /prd's component_mapping_intent. No lo-fi mockups — with a complete linked DS, lo-fi adds no value; references ground decisions in shipped evidence instead.
+description: Use when user says "explore idea", "quick exploration", "brainstorm feature", "investigate approach", or "research options". Lightweight UX/product exploration before a PRD. Block-mines references from Mobbin (and Dribbble/Pinterest via browser MCP) at multiple grains (section/pattern/component/page-archetype/flow), produces a **visual moodboard** with embedded screenshots (not text-only URLs), and saves to Notion. Each mined block becomes a structured row that feeds /prd's component_mapping_intent. No lo-fi mockups — with a complete linked DS, lo-fi adds no value; references ground decisions in shipped evidence instead.
 
 # Explore Skill
 
-Quick idea exploration before PRD creation. Output stays at the UX/product level — research-only, **no Figma writes, no lo-fi mockups**. The saved document is a **visual moodboard** with embedded reference screenshots so designers can scan inspiration without chasing URLs. Saves to Notion or Anytype.
+Quick idea exploration before PRD creation. Output stays at the UX/product level — research-only, **no Figma writes, no lo-fi mockups**. The saved document is a **visual moodboard** with embedded reference screenshots so designers can scan inspiration without chasing URLs. Saves to Notion.
 
 > **MCP namespace**: This skill uses `mcp__mobbin__*` for primary research and `mcp__claude-in-chrome__*` or `mcp__plugin_playwright_playwright__*` for screenshotting non-Mobbin references (Dribbble / Pinterest / arbitrary URLs). See `_shared/mcp-tool-routing.md` for the Plugin Tool Index and the announce-the-plugin rule.
 
@@ -21,7 +21,7 @@ Exploration is for **UX/product direction**, not implementation. The output docu
 
 ## Step 1: Detect Platform & Verify Connection
 
-Read and follow `_shared/mcp-tool-routing.md`. Discover connected save platforms (Notion or Anytype), ask the user which to use, and verify connection.
+Read and follow `_shared/mcp-tool-routing.md`. Discover the connected save platform (Notion) and verify connection.
 
 ## Step 2: Scoping Batch (4 questions)
 
@@ -105,7 +105,7 @@ Non-negotiable.
 
 Show the complete exploration document in chat using the canonical template in `./output-schema.md` (sibling of this SKILL.md). Populate every required section with content from Steps 2-6. Omit **Reference Patterns** and **Blocks Mined** when Step 3 didn't run.
 
-In chat, screenshots are referenced by URL or file path (chat can't render embedded images). The actual embedding happens in Step 8 when the document lands in Notion or Anytype.
+In chat, screenshots are referenced by URL or file path (chat can't render embedded images). The actual embedding happens in Step 8 when the document lands in Notion.
 
 After showing the draft, ask: "Does this look good? Ready to save?"
 
@@ -117,8 +117,7 @@ Save using the platform selected in Step 1. Follow the "Save Content" section in
 
 **Visual moodboard embedding (REQUIRED):** the saved doc must include the screenshot images inline next to each block, not just URLs. Designers think in pixels; URL-only output is designer-hostile.
 
-- **Notion** — use `mcp__notion__notion-create-pages` with image blocks. Mobbin screenshot URLs go directly as the `url` field of an image block; locally captured Dribbble/Pinterest screenshots get uploaded (or hosted) first.
-- **Anytype** — embed via the platform's image-block equivalent (check the Anytype MCP schema for the supported image-block shape).
+- **Notion** — use `mcp__plugin_Notion_notion__notion-create-pages` with image blocks. Mobbin screenshot URLs go directly as the `url` field of an image block; locally captured Dribbble/Pinterest screenshots get uploaded (or hosted) first.
 
 For each mined block, the doc renders:
 
@@ -134,7 +133,7 @@ This is the structured shape `/vorbit:design:prd` consumes to seed its Component
 ## Step 9: Report
 
 - URL or object ID (if saved)
-- Platform used (Notion/Anytype)
+- Platform used (Notion)
 - Recommended approach summary
 - **Next steps** — present both, let the user pick:
   - `/vorbit:design:prd` — capture as a Linear PRD ticket.
@@ -144,4 +143,4 @@ This is the structured shape `/vorbit:design:prd` consumes to seed its Component
 
 # Output Schema & Validation
 
-**See `./output-schema.md`** (sibling of this SKILL.md) for the required sections table, options format, validation rules, the markdown template the agent should populate in Step 7, and the Notion / Anytype mapping tables.
+**See `./output-schema.md`** (sibling of this SKILL.md) for the required sections table, options format, validation rules, the markdown template the agent should populate in Step 7, and the Notion mapping table.

@@ -114,13 +114,13 @@ Use Webflow MCP tools (see `references/mcp-tools.md` for detailed tool reference
 | `element_builder` | Create page structure (sections, containers, divs) |
 | `element_tool` | Select, modify, and configure existing elements |
 | `style_tool` | Create and apply CSS classes |
-| `component_tool` | Register components and create instances |
+| `component_builder` | Register components and create instances |
 
 **Workflow:**
 1. Use `element_builder` to create structure (max 3 levels per call)
 2. Use `style_tool` to create and configure styles
 3. Use `element_tool` to apply styles and set content
-4. Use `component_tool` to register reusable components
+4. Use `component_builder` to register reusable components
 
 **For Templates:**
 - Add Page Slot elements where content varies

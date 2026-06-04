@@ -21,10 +21,9 @@ Read and follow `_shared/mcp-tool-routing.md`. Discover connected platforms, ask
 ## Step 2: Determine Context
 
 1. **IF Linear issue ID provided**: Fetch the issue via `get_issue`. Read its description. Identify whether it's a sub-issue (has `parentId`) — if so, also fetch the parent epic for its Acceptance Criteria.
-2. **IF Notion PRD URL**: Use `notion-find` to fetch the PRD.
-3. **IF Anytype PRD URL or object ID**: Use `API-get-object`.
-4. **IF description only**: Ask the user for the acceptance criteria.
-5. **IF no args**: Ask what to validate.
+2. **IF Notion PRD URL**: Use `notion-fetch` to fetch the PRD.
+3. **IF description only**: Ask the user for the acceptance criteria.
+4. **IF no args**: Ask what to validate.
 
 **Parse the sub-issue body for these sections** (per `skills/epic/output-schema.md → Required Sections per Sub-issue`):
 
@@ -135,7 +134,7 @@ The issue's Screenshot Evidence section should already have the Figma reference 
 
 ## Step 9: i18n Compliance (if project has localization)
 
-Per `/implement` Step 4.5 detection — if the project uses i18n:
+Per `_shared/frontend-knowledge/i18n-detection.md` — if the project uses i18n:
 1. Grep the changed files for hardcoded user-facing strings (no `t()`, `useTranslations`, `$t`, etc. wrapping the text)
 2. If hardcoded strings found, mark `[i18n MISSING]` with file:line
 3. Check that translation keys exist in ALL locale files, not just the default

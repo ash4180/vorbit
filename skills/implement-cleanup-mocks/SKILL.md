@@ -12,7 +12,7 @@ Clean up mock data created during prototyping/implementation and generate API co
 
 When frontend development is ready for backend handover:
 1. Generate API contract doc from mock data shapes
-2. Update PRD in Notion or Anytype with API requirements
+2. Update PRD in Notion with API requirements
 3. Delete mock files and state
 4. Leave clean branch for backend
 
@@ -29,22 +29,7 @@ Read and follow `_shared/mcp-tool-routing.md`. Discover connected platforms, ask
 .claude/mock-registry.json
 ```
 
-**Registry format:**
-```json
-{
-  "version": "1.1",
-  "mocks": [
-    {
-      "feature": "user-profile",
-      "type": "file",
-      "path": "src/pages/UserProfile/mocks/user.json",
-      "endpoint": "GET /api/users/:id",
-      "createdBy": "prototype",
-      "createdAt": "2024-01-15T10:00:00Z"
-    }
-  ]
-}
-```
+**Registry format:** see `_shared/mock-registry.md` for the version 1.1 schema.
 
 **IF registry exists:**
 - Load and display registered mocks grouped by feature
@@ -145,12 +130,6 @@ Generated from frontend mock data for backend implementation.
    - Find appropriate location (after User Stories or at end)
    - Insert the API contract markdown
 
-### If Anytype PRD:
-1. Use `API-get-object` to fetch current PRD content
-2. Use `API-update-object` to append API Contract section to the PRD body
-   - Find appropriate location (after User Stories or at end)
-   - Insert the API contract markdown
-
 ### If no platform detected:
 1. Create local file: `docs/api-contracts/[feature-name].md`
 2. Report file location
@@ -227,7 +206,7 @@ Generated from frontend mock data for backend implementation.
 ## Mock Cleanup Complete
 
 ### API Contract
-- Saved to: [Notion PRD URL / Anytype object ID / local file path]
+- Saved to: [Notion PRD URL / local file path]
 - Endpoints documented: [count]
 
 ### Files Removed
@@ -248,56 +227,7 @@ Generated from frontend mock data for backend implementation.
 
 # Mock Registry Schema
 
-## Registry File Location
-```
-.claude/mock-registry.json
-```
-
-## Registry Format
-```json
-{
-  "version": "1.1",
-  "mocks": [
-    {
-      "feature": "string - feature/epic name",
-      "type": "file | state",
-      "path": "string - relative path to file",
-      "location": "string - for state: line number or function name",
-      "endpoint": "string - inferred API endpoint (e.g., GET /api/users)",
-      "stateType": "useState | zustand | redux | context (only for type: state)",
-      "createdBy": "string - 'prototype' | 'implement'",
-      "createdAt": "string - ISO 8601 timestamp",
-      "components": ["string - paths to components using this mock"]
-    }
-  ]
-}
-```
-
-## Registration Rules
-
-**When to register (in prototype/implement skills):**
-
-### Mock Files
-- Any file created in a `mocks/` folder
-- Any JSON file with mock data shape
-- Any file with `// TODO: Replace with real API` comment
-
-### Mock State
-- `useState` with hardcoded array/object data (not primitives)
-- Zustand/Redux store initial state with mock data
-- Context providers with mock values
-- Any state marked with `// TODO: Replace with real API`
-
-**What to capture:**
-- Feature name (from page/component folder)
-- Type: `file` or `state`
-- File path
-- Location (for state: line number, hook name, or store name)
-- Inferred endpoint
-- State type (for state: useState, zustand, redux, context)
-- Which skill created it
-- Timestamp
-- Components that use it
+See `_shared/mock-registry.md` for the `.claude/mock-registry.json` location, the version 1.1 format, registration rules, and what each entry captures.
 
 ---
 

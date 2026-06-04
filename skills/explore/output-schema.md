@@ -175,11 +175,3 @@ Governing User Flow steps: 5
 | Type | `["Exploration"]` | multi_select, if exists |
 
 Content goes in page body as markdown.
-
-## Anytype Mapping
-
-| Anytype Field | Explore Field | Notes |
-|---------------|---------------|-------|
-| name | Topic | object name |
-| body | Full exploration content | markdown format |
-| type_key | "page" | or custom type if available |

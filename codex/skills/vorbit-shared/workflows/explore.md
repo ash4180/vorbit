@@ -20,5 +20,5 @@ Use for lightweight idea exploration before PRD creation. **Stay high-level — 
    - **Recommendation** — direction + why, UX/product level. Names what to build first.
    - **Follow-up Questions for PRD** (optional) — implementation specifics that came up during exploration; deferred to `/vorbit-prd`.
 8. Get user confirmation before saving.
-9. Save to connected platform (Notion/Anytype) if user confirms.
+9. Save to connected platform (Notion) if user confirms.
 10. Report: URL/ID, recommended approach. Next: `/vorbit-prd` for a Linear ticket, OR `/vorbit-figma` for a hi-fi Figma mockup with real library components when the direction is confirmed.

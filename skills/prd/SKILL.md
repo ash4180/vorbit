@@ -232,7 +232,7 @@ Only proceed after the user confirms the draft. If they ask for changes, edit th
 - Quick summary: X user stories, Y flows, Z success criteria
 - Suggested next step:
   - `/vorbit:implement:epic <ticket-id>` to break the ticket into engineering sub-issues
-  - `/vorbit:design:journey` to draw a flow diagram in FigJam
+  - `/vorbit:design:journey` to draw a flow diagram in Excalidraw
 
 ---
 

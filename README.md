@@ -91,7 +91,7 @@ vorbit/
 - At least one supported agent CLI: Claude Code, Codex CLI, or Gemini CLI
 - **MCP integrations used by workflows:**
   - **Linear** (epic, implement, verify, prd)
-  - **Notion or Anytype** (explore)
+  - **Notion** (explore)
   - **Figma** (figma, journey, prototype, webflow)
   - **Pencil** (pencil)
   - **Webflow** (webflow)

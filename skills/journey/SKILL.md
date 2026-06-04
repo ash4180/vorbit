@@ -30,10 +30,9 @@ Read and follow `_shared/mcp-tool-routing.md`. Discover connected platforms, ask
 
 ## Step 2: Gather Context
 
-1. IF Notion PRD URL provided, use `notion-find` to fetch the PRD
-2. IF Anytype PRD URL or object ID provided, use `API-get-object` to fetch the PRD
-3. IF feature name provided, search the detected platform for existing PRD
-4. Extract user stories and acceptance criteria if available
+1. IF Notion PRD URL provided, use `notion-fetch` to fetch the PRD
+2. IF feature name provided, search the detected platform for existing PRD
+3. Extract user stories and acceptance criteria if available
 
 ## Step 3: Confirm Flow Details
 
@@ -99,10 +98,6 @@ If PRD exists from Step 2:
 ### If Notion PRD:
 1. Use `notion-fetch` to get the PRD page
 2. Add the Excalidraw URL under "User Flow" section
-
-### If Anytype PRD:
-1. Use `API-get-object` to fetch the PRD
-2. Use `API-update-object` to add the Excalidraw URL under "User Flow" section
 
 **IMPORTANT**: After `export_to_excalidraw`, show the returned URL as a markdown link so the user can view and edit.
 
