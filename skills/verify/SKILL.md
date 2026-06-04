@@ -14,6 +14,8 @@ Validate that an implementation meets the requirements in the parent Linear issu
 
 > **Required reading**: `/vorbit:implement:epic` produces sub-issues with structured sections (Required Sections per Sub-issue — see `skills/epic/output-schema.md`). Verify validates each section, not just tests. A passing test suite is the floor, not the ceiling.
 
+> **UX patterns reference**: When validating state coverage, consult `_shared/ux-knowledge/edge-case-catalog.md` (concrete edge cases) and `ux-philosophy.md` (state-design principles). Read directly.
+
 ## Step 1: Detect Platform & Verify Connection
 
 Read and follow `_shared/mcp-tool-routing.md`. Discover connected platforms, ask user which to use, verify connection. If no PRD is needed, skip to Step 2.
@@ -108,11 +110,7 @@ If the sub-issue has a "Design Source of Truth" section with a Figma node ID:
 2. **Capture browser/app screenshot** of the implemented surface:
    - Start the dev server if needed
    - Use a screenshot tool (browser MCP, Playwright, or manual)
-3. **Compare side-by-side**:
-   - Layout match: hierarchy, spacing, alignment
-   - Token bindings: colors, typography, radii match the design tokens (not hardcoded)
-   - States: empty/loading/error rendered as designed
-   - Copy: text matches the design exactly (or follow the conflict rule from the issue)
+3. **Compare side-by-side** per `_shared/figma-handoff.md` — layout, token bindings, states (empty/loading/error rendered as designed), and copy; follow the conflict rule when sources disagree.
 4. **Flag mismatches**:
    - `[FIGMA MATCH]` — implemented surface matches the source node
    - `[FIGMA DRIFT — INTENTIONAL]` — differs from Figma but the issue has a noted exception

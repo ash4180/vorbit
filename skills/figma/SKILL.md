@@ -267,10 +267,6 @@ Final report must include:
 ## Anti-Patterns
 
 - **Treating "tooling works" as permission to skip the design process** — `use_figma` succeeding is the floor. Without inventory, mapping, Mobbin, and confirmations, the output is shapes-with-keys, not design.
-- **Skipping the library-driven enumeration pass in Phase 1 step 6** — per-need searches alone confirm what the agent already imagined and miss compositions/blocks it didn't think to search for. This is the single biggest source of the "agent ignores the linked DS" failure. The inventory pass is mandatory.
-- **Mocking states as separate Figma frames** — empty/loading/error/permission-denied are PRD concerns (text in `state_list[]`), not visual concerns. Multi-state mockups duplicate spec and drift; the visual contract is the *happy path*, and code realizes states per AC.
-- **Skipping the Flow Page** — downstream `/vorbit:implement:epic` reads it for the canonical journey. Without it, /epic falls back to inferring flow from frame names, which is fragile.
-- **Using pin-style canvas annotations instead of Dev Mode annotations** — only `data-development-annotations` (`implements: AC-X`) have been validated as agent-readable downstream. Pin annotations look helpful but are invisible to `/vorbit:implement:implement` and `/vorbit:implement:verify`.
 - Creating screens before confirming the page inventory.
 - **Using `generate_figma_design` as the main writer** — it's reserved for web-app screenshot reference. `use_figma` is the default writer.
 - **Calling `use_figma` without loading `figma-use` first** — covers Plugin API gotchas that cause silent JavaScript failures.

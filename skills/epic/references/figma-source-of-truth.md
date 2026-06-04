@@ -10,7 +10,7 @@ This file covers:
 
 ## When a Figma node ID is required
 
-The PRD must name an exact Figma node ID for any UI work. The phrasing the user chose doesn't matter — "match Figma", "like the mockup", "same as X's design", a screenshot without a URL, a description with no link, etc., all need to resolve to a concrete node before sub-issues can be created. If the PRD doesn't supply one, stop and ask.
+Per `_shared/figma-handoff.md`: any UI work must resolve to an exact Figma node ID before sub-issues can be created. If the PRD doesn't supply one, stop and ask.
 
 ## Consuming `/figma` v1.6.0+ structured outputs
 
@@ -58,8 +58,6 @@ When this matrix appears inside a Linear ticket body, render it per `../output-s
 
 **Mockup missing rule.** If a UI sub-issue cannot name its source node, do not create it as implementation-ready. Ask for the mockup or mark `TBD-design` and keep the sub-issue blocked.
 
-**Conflict rule.** If ticket text, implementation notes, screenshots, and Figma disagree, stop and ask which source wins before coding. Do not silently average the sources.
-
-**Structure/flow rule.** Before coding, summarize the parent frame, selected node boundary, child blocks in render order, entry action, visible result, and exit state. If any part is unclear, ask before implementation.
+**Conflict rule and structure/flow rule.** Per `_shared/figma-handoff.md` — stop and ask if the sources disagree or if the structure/flow can't be explained from Figma + PRD.
 
 **API/backend contract rule.** Backend sub-issues that derive a contract from a design must include only the fields, states, ordering, or copy the UI needs. Do not put pixel or layout requirements in backend tickets — those belong in the matching UI sub-issue.

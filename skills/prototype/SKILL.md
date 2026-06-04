@@ -198,7 +198,7 @@ Read and follow `_shared/mcp-tool-routing.md`. Discover connected platforms, ask
 
 ---
 
-# Prototype Schema & Validation
+# Prototype Reference
 
 ## What is a Prototype?
 
@@ -228,38 +228,4 @@ src/
             └── data.json     # → swap to real API later
 ```
 
-## Prototype Checklist
-
-**Before coding:**
-- [ ] Analyzed codebase patterns (pages, components, styling)
-- [ ] Asked user about layout, fields, actions, empty states
-- [ ] Did NOT invent features user didn't request
-
-**Structure:**
-- [ ] Framework detected from codebase
-- [ ] Page structure matches existing patterns
-- [ ] **Components receive data via props (not hardcoded)**
-- [ ] **Mock import in ONE place per component**
-- [ ] Composes existing UI components (buttons, cards, inputs)
-
-**Mocks:**
-- [ ] Mock data under feature folder: `pages/Feature/mocks/`
-- [ ] Mock shows only fields UI actually uses
-- [ ] **Every mock import has `// TODO: Replace with real API` comment**
-- [ ] Components needing same data share the same mock file
-- [ ] **Mock registered in `.claude/mock-registry.json`**
-
-**Final:**
-- [ ] Page is navigable/renderable
-
-## Anti-Patterns (DON'T)
-
-- Starting to code before analyzing codebase
-- Guessing layout/fields/actions without asking
-- Adding search, filter, tabs, pagination "just in case"
-- Hardcoding data in components
-- Creating mock utilities or factories
-- Duplicating mock data across files
-- Skipping TODO comments on mock imports
-- Creating new UI components when existing ones work
-- Deviating from Figma design without asking
+The build checklist and anti-patterns live inline in Phases 3–5 (where they're actionable), so they're not repeated here.

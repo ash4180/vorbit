@@ -189,20 +189,7 @@ For each block surfaced by `/explore`'s `blocks_mined[]`, declare the *kind of c
 * [Another measurable target]
 ```
 
-### Flow rules
-
-- Every PRD needs at least one happy flow
-- Each step gets an `F*-S*` ID and ends with `[AC-X]` tags listing every AC the step touches. This is what `/figma`'s Flow Page mirrors and what `/epic` puts in sub-issue "Related Flow Steps".
-- Each step names what the user does, the surface they touch, and the visible result
-- Add a separate flow for any materially different path (second happy path, alternate, error)
-- Every AC should appear in at least one step's `[AC-X]` tag — orphan ACs are a coverage gap
-- Keep flows ticket-sized: typically 3-8 steps per flow
-
-### TBD rules
-
-- `TBD` is fine in Constraints, Success Criteria numbers, and flow details that depend on later design decisions
-- `TBD` is **not** allowed in Problem, Users, or User Stories — those must be concrete before the ticket is created
-- Every `TBD` must have a matching `AskUserQuestion` attempt
+Flow rules, TBD rules, and per-section validation live in the **Schema & Validation** section below — read it before drafting.
 
 ## Step 4: Confirm Draft
 

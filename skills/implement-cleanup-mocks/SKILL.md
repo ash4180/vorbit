@@ -95,27 +95,7 @@ If the user has nothing, drop the "Questions for Backend" section from the contr
 
 ## Step 5: Present API Contract for Review
 
-**Show complete API contract document:**
-
-```markdown
-# API Contract - [Feature Name]
-
-Generated from frontend mock data for backend implementation.
-
-## Overview
-- Feature: [Feature name]
-- Generated: [Date]
-- Mock files cleaned: [Count]
-
-## Required Endpoints
-
-[Generated endpoint sections from Step 3]
-
-## Notes for Backend
-- Response shapes are based on frontend UI requirements
-- All fields shown are actively used by frontend components
-- Frontend expects these exact field names (case-sensitive)
-```
+**Show the complete API contract document**, populated with the endpoints generated in Step 3 — use the template in `./output-schema.md`.
 
 **Ask:** "Does this API contract look correct? Ready to save to PRD?"
 
@@ -233,67 +213,4 @@ See `_shared/mock-registry.md` for the `.claude/mock-registry.json` location, th
 
 # API Contract Template
 
-```markdown
-# API Contract - [Feature Name]
-
-> Generated from frontend mock data for backend implementation.
-> Date: [Generated date]
-
-## Overview
-
-| Item | Value |
-|------|-------|
-| Feature | [Feature name] |
-| PRD | [Link to PRD] |
-| Frontend Status | Ready for backend |
-| Mock files | [Count] cleaned |
-
-## Required Endpoints
-
-### 1. [Endpoint Name]
-
-| Property | Value |
-|----------|-------|
-| Method | GET/POST/PUT/DELETE |
-| Path | `/api/resource/:id` |
-| Auth | Required/Optional |
-
-**Request Body (if POST/PUT):**
-```json
-{
-  "field": "type"
-}
-```
-
-**Response Shape:**
-```json
-{
-  "id": "string",
-  "name": "string"
-}
-```
-
-**Example Response:**
-```json
-{
-  "id": "123",
-  "name": "Example"
-}
-```
-
-**Used by components:**
-- `src/pages/Feature/index.tsx`
-- `src/pages/Feature/components/List.tsx`
-
----
-
-## Implementation Notes
-
-- All field names are case-sensitive
-- Frontend expects exact shapes documented above
-- Dates should be ISO 8601 format
-- IDs can be string or number (frontend handles both)
-
-## Questions for Backend
-[Any unclear requirements or decisions needed]
-```
+See `./output-schema.md` for the full API Contract Template handed to backend.

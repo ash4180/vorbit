@@ -14,6 +14,8 @@ A disciplined, Test-Driven Development (TDD) workflow for implementing features 
 
 > **Locate `_shared/`**: This skill ships as a plugin, so `_shared/` files live in the plugin cache, not your project. Before reading any `_shared/...` path below, run `ls -d ~/.claude/plugins/cache/local/vorbit/*/skills/_shared 2>/dev/null | head -1` and use the output as the absolute base for every `_shared/...` reference.
 
+> **UX patterns reference**: When implementing UI states (loading / empty / error / permission-denied), consult `_shared/ux-knowledge/edge-case-catalog.md` for the concrete cases to cover. Read directly — no need to invoke `/vorbit:design:ux`.
+
 ## Handle Loop Mode
 
 **If `--loop` or `--cancel` in arguments:**
@@ -78,19 +80,10 @@ If issue involves UI components:
 - Follow: Tailwind, motion/react, accessibility primitives
 
 ### Check "Design Source of Truth" and "Screenshot Evidence"
-If the issue includes UI/design-driven work:
+If the issue includes UI/design-driven work, apply `_shared/figma-handoff.md` (node-ID-required, structure/flow summary, conflict rule, screenshot capture-and-compare):
 1. Fetch the primary Figma node with `get_design_context`; use `get_metadata` only for hierarchy, then return to `get_design_context`.
-2. Capture the Figma reference screenshot with `get_screenshot` or the screenshot returned by `get_design_context`.
-3. Build a short structure/flow summary before coding:
-   - Parent frame/page and nearest meaningful ancestor
-   - Selected node boundary and child blocks in render order
-   - What is inside vs outside implementation scope
-   - Entry action, visible result, and exit state
-4. If the Figma structure or interaction flow is unclear, stop and ask before implementing.
-5. Start the local app if needed and capture a browser/app screenshot of the implemented surface after changes.
-6. Compare screenshots against the issue's Design Source of Truth. Fix visible mismatches unless the issue explicitly marks them out of scope.
-7. If the issue says "match Figma" but does not name an exact node, stop and ask for the node before implementing.
-8. If ticket text and Figma disagree, stop and ask which source wins before coding.
+2. Build the structure/flow summary and confirm a concrete node ID. If "match Figma" names no node, the structure/flow is unclear, or ticket text and Figma disagree — stop and ask before implementing.
+3. After changes, capture a browser/app screenshot and compare it against the Figma reference per `figma-handoff.md`. Fix unintended mismatches unless the issue marks them out of scope.
 
 ## Step 4: Learn Codebase Style
 
