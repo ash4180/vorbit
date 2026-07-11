@@ -154,7 +154,7 @@ Read and follow `_shared/mcp-tool-routing.md` (glob for `**/skills/_shared/mcp-t
 
    - Use the active runtime contract/resolver for the current project and read its `storage_root` and `project_slug`; do not reconstruct the slug.
    - Registry path: `<storage_root>/projects/<project_slug>/mock-registry.json`.
-   - If this legacy surface has no resolver, use the project-local fallback `.vorbit/mock-registry.json` and report the fallback explicitly.
+   - If the current runtime has no resolver, use the project-local fallback `.vorbit/mock-registry.json` and report the fallback explicitly (this registry fallback is intentional and does not override the rule-loading contract's missing-resolver stop).
    - Never hardcode `.claude/`, `.codex/`, or `.gemini/` storage.
 
    Register mocks in the resolved registry:

@@ -9,7 +9,7 @@ Create a Linear ticket that captures a product requirement. No fluff, just what 
 
 Read and follow `../_shared/execution-contract.md` before starting.
 
-Before any Linear call, read `_shared/mcp-tool-routing.md`, discover the connected Linear capability, and inspect its current operation/parameter schemas. Verb names below describe intent; never substitute an operation name remembered from another runtime.
+Before any Linear call, read `_shared/mcp-tool-routing.md`. Verb names below describe intent; never substitute an operation name remembered from another runtime.
 
 ## Step 1: Gather Context (Draft First)
 
@@ -32,7 +32,7 @@ Resolve context in this order:
 
 **IF conversation already covers the feature:** use that context as input.
 
-**IF starting fresh:** proceed to Step 2.
+**IF starting fresh:** proceed to Step 2. Do not require an existing Linear ticket to draft; Linear becomes canonical only after the approved creation step.
 
 ## Step 2: Clarify Requirements
 

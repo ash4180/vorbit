@@ -64,10 +64,7 @@ If output type unclear, ask:
 ### Step 2: Get Design Context
 
 **Mode A - With Figma:**
-Use Figma MCP to get design context:
-```
-mcp__plugin_figma_figma__get_design_context
-```
+Use the connected Figma MCP's `get_design_context` tool (resolve the connector per `_shared/mcp-tool-routing.md`).
 Extract: layout structure, styling, component hierarchy, design tokens.
 
 **Mode B - Direct Build:**

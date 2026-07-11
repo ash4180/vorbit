@@ -4,7 +4,7 @@ TDD-first product development workflows for Claude Code, Codex CLI, and Gemini C
 
 Vorbit packages four layers:
 - **Commands** (`commands/`) — slash command entry points, thin dispatchers
-- **Skills** (`skills/`, `codex/skills/`, `gemini/skills/`) — workflow logic per agent
+- **Skills** (`skills/`, `codex/skills/`, `gemini/skills/`) — `skills/` is the single authored source; the Codex/Gemini workflow files are generated from it by `python3 -m vorbit_core.project_skills --write` (a deterministic per-agent substitution of tool idioms, storage paths, and command syntax). Only `implement-loop` stays hand-written per agent — its Claude implementation depends on a Stop hook other runtimes don't have. Edit canonical, regenerate, never edit generated files.
 - **Hooks** — formatting, validation, and push warnings
 - **Core** (`vorbit_core/`) — shared configuration, rule resolution, and safe agent-asset sync
 

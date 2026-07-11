@@ -1,63 +1,142 @@
-# Vorbit Figma Workflow
+<!-- GENERATED from skills/figma/SKILL.md — edit the canonical file, then run: python3 -m vorbit_core.project_skills --write -->
 
-Use for Figma design-system sync and front-end-ready Figma mockups.
+# Figma Skill
 
-## Required Setup
+Create Figma design-system assets and front-end-ready mockups that engineers can implement without guessing.
 
-1. Load Vorbit durable rules before doing anything else.
-2. Verify Figma MCP connection before any Figma read or write. If unavailable, stop and ask user to reconnect.
-3. Work incrementally. Never batch unrelated Figma mutations into one step.
-4. Validate major Figma changes with metadata and screenshot checks when tools support them.
+Read and follow `../references/execution-contract.md` before starting.
 
-## Shared Mindset
+## Core Principles
 
-1. Think like the engineer who must implement the mockup.
-2. Break complex flows into pages, routes, components, states, and data boundaries before drawing screens.
-3. Search the codebase before inventing components or patterns.
-4. Use the linked Figma design system first: components, variables, text styles, and effect styles.
-5. Stop and ask if no linked design system exists or if Figma and code disagree.
-6. Use Figma-specific APIs, linked-library behavior, validation loops, and screenshots.
+- **Think like the implementer**: Break flows into pages, routes, components, states, and data boundaries before drawing.
+- **Search code first**: Read routes, pages, components, token files, and imports before inventing layout or components.
+- **Confirm every phase**: Discovery, page inventory, design-system mapping, mockup plan, and each generated page/screen.
+- **Use Figma app logic**: Use Figma-specific MCP tools, linked-library behavior, metadata checks, and screenshot validation.
 
-## Discovery Phase
+## Phase 0: Verify Figma Connection
 
-1. Gather source context: PRD, journey, existing Figma file, screenshots, codebase routes/pages, and relevant components.
-2. If journey context is needed, read `journey.md` and use it only to understand flow and page needs.
-3. Inspect the codebase for framework, routing, styling, component library, import aliases, and reusable UI components.
-4. Inspect the target Figma file for pages, existing frames, local variables, components, text styles, and effect styles.
-5. Search linked Figma libraries for relevant components, variables, and styles before creating anything custom.
-6. Present discovery findings and get user confirmation before planning screens or syncing a library.
+Preflight required connectors: confirm each needed connector is configured in Gemini CLI and inspect its current operation/parameter schemas; never guess tool names.
 
-## Design-System Sync Path
+1. Check your configured connectors for `"figma"` to check if Figma MCP tools are available.
+2. **IF no Figma tools found:** "No Figma connection found. Configure the connector in Gemini CLI, then retry." → **STOP**
+3. Verify connection with a lightweight Figma read operation such as file/page metadata.
+4. **IF verification fails:** "Figma connection expired. Reconnect the connector in Gemini CLI, then retry." → **STOP**
 
-Use this path when the user asks to create, sync, or reconcile a Figma design system from code.
+## Phase 1: Discovery
 
-1. Compare code tokens/components with existing Figma variables, styles, and components.
-2. Present a design-system mapping: code source, Figma target, reusable linked asset, gap, and proposed action.
-3. Get user confirmation before writing tokens, styles, pages, or components.
-4. Build foundations before components: variables, text styles, effect styles, page structure, then reusable components.
-5. Confirm with the user after foundations, file structure, each component, and final QA.
+**Goal**: Understand the product flow, implementation surface, and existing design system before creating anything.
 
-## Mockup Creation Path
+1. Create todo list with all phases.
+2. Gather source context:
+   - PRD or requirements
+   - Journey / user flow
+   - Existing Figma file URL or target file
+   - Screenshots or reference frames
+   - Codebase routes/pages/components
+3. If journey context exists, use it only to understand flow and page needs.
+4. Inspect the codebase:
+   - Framework and routing
+   - Styling/token source
+   - Existing UI components and import aliases
+   - Data-loading boundaries and page states
+5. Inspect Figma:
+   - Pages and existing frames
+   - Local and linked variables
+   - Components and component sets
+   - Text styles and effect styles
+   - **Empty-file check**: if the target file or frame is blank (screenshot returns nothing, `get_design_context` reports "nothing selected"), the file has not been seeded yet. Do NOT keep fetching — switch to **code→design push mode** and use `generate_figma_design` (or equivalent write tool) to push the current UI/intent into Figma first, then continue from a populated frame.
+6. Search linked Figma libraries for relevant components, variables, and styles before creating anything custom.
+7. Present discovery findings and **use plain-text chat questions** to confirm before planning.
+
+## Phase 2: Page Inventory
+
+**Goal**: Convert complex flow into implementation-sized screens.
+
+Before drawing, produce a page inventory:
+
+| Field | Meaning |
+|-------|---------|
+| Page name | Human-readable screen name |
+| Route | Expected frontend route or screen ID |
+| User goal | Why this page exists |
+| Entry point | How user gets here |
+| Exit point | Where user goes next |
+| Primary actions | Buttons/actions that must be implemented |
+| Data needed | API/model data shown on the page |
+| States | Default, loading, empty, error, disabled, permission denied, success |
+
+Use shadcn-friendly implementation boundaries where applicable:
+Button, Input, Form, Card, Dialog, Sheet, Tabs, Table, Dropdown, Badge, Toast, Accordion, Checkbox, RadioGroup, Select, Switch, Tooltip.
+
+Present the inventory and **use plain-text chat questions** to confirm before mapping design-system assets.
+
+## Phase 3: Design-System Mapping
+
+**Goal**: Decide exactly what linked Figma assets will be used.
+
+For each page/component, map:
+
+| Code / Need | Figma asset | Source | Action |
+|-------------|-------------|--------|--------|
+| Button primary | Button / Primary | Linked library | Reuse |
+| Form field | Input | Local component | Reuse |
+| Missing empty state | None | Gap | Ask before creating |
+
+Rules:
+1. **Always check linked Figma libraries first** — components, variables, text styles, effect styles. This is a hard gate, not a preference.
+2. Reuse linked-library assets when they match the need; reuse local existing assets when no linked match exists.
+3. **If a needed asset is missing from the linked library, STOP and ASK the user**: add it to the library, point to a different linked library, or explicitly approve a custom primitive. Never invent primitives silently.
+4. Stop and ask if no linked design system exists at all — do not fall back to "create custom primitives" without explicit user approval.
+5. Stop and ask if code and Figma disagree on tokens, components, or naming.
+
+Present the mapping and **use plain-text chat questions** to confirm before writing anything.
+
+## Phase 4A: Design-System Sync Path
+
+Use this path when the user asks to create, sync, or reconcile Figma design-system assets from code.
+
+1. Compare code tokens/components with Figma variables, styles, and components.
+2. Lock exact v1 scope: variables, text styles, effect styles, components, and variants.
+3. Get user confirmation before writing.
+4. Build foundations before components:
+   - Variables
+   - Text styles
+   - Effect styles
+   - Page/file structure
+   - Reusable components
+5. Validate after each major write using Figma metadata and screenshot checks when available.
+6. Confirm with the user after foundations, file structure, each component, and final QA.
+
+## Phase 4B: Mockup Creation Path
 
 Use this path when the user asks for Figma mockups, screens, pages, or journey-informed designs.
 
-1. Build a page inventory before drawing: page name, route, user goal, entry point, exit point, primary actions, data needed, and required states.
-2. Map each page to front-end component boundaries before creating Figma frames.
-3. Use shadcn-friendly boundaries where applicable: Button, Input, Form, Card, Dialog, Sheet, Tabs, Table, Dropdown, Badge, Toast, Accordion, Checkbox, RadioGroup, Select, Switch, Tooltip.
-4. Include the states engineers need to implement: default, loading, empty, error, disabled, permission denied, and success where the flow requires them.
-5. Present the page inventory and get user confirmation.
-6. Present the design-system mapping for each page and get user confirmation.
-7. Present the mockup plan with frame names, sections, components, and states. Get user confirmation before creating screens.
-8. Create screens with linked design-system component instances and variables whenever available. Do not hardcode styling when a token or component exists.
-9. Name frames by page, route, section, and state so frontend implementation is obvious.
-10. Validate each generated page with Figma metadata and screenshot checks when available.
-11. Get user confirmation after each generated page or screen before continuing.
+1. Present the mockup plan:
+   - Frame names
+   - Routes/screens
+   - Sections
+   - Reused design-system assets
+   - Required states
+2. **Use plain-text chat questions** to confirm before creating screens.
+3. Create screens with linked component instances and variables whenever available; do not hardcode styling when a token or component exists.
+4. Name frames by page, route, section, and state.
+5. Use auto-layout and stable frame hierarchy so frontend implementation is obvious.
+6. Validate each generated page with metadata and screenshot checks when available.
+7. **Use plain-text chat questions** after each generated page/screen before continuing.
 
 ## Handoff Rules
 
-1. Make mockups easy to implement, not visually clever.
-2. Prefer existing product layout and component patterns over new abstractions.
-3. Use auto-layout, consistent spacing tokens, and stable frame names.
-4. Keep custom primitives to a minimum. If a linked component exists, use it.
-5. Call out any missing design-system components as explicit implementation gaps.
-6. Final report must include Figma page/frame links or IDs, page inventory, reused design-system assets, missing assets, confirmed states, and next implementation steps.
+Final report must include:
+
+- Figma page/frame links or IDs
+- Page inventory
+- Reused design-system assets
+- Missing design-system assets
+- Confirmed states
+- Frontend component boundaries
+- Next implementation steps
+
+## Anti-Patterns
+
+- Inventing pages not supported by PRD, journey, or code
+- Depending on another design tool's rules or node IDs

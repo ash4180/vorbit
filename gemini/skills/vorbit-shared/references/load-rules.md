@@ -12,7 +12,7 @@ Apply this contract once before every Vorbit workflow.
    "$GEMINI_HOME/bin/vorbit-resolve-rules" --agent gemini --project-root "$PROJECT_ROOT"
    ```
 
-4. Read the returned JSON. Traverse its `rules` array in ascending `order`, load only each listed readable `path`, and retain that item's `authority`, `specificity`, and `tier` metadata while reasoning.
+4. Read the returned JSON. Traverse its `rules` array in ascending `order`, load only each listed readable `path`, and retain that item's `authority`, `specificity`, and `tier` metadata while reasoning. The same JSON carries top-level `storage_root` and `project_slug` — use them whenever a workflow needs a state or registry path (e.g. `<storage_root>/projects/<project_slug>/mock-registry.json`); `<rules-root>` in workflow text means `<storage_root>/rules`.
 5. If the resolver is missing, stop with `blocked_missing_runtime` and tell the user to rerun `scripts/sync-gemini-skills.sh`. Do not reconstruct the hashed project slug or storage config by guesswork.
 
 The resolver is authoritative for `VORBIT_HOME`, global `[storage].root`, project slug overrides, path-hashed default slugs, include flags, and deterministic filename ordering.

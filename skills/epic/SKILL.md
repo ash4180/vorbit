@@ -9,7 +9,7 @@ Transform User Stories from one PRD spec ticket into deterministic implementatio
 
 Read and follow `../_shared/execution-contract.md` before starting.
 
-> **Linear MCP namespace**: All Linear calls in this skill use `mcp__plugin_linear_linear__*` (the namespace shipped with the vorbit plugin). Bare verb names below (`get_user`, `list_teams`, `list_issues`, etc.) refer to the corresponding `mcp__plugin_linear_linear__<verb>` tool.
+> **Linear connector**: Resolve the connected Linear capability per `_shared/mcp-tool-routing.md` before the first call. Bare verb names below (`get_user`, `list_teams`, `list_issues`, etc.) refer to that connector's operations — inspect its current schema; never substitute a verb remembered from another runtime.
 
 **Key Features:**
 - Sub-issues include plain-language "Why" section

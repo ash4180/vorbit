@@ -181,7 +181,7 @@ For branches without design files, the skill still handles PR body generation an
 **Goal**: Generate a complete PR body from Linear context and commit history.
 
 1. **Fetch Linear issue** (if issue-id was found):
-   - Call `mcp__plugin_linear_linear__get_issue` with the issue identifier
+   - Call the Linear connector's `get_issue` with the issue identifier (resolve the connector per `_shared/mcp-tool-routing.md`; inspect its current schema)
    - Extract: title, description, acceptance criteria, labels, parent issue, **url**
    - The issue response includes a `url` field — use it for the "Related" section links
    - If issue has a parent → fetch the parent too for its url and title
@@ -258,7 +258,7 @@ For branches without design files, the skill still handles PR body generation an
    ```
 
 3. **Post design recovery reference to Linear** only if design files were stripped and Linear integration was selected, resolved to an issue, and approved. Otherwise keep the recovery block in the PR and report that the Linear comment was skipped.
-   - Call `mcp__plugin_linear_linear__save_comment` on the issue:
+   - Call the Linear connector's comment-creation operation (`save_comment` in the vorbit Claude plugin) on the issue:
      ```
      📐 Design files archived
 
@@ -273,7 +273,7 @@ For branches without design files, the skill still handles PR body generation an
    This comment records how to recover the files while the referenced commit remains retained. It is not a backup; if permanent retention is required, archive the design in the team's approved design storage before stripping.
 
 4. **Update Linear issue status** only when Linear integration was selected, resolved, and approved:
-   - Call `mcp__plugin_linear_linear__save_issue` with `state: "In Review"`
+   - Call the Linear connector's issue-update operation (`save_issue` in the vorbit Claude plugin) with `state: "In Review"`
 
 5. **Report:**
    ```

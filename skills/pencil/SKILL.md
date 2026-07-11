@@ -19,11 +19,11 @@ Read and follow `../_shared/execution-contract.md` before starting.
 
 ## Phase 0: Verify Pencil Connection
 
-Read and follow `_shared/mcp-tool-routing.md` (glob for `**/skills/_shared/mcp-tool-routing.md`).
+Read and follow `_shared/mcp-tool-routing.md` (glob for `**/skills/_shared/mcp-tool-routing.md`). Bare Pencil verbs in this skill (`get_editor_state`, `get_variables`, `batch_get`, `batch_design`, ...) refer to the connected Pencil MCP server's tools — resolve the current namespace through that discovery.
 
 1. Run `ToolSearch` for `"pencil"` to check if Pencil MCP is available
 2. **IF no Pencil tools found:** "No Pencil connection found. Run `/mcp` to connect, then retry." → **STOP**
-3. **IF found:** Call `mcp__pencil__get_editor_state` to verify connection
+3. **IF found:** Call `get_editor_state` to verify connection
 4. **IF fails:** "Pencil connection expired. Run `/mcp` to reconnect, then retry." → **STOP**
 5. **IF succeeds:** Note whether a `.pen` file is currently open (needed for Phases 4-5)
 
@@ -76,7 +76,7 @@ Read the detection tables at `references/detection.md` relative to this skill.
 
    **Step 2 — Select design system from Pencil** `[Pencil]`:
    Since there's no codebase to extract tokens from, use Pencil's built-in style guides as the token source:
-   1. Call `mcp__pencil__get_style_guide_tags` to get available style tags
+   1. Call `get_style_guide_tags` to get available style tags
    2. **Use AskUserQuestion** `[User]` — present the tags and ask:
       ```
       What visual style do you want? Pick a few keywords or describe:
@@ -85,7 +85,7 @@ Read the detection tables at `references/detection.md` relative to this skill.
       Available directions: [show relevant subset of tags from get_style_guide_tags]
       Or say "show me options" and I'll preview a few.
       ```
-   3. Call `mcp__pencil__get_style_guide(tags)` with the user's chosen tags + platform tag (e.g., `mobile`, `webapp`)
+   3. Call `get_style_guide(tags)` with the user's chosen tags + platform tag (e.g., `mobile`, `webapp`)
       - The response includes a **named design system** with complete tokens: colors, typography, spacing, radii, icons
    4. **Use AskUserQuestion** `[User]` — show the style guide preview:
       ```
@@ -98,7 +98,7 @@ Read the detection tables at `references/detection.md` relative to this skill.
       Use this design system? Or want to see another? (say different tags to try again)
       ```
    5. If user wants another → repeat step 3-4 with new tags
-   6. If user wants a specific named style → call `mcp__pencil__get_style_guide(name="[name]")`
+   6. If user wants a specific named style → call `get_style_guide(name="[name]")`
    7. On approval → store the style guide tokens for Phase 4
 
 6. Present findings and **use AskUserQuestion** to confirm:
@@ -238,15 +238,15 @@ Token source depends on the path:
 1. **IF no `.pen` file is open** (from Phase 0):
    - Ask: "No .pen file is open. Skip Pencil sync and just write project rules?"
    - **IF skip:** Jump to Phase 6
-   - **IF user opens a file:** Call `mcp__pencil__get_editor_state` again `[Pencil]`
+   - **IF user opens a file:** Call `get_editor_state` again `[Pencil]`
    - Never create a `.pen` file yourself — out of scope
-2. Call `mcp__pencil__get_variables` `[Pencil]` to read existing canvas variables
+2. Call `get_variables` `[Pencil]` to read existing canvas variables
 3. Diff tokens against existing:
    - **New:** Add
    - **Changed:** Update
    - **Unchanged:** Skip
    - **Canvas-only:** Leave untouched
-4. Call `mcp__pencil__set_variables` `[Pencil]` with the token payload
+4. Call `set_variables` `[Pencil]` with the token payload
 
 **Token format for `set_variables`:**
 - Color tokens → color type variables
@@ -268,27 +268,27 @@ This is the key performance improvement. Without this phase, every mockup builds
 **Then** load the appropriate Pencil guidelines based on the path and detected platform:
 
 **Path A (codebase — building reusable components):**
-- Call `mcp__pencil__get_guidelines("design-system")` `[Pencil]` — how to structure reusable components (naming, slots, nesting)
+- Call `get_guidelines("design-system")` `[Pencil]` — how to structure reusable components (naming, slots, nesting)
 - **Also call platform-specific guideline:**
-  - Mobile detected → `mcp__pencil__get_guidelines("mobile-app")` `[Pencil]`
-  - Web detected → `mcp__pencil__get_guidelines("web-app")` `[Pencil]`
+  - Mobile detected → `get_guidelines("mobile-app")` `[Pencil]`
+  - Web detected → `get_guidelines("web-app")` `[Pencil]`
 
 **Path B (no codebase — building Screen Shells + bone demo only):**
 - Skip `get_guidelines("design-system")` — no reusable components to build yet
 - **Call platform-specific guideline only:**
-  - Mobile chosen → `mcp__pencil__get_guidelines("mobile-app")` `[Pencil]`
-  - Web chosen → `mcp__pencil__get_guidelines("web-app")` `[Pencil]`
+  - Mobile chosen → `get_guidelines("mobile-app")` `[Pencil]`
+  - Web chosen → `get_guidelines("web-app")` `[Pencil]`
 
 ### Step 2: Check for existing component library
 
-Call `mcp__pencil__batch_get` with `patterns: [{ reusable: true }]` and `searchDepth: 2` to find any existing reusable components on canvas.
+Call `batch_get` with `patterns: [{ reusable: true }]` and `searchDepth: 2` to find any existing reusable components on canvas.
 
 - **IF components already exist:** Map them to extracted inventory. Only build missing ones.
 - **IF no components:** Build from scratch.
 
 ### Step 3: Find canvas space
 
-Call `mcp__pencil__find_empty_space_on_canvas` to position the component library frame away from existing content.
+Call `find_empty_space_on_canvas` to position the component library frame away from existing content.
 
 ### Step 4: Create component library frame
 
@@ -436,7 +436,7 @@ Before writing ANY `batch_design` call, review the checklist at the bottom of `r
 
 ### Step 5: Record component IDs
 
-After building, call `mcp__pencil__batch_get` on the library frame to get the real node IDs of each reusable component. These IDs are needed for the rules file so future mockup instructions can reference them.
+After building, call `batch_get` on the library frame to get the real node IDs of each reusable component. These IDs are needed for the rules file so future mockup instructions can reference them.
 
 Save a mapping like:
 ```
