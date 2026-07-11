@@ -1,16 +1,17 @@
 ---
 name: prepare-pr
-version: 1.0.0
-description: Prepare a feature branch for PR — strip design files, generate PR body, create the pull request, and post design file references to Linear. Use when user says "prepare PR", "create PR", "ready for review", "ship it", "open PR", "submit PR", "PR time", or wants to finalize a feature branch for merge. Also triggers on "strip designs", "clean up for merge", or "ready to merge". Handles both branches with and without design files.
+description: Use only when the user explicitly asks to finalize the current feature branch, strip design files for merge, or open a GitHub pull request. It checks and may rebase the branch, can remove and commit design files, pushes commits, creates the approved PR, and may update Linear. Requires a clean non-protected branch plus GitHub access; do not use for code review, commit-only requests, or generic Git advice.
 ---
 
 # Prepare PR Skill
 
 Finalize a feature branch for merge: run pre-flight checks, strip design files per the management standard, generate a PR body from Linear context and commit history, create the pull request, and post design file recovery references to the Linear ticket.
 
+Read and follow `../_shared/execution-contract.md` before starting.
+
 ## Why This Skill Exists
 
-Design files (`.pen`) live on feature branches during development so teammates can review them. But they must never reach `dev`, `main`, or `demo` — a CI gate (`design-files-check`) blocks PRs that contain `designs/`. This skill automates the stripping, records the recovery hash (the only way to get designs back after branch deletion), and posts references to both the PR and Linear ticket so the design is never lost.
+Design files (`.pen`) live on feature branches during development so teammates can review them. But they must never reach `dev`, `main`, or `demo` — a CI gate (`design-files-check`) blocks PRs that contain `designs/`. This skill removes the approved files and records the exact pre-removal commit. Recovery remains subject to the repository's commit-retention policy; a hash alone is not a permanent archive.
 
 For branches without design files, the skill still handles PR body generation and Linear integration.
 
@@ -30,9 +31,12 @@ For branches without design files, the skill still handles PR body generation an
    - `fix/tl-42-broken-auth` → `TL-42`
    - No match → **Use AskUserQuestion**: ask for the Linear issue ID, or skip Linear integration
 
-3. **Check git state:**
-   - Uncommitted changes → Warn: "You have uncommitted changes. Commit or stash before continuing?"
-   - Not pushed to remote → Note for Phase 5 (will push before PR creation)
+3. **Check git and publication capabilities before any mutation:**
+   - Require a clean working tree. If not clean, stop; never auto-stash or discard work.
+   - Verify `origin` and the selected base exist.
+   - Verify `gh` is installed and authenticated (`gh auth status`). If not, stop before rebase, deletion, or commit.
+   - If Linear integration is selected, verify its read/update/comment operations now. A missing optional Linear connection may be skipped only with user approval.
+   - Note whether the branch has an upstream; Phase 5 performs the push.
 
 4. **Detect design files:**
    - Does `designs/` directory exist with `.pen` files?
@@ -40,15 +44,50 @@ For branches without design files, the skill still handles PR body generation an
    - If no → Skip Phase 3
 
 5. **Check mock data (informational):**
-   - Does `.claude/mock-registry.json` exist with entries?
+   - Does the resolved project mock registry (fallback `.vorbit/mock-registry.json`) contain entries?
    - If yes → Warn: "Mock data detected. Consider running `/cleanup-mocks` first."
    - Don't block — just inform
 
-6. **Suggest review (informational):**
-   - "Have you run `/review`? Consider it before creating the PR."
-   - Don't block — just inform
+6. **Redundant comment gate (hard block):**
+   - Get the diff scope: `git diff {base-branch}...HEAD --name-only -- '*.ts' '*.tsx' '*.js' '*.jsx' '*.py' '*.go'`
+   - If the file list is empty → skip this step.
+   - Use `pr-review-toolkit:comment-analyzer` when available; otherwise inspect only comment lines added or modified by the diff locally. Do not fail merely because that named agent is absent.
+   - Use this prompt:
+     ```
+     Review comments added or modified in these files: {file list}.
 
-**Output**: Branch state confirmed, blockers surfaced
+     Redundancy rule: a comment is redundant unless it explains a non-obvious WHY — a hidden constraint, subtle invariant, workaround for a specific bug, or behavior that would surprise a reader. Comments that restate WHAT the code does, reference the current task/PR/issue, or could be removed without confusing a future reader are redundant.
+
+     Output a per-file list: `path:line — one-line reason`. Findings only, no remediation suggestions.
+     ```
+   - **No findings → continue to step 7.**
+   - **Findings present → block via AskUserQuestion:**
+     ```
+     Redundant comments found in {N} files:
+       {file:line — reason}
+       ...
+
+     1. Strip all listed comments now (skill removes the lines, commits `chore: strip redundant comments`)
+     2. I'll clean up manually — stop the skill, I'll re-run after
+     3. Show the full agent report
+     ```
+   - **Option 1** → Edit each listed file, remove only the lines the agent flagged, then `git commit -m "chore: strip redundant comments"` (no AI attribution). Re-run the agent once to confirm clean; if findings remain, re-ask. Continue when clean.
+   - **Option 2** → **STOP**: "Skill stopped. Clean up the listed comments and re-run `/prepare-pr`."
+   - **Option 3** → Print the full report, then re-ask.
+
+7. **Release evidence gate:**
+   - Run the repository's focused checks and smallest relevant regression suite, or verify equivalent successful evidence from the current task.
+   - If checks fail or blocking review findings remain, stop. Preparing a PR is not a way to bypass verification.
+
+8. **Show one mutation preview and get approval:**
+   - Base and rebase strategy
+   - Whether a force-with-lease push may be needed
+   - Exact design files/directories proposed for removal
+   - Planned mechanical commits
+   - GitHub PR and optional Linear mutations
+   - Do not begin Phase 2 until the user approves this plan.
+
+**Output**: Capabilities verified, branch clean, checks passing, and mutation plan approved
 
 ## Phase 2: Sync with Base
 
@@ -125,11 +164,7 @@ For branches without design files, the skill still handles PR body generation an
    ```
    Branch returns to its pre-rebase state. Stop the entire skill: "Rebase aborted. Branch unchanged. PR not created."
 
-7. **Push the rebased branch:**
-   ```bash
-   git push --force-with-lease
-   ```
-   `--force-with-lease` refuses to push if someone else updated the remote branch since the last fetch — prevents wiping a teammate's work. Never use plain `--force`.
+7. **Record whether history changed.** Do not push yet; Phase 5 pushes only after the PR title/body are approved. If a previously pushed branch was rebased, Phase 5 must use `--force-with-lease`, never plain `--force`.
 
 8. **Report:**
    ```
@@ -138,38 +173,44 @@ For branches without design files, the skill still handles PR body generation an
      {M} conflicts resolved (if any)
    ```
 
-**Output**: Branch is up to date with base, ready for design stripping and PR creation.
+**Output**: Local branch is up to date with base; push is deferred until final approval.
 
 ## Phase 3: Design File Handling
 
 **Skip this phase if no `designs/` directory exists, or if `--skip-designs` flag is set.**
 
-**Goal**: Strip design files and record the recovery reference. The recovery hash is captured BEFORE stripping because it points to the last commit where the files still exist — this is the only way to recover them later.
+**Goal**: Remove only the approved tracked design files and record a verified pre-removal reference.
 
-1. **Record the recovery hash** — this MUST happen before any `git rm`:
+1. **Record the pre-removal hash** — this MUST happen before any `git rm`:
    ```bash
-   git log -1 --format="%H" -- designs/
+   git rev-parse HEAD
    ```
-   Store this hash. It points to the last commit where design files exist.
+   Store this hash. Because the tree is clean, it contains the exact tracked files being reviewed.
 
-2. **Inventory design files** being stripped:
+2. **Inventory the exact tracked files** in the issue-specific directory:
    ```bash
-   find designs/ -name "*.pen" -type f
+   git ls-files "designs/{issue-id}/"
    ```
-   Record the full paths (e.g., `designs/on-329/scheduling.pen`).
+   Resolve the actual directory name from tracked paths; do not assume case. If multiple directories match the issue, stop and ask. Re-show the list if it differs from the approved preview.
 
-3. **Strip design files:**
+3. **Verify recovery for every file:**
+   ```bash
+   git cat-file -e "{full-hash}:{path}"
+   ```
+   If any file cannot be read from that commit, stop before deletion.
+
+4. **Strip the approved issue directory:**
    ```bash
    git rm -r designs/{issue-id}/
    ```
    Only remove the issue-specific directory. If other issue directories exist under `designs/`, leave them — they belong to other features.
 
-4. **Commit the stripping** — this is a mechanical commit, do NOT add `Co-Authored-By` or any AI attribution:
+5. **Commit the stripping** — this is a mechanical commit, do NOT add `Co-Authored-By` or any AI attribution:
    ```bash
    git commit -m "chore: strip design files before merge"
    ```
 
-5. **Build the design files reference block** for use in the PR body:
+6. **Build the design files reference block** for use in the PR body:
    ```markdown
    ## Design files
    Design files were stripped before merge per the [management standard](https://www.notion.so/vibranium-labs/Pencil-Design-Files-in-Git-Management-Standard-313477245840818dbf27dcc2d6774bde).
@@ -178,7 +219,7 @@ For branches without design files, the skill still handles PR body generation an
    git checkout {full-hash} -- {path-to-each-pen-file}
    ```
    ```
-   If multiple `.pen` files, list each recovery command on its own line.
+   List each recovery command on its own line and state that recovery depends on commit retention.
 
 **Output**: Design files stripped, recovery reference prepared
 
@@ -213,7 +254,7 @@ For branches without design files, the skill still handles PR body generation an
    [Omit this section if nothing notable]
 
    ## Related
-   - Closes [{ISSUE-ID}]({linear-issue-url})
+   - Issue: [{issue-id}]({linear-issue-url})
    [- Parent epic: [{epic-id}]({epic-url}) {epic title} if applicable]
 
    ## Test plan
@@ -253,6 +294,7 @@ For branches without design files, the skill still handles PR body generation an
    ```bash
    git push -u origin {branch-name}
    ```
+   If Phase 2 rebased an already-published branch, use `git push --force-with-lease` instead. Never use plain `--force`.
 
 2. **Create the PR** — use the approved body exactly as the user approved it. Do NOT append `🤖 Generated with Claude Code` or `Co-Authored-By` footers:
    ```bash
@@ -262,7 +304,7 @@ For branches without design files, the skill still handles PR body generation an
    )"
    ```
 
-3. **Post design recovery reference to Linear** (if design files were stripped):
+3. **Post design recovery reference to Linear** only if design files were stripped and Linear integration was selected, resolved to an issue, and approved. Otherwise keep the recovery block in the PR and report that the Linear comment was skipped.
    - Call `mcp__plugin_linear_linear__save_comment` on the issue:
      ```
      📐 Design files archived
@@ -275,9 +317,9 @@ For branches without design files, the skill still handles PR body generation an
 
      PR: {pr-url}
      ```
-   This comment is the PERMANENT reference. It survives branch deletion, PR archival, and repo history compaction. The design file was already referenced on this ticket when it was created by Pencil — this comment closes the loop.
+   This comment records how to recover the files while the referenced commit remains retained. It is not a backup; if permanent retention is required, archive the design in the team's approved design storage before stripping.
 
-4. **Update Linear issue status:**
+4. **Update Linear issue status** only when Linear integration was selected, resolved, and approved:
    - Call `mcp__plugin_linear_linear__save_issue` with `state: "In Review"`
 
 5. **Report:**
@@ -286,7 +328,7 @@ For branches without design files, the skill still handles PR body generation an
 
      Branch:        {branch} → {base}
      Design files:  {count} stripped, recovery hash recorded
-     Linear:        {issue-id} → "In Review", design reference posted
+     Linear:        {issue-id} → "In Review", design reference posted | skipped with reason
    ```
 
 ## Flags
@@ -303,8 +345,9 @@ For branches without design files, the skill still handles PR body generation an
 - Auto-stashing uncommitted changes to make the rebase possible — that hides in-progress work and risks losing it. Always require a clean tree first
 - Continuing the skill after a rebase abort — when the user aborts, stop. They likely need to think before pushing
 - Skipping the rebase phase silently when there are conflicts — only skip when `--skip-rebase` is explicitly passed, never as a "fall-through" fallback
-- Stripping design files without recording the recovery hash first — capture the hash BEFORE `git rm`, because after stripping `git log -- designs/` returns the strip commit, not the one with actual files
-- Posting recovery reference to ONLY the PR — Linear ticket must also get it as the permanent record
+- Stripping design files without recording `HEAD` and verifying every path with `git cat-file` first
+- Claiming a commit hash is a permanent backup — recovery depends on commit retention
+- Posting the recovery reference only to the PR when Linear integration was approved
 - Removing `designs/library/` — that's the shared template directory (gitignored), not feature-specific
 - Stripping other features' design directories (e.g., `designs/on-500/` when working on `on-329`)
 - Creating the PR without showing the body to the user first

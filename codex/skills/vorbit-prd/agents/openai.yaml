@@ -1,0 +1,7 @@
+interface:
+  display_name: "Vorbit PRD"
+  short_description: "Define a feature as one approved Linear PRD"
+  default_prompt: "Use $vorbit-prd to clarify this feature and create one approved Linear requirements ticket."
+
+policy:
+  allow_implicit_invocation: true

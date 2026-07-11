@@ -1,0 +1,7 @@
+interface:
+  display_name: "Vorbit Epic Planning"
+  short_description: "Plan Linear epics and implementation issues"
+  default_prompt: "Use $vorbit-epic to turn the approved PRD into a reviewed Linear implementation plan."
+
+policy:
+  allow_implicit_invocation: true

@@ -1,19 +1,22 @@
 ---
 name: prototype
-version: 1.1.0
-description: Use when user says "create prototype", "build UI mockup", "quick prototype", "mock this feature", "prototype page", or wants to generate UI with mock data that becomes production code by swapping mocks for real API.
+description: Use when the user asks to build a working frontend prototype or UI mockup in the codebase using mock data that can later be swapped for real APIs. It inspects existing patterns, changes project files, registers mocks, and verifies the result. Do not use for Figma or Pencil-only design work, throwaway images, backend implementation, or production features that must connect to live APIs now.
 ---
 
 # Prototype Skill
 
 Create reusable UI prototypes that become production code. Frontend devs swap mocks for real API.
 
+Read and follow `../_shared/execution-contract.md` before starting.
+
 ## Core Principles
 
 - **Use AskUserQuestion for ANY uncertainty**: If anything is unclear, ASK. Don't guess.
 - **Analyze codebase first**: Find existing patterns before writing any code.
 - **Props-driven**: Components receive data as props. Never hardcode data inside components.
-- **Single mock import**: Each component imports mock at top of file, with `// TODO: Replace with real API`.
+- **One mock integration boundary**: Exactly one feature-level container/adapter imports mock data. Presentational components only receive typed props and never import mocks.
+- **Linear-first PRD context**: Linear is canonical. Pasted text and explicit local files are legacy fallbacks.
+- **Smoke-tested**: The prototype is not complete until its route renders and navigation reaches it.
 - **Use TaskCreate/TaskUpdate**: Track progress through all phases.
 
 ## Phase 0: Detect Platform & Verify Connection
@@ -27,10 +30,10 @@ Before starting, check if Pencil MCP is available and configured:
 5. **IF pencil.md exists:** Read it — use detected stack, tokens, and component inventory to inform prototype decisions
 
 ### Platform Discovery
-Read and follow `_shared/mcp-tool-routing.md` (glob for `**/skills/_shared/mcp-tool-routing.md`). Discover connected platforms, ask user which to use, and verify connection.
+Read and follow `_shared/mcp-tool-routing.md` (glob for `**/skills/_shared/mcp-tool-routing.md`). Verify only the external services actually needed. Linear is the canonical PRD provider; Figma is an optional design input, not a competing requirements source.
 
 **IF Figma URL provided:**
-1. Use `mcp__plugin_figma_figma__get_design_context` to fetch the design
+1. Use the connected Figma `get_design_context` tool discovered through routing to fetch the design
 2. **IF fails:** "Figma connection failed. Run `/mcp` to reconnect, then retry." → **STOP**
 3. **IF succeeds:** extract design specs
 
@@ -42,15 +45,15 @@ Read and follow `_shared/mcp-tool-routing.md` (glob for `**/skills/_shared/mcp-t
 
 **Actions**:
 1. Create todo list with all 6 phases (0-5)
-2. **IF Notion PRD URL provided:**
-   - Fetch PRD from Notion
-   - Extract user stories and UI requirements
-3. **IF Figma URL provided:**
+2. Resolve PRD context in this order:
+   - **Linear URL/ID:** use `get_issue`
+   - **Feature name:** use scoped `list_issues` title search, ask if multiple match, then `get_issue`
+   - **Explicit pasted PRD or user-specified local file:** use it as a legacy fallback and record provenance
+   - **Inaccessible non-Linear URL:** ask the user to paste/export it; do not guess
+3. Extract exact `US-###`, `US-###.AC-##`, `F#-S#`, constraints, and unresolved `TBD-###` items. Keep the Linear ticket URL in the handoff.
+4. **IF Figma URL provided:**
    - Use design context from Phase 0
    - Extract layout, components, and styling specs
-4. **IF feature name provided:**
-   - Search Notion for existing PRD
-   - If not found, gather requirements via conversation
 5. **IF purpose is unclear, use AskUserQuestion:**
    - What is this feature for?
    - Who uses it and when?
@@ -97,7 +100,7 @@ Read and follow `_shared/mcp-tool-routing.md` (glob for `**/skills/_shared/mcp-t
 **CRITICAL**: This is the most important phase. DO NOT SKIP.
 
 **IF Figma design provided:**
-- Use design specs as source of truth for layout, fields, styling
+- Use design specs as the visual source of truth for layout and styling; Linear remains canonical for behavior and scope
 - Only ask about behavior not shown in design (actions, empty states)
 
 **IF no Figma design, MUST ask using AskUserQuestion:**
@@ -124,10 +127,12 @@ Read and follow `_shared/mcp-tool-routing.md` (glob for `**/skills/_shared/mcp-t
 1. Create page structure matching codebase patterns:
    ```
    src/pages/[Feature]/
-   ├── index.tsx           # Main page
-   ├── components/         # Feature-specific components
-   └── mocks/              # Mock data (delete when implementing real API)
-       └── data.json       # Shape matches API response
+   ├── index.tsx                # Main page
+   ├── data-source.ts           # ONLY mock integration boundary
+   ├── index.smoke.test.tsx     # Render/navigation smoke test (name follows repo pattern)
+   ├── components/              # Feature-specific presentational components
+   └── mocks/                   # Mock data (delete when implementing real API)
+       └── data.json            # Shape matches API response
    ```
 
 2. Create components with clean props:
@@ -136,13 +141,27 @@ Read and follow `_shared/mcp-tool-routing.md` (glob for `**/skills/_shared/mcp-t
    - Feature-specific components under the page folder
    - **IF Figma provided:** Match design specs exactly
 
-3. Create mock data:
+3. Create one feature data boundary and mock data:
    - Mock folder under feature: `pages/Feature/mocks/`
    - JSON filename = endpoint: `users.json` → `/api/users`
    - Show exact fields the UI needs (API contract)
-   - If multiple components need SAME data, share the mock
+   - Choose one route container **or** one adapter as the boundary; do not create both
+   - That boundary is the only module that imports file mocks or initializes mock-only state
+   - Pass all data and callbacks from that boundary into child components via typed props
+   - If the feature has multiple mock payloads, import them all at the same boundary; do not create per-component boundaries
 
-4. **MANDATORY**: Register mocks in `.claude/mock-registry.json`:
+4. **MANDATORY**: Resolve the runtime-neutral Vorbit registry before writing:
+
+   - Use the active runtime contract/resolver for the current project and read its `storage_root` and `project_slug`; do not reconstruct the slug.
+   - Registry path: `<storage_root>/projects/<project_slug>/mock-registry.json`.
+   - If this legacy surface has no resolver, use the project-local fallback `.vorbit/mock-registry.json` and report the fallback explicitly.
+   - Never hardcode `.claude/`, `.codex/`, or `.gemini/` storage.
+
+   Register mocks in the resolved registry:
+
+   The registry root is `{ "version": "1.1", "mocks": [...] }`. The snippets below are individual entries appended to `mocks`.
+
+   The following are alternatives. Register the one boundary actually used; do not create both forms for the same feature.
 
    **For mock files:**
    ```json
@@ -150,10 +169,10 @@ Read and follow `_shared/mcp-tool-routing.md` (glob for `**/skills/_shared/mcp-t
      "feature": "[Feature name]",
      "type": "file",
      "path": "src/pages/Feature/mocks/data.json",
-     "endpoint": "GET /api/[resource]",
+     "endpoint": "proposed:GET /api/[resource]",
      "createdBy": "prototype",
      "createdAt": "[ISO timestamp]",
-     "components": ["src/pages/Feature/index.tsx"]
+     "components": ["src/pages/Feature/data-source.ts"]
    }
    ```
 
@@ -164,7 +183,7 @@ Read and follow `_shared/mcp-tool-routing.md` (glob for `**/skills/_shared/mcp-t
      "type": "state",
      "path": "src/pages/Feature/index.tsx",
      "location": "useState:users (line 15)",
-     "endpoint": "GET /api/[resource]",
+     "endpoint": "proposed:GET /api/[resource]",
      "stateType": "useState",
      "createdBy": "prototype",
      "createdAt": "[ISO timestamp]",
@@ -174,11 +193,13 @@ Read and follow `_shared/mcp-tool-routing.md` (glob for `**/skills/_shared/mcp-t
    - Create registry file if doesn't exist
    - Append to existing mocks array if file exists
 
-5. **MANDATORY**: Every mock (file or state) MUST have TODO comment:
+5. **MANDATORY**: The single mock boundary MUST have the replacement TODO next to its imports:
    ```tsx
    import mockData from './mocks/data.json';
-   // TODO: Replace with real API
+   // TODO: Replace this mock boundary with the real API client.
    ```
+
+   Child components must not import anything from `mocks/`.
 
 6. Update todos as each component is completed
 
@@ -187,6 +208,7 @@ Read and follow `_shared/mcp-tool-routing.md` (glob for `**/skills/_shared/mcp-t
 - Don't add fields "for completeness"
 - Don't create mock utilities, factories, or generators
 - Don't duplicate same data in different mock files
+- Keep the integration seam boring: one boundary can be replaced without editing presentational components
 
 **Output**: Working prototype with clean structure
 
@@ -197,23 +219,34 @@ Read and follow `_shared/mcp-tool-routing.md` (glob for `**/skills/_shared/mcp-t
 **Actions**:
 1. **Verify checklist**:
    - [ ] Components receive data via props (not hardcoded)
-   - [ ] Mock import in ONE place per component
-   - [ ] Every mock import has `// TODO: Replace with real API` comment
-   - [ ] Components needing same data share the same mock file
+   - [ ] Exactly one feature-level module imports from `mocks/`
+   - [ ] That boundary has `// TODO: Replace this mock boundary with the real API client.`
+   - [ ] No presentational component imports mocks or knows whether data is mocked
    - [ ] Page is navigable/renderable
    - [ ] Uses existing UI components from codebase
    - [ ] Matches codebase styling patterns
    - [ ] **IF Figma:** Matches design specs
 
-2. **Present summary to user**:
+2. **Run render/navigation smoke tests (required):**
+   - Reuse the project's existing test runner and routing test pattern; search before adding a test
+   - Assert the feature route renders its primary observable content
+   - Assert an existing navigation entry or direct router navigation reaches the feature route
+   - Use the real router configuration and the feature's mock data boundary; do not mock the router or service layer
+   - Run the narrow smoke test first, then the project's relevant typecheck/build command
+   - If no test harness exists, run the real local app and perform an equivalent browser/HTTP render plus navigation smoke check. Report the exact commands and evidence; do not install a framework just for the prototype
+
+3. **Present summary to user**:
    ```
    Created:
    - src/pages/Feature/index.tsx
    - src/pages/Feature/components/...
    - src/pages/Feature/mocks/...
 
-   Mock data registered in .claude/mock-registry.json:
-   - mocks/data.json → GET /api/...
+   Mock data registered in [resolved Vorbit project registry path]:
+   - data-source.ts (single boundary) → mocks/data.json → GET /api/...
+
+   Verified:
+   - [smoke-test command] — route render + navigation passed
 
    Used existing components:
    - Layout, Card, Button, Input
@@ -224,7 +257,7 @@ Read and follow `_shared/mcp-tool-routing.md` (glob for `**/skills/_shared/mcp-t
    - /vorbit:implement:cleanup-mocks [feature] before backend handover
    ```
 
-3. Mark all todos complete
+4. Mark all todos complete
 
 **Output**: Complete, documented prototype ready for handover
 
@@ -243,7 +276,7 @@ A prototype is:
 A prototype is NOT:
 - A single reusable component (that's a component, not a prototype)
 - Throwaway demo code
-- Fully tested (tests come in implementation phase)
+- Fully covered by implementation tests; only render/navigation smoke coverage is required here
 
 ## Page/Feature Structure
 
@@ -256,8 +289,10 @@ src/
         │   ├── Header.tsx
         │   ├── List.tsx
         │   └── Form.tsx
-        └── mocks/            # Mock data FOR THIS FEATURE
-            └── data.json     # → swap to real API later
+        ├── mocks/            # Mock data FOR THIS FEATURE
+        │   └── data.json
+        ├── data-source.ts    # ONLY mock import boundary → swap to real API here
+        └── index.smoke.test.tsx
 ```
 
 ## Prototype Checklist
@@ -271,18 +306,21 @@ src/
 - [ ] Framework detected from codebase
 - [ ] Page structure matches existing patterns
 - [ ] **Components receive data via props (not hardcoded)**
-- [ ] **Mock import in ONE place per component**
+- [ ] **Exactly ONE feature-level boundary imports mocks**
+- [ ] **Presentational components never import mocks**
 - [ ] Composes existing UI components (buttons, cards, inputs)
 
 **Mocks:**
 - [ ] Mock data under feature folder: `pages/Feature/mocks/`
 - [ ] Mock shows only fields UI actually uses
-- [ ] **Every mock import has `// TODO: Replace with real API` comment**
+- [ ] **Single mock boundary has the replacement TODO comment**
 - [ ] Components needing same data share the same mock file
-- [ ] **Mock registered in `.claude/mock-registry.json`**
+- [ ] **Mock registered in the resolved Vorbit project registry**
 
 **Final:**
 - [ ] Page is navigable/renderable
+- [ ] Route render smoke test passes
+- [ ] Navigation smoke test passes
 
 ## Anti-Patterns (DON'T)
 
@@ -290,8 +328,9 @@ src/
 - Guessing layout/fields/actions without asking
 - Adding search, filter, tabs, pagination "just in case"
 - Hardcoding data in components
+- Importing mocks in more than one module or in presentational components
 - Creating mock utilities or factories
 - Duplicating mock data across files
-- Skipping TODO comments on mock imports
+- Skipping the replacement TODO at the mock boundary
 - Creating new UI components when existing ones work
 - Deviating from Figma design without asking

@@ -1,6 +1,6 @@
 ---
 name: vorbit-prd
-description: Use when the user wants to create a Product Requirements Document, write requirements, define a feature, or document a product spec with shared Vorbit rules.
+description: Use when the user asks to define a feature as a product requirements document or to review whether sub-issues cover an existing PRD. In creation mode it clarifies requirements, drafts user stories, acceptance criteria, flows, constraints, and success metrics, then creates one Linear ticket after approval. Requires Linear for creation; do not use for early brainstorming, engineering issue decomposition, implementation, or a multi-ticket epic plan.
 ---
 
 # Vorbit PRD

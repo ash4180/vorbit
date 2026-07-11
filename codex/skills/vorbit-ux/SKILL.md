@@ -1,6 +1,6 @@
 ---
 name: vorbit-ux
-description: Use when any skill needs to clarify user experience requirements through exhaustive questioning. Transforms vague requirements into precise acceptance criteria.
+description: Use only when the user explicitly invokes UX clarification or another Vorbit workflow deliberately delegates unresolved experience requirements. It conducts exhaustive, category-based questioning and returns acceptance criteria using the user's answers. It does not design screens, write a PRD, implement code, or make product decisions for the user; avoid implicit use for ordinary clarification.
 ---
 
 # Vorbit UX Clarification

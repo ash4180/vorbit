@@ -1,6 +1,6 @@
 ---
 name: vorbit-verify
-description: Use when the user wants to verify an implementation, validate acceptance criteria, or run a Vorbit-style post-change check using shared project rules.
+description: Use when the user asks for a post-implementation validation against explicit acceptance criteria or a linked issue or PRD. It runs the real project tests, checks each criterion and code hygiene with evidence, reports pass or fail, and may comment on or update the Linear issue. Do not use to implement fixes, perform an open-ended code review, or validate requirements that have not been supplied.
 ---
 
 # Vorbit Verify

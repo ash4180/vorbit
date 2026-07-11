@@ -3,9 +3,9 @@
 Use for creating UI prototypes with mock data that become production code.
 
 1. Load Vorbit durable rules before doing anything else.
-2. Discovery: fetch PRD/Figma design if provided. If purpose unclear, ask.
+2. Discovery: fetch canonical PRD context from Linear by URL/ID or scoped title search; accept explicit pasted/local PRDs only as labeled legacy fallbacks. Extract exact US/AC/flow IDs and constraints. Fetch optional Figma design separately. If purpose is unclear, ask.
 3. Codebase analysis (before writing any code): detect framework, pages location, styling approach, existing UI components. Report findings and confirm with user.
-4. Requirements clarification: if Figma provided, use as source of truth. Otherwise ask about layout, data fields, actions, empty states. Don't invent features.
-5. Build prototype: create page structure matching codebase patterns. Components receive data via props (not hardcoded). Mock data under feature folder. Every mock import has `// TODO: Replace with real API`. Register mocks in `.claude/mock-registry.json`.
-6. Verification: components use props, mock imports in one place, TODO comments present, existing UI components reused, matches codebase patterns.
-7. Report: files created, mocks registered, existing components used, next steps (`/vorbit-epic` or `/vorbit-cleanup-mocks`).
+4. Requirements clarification: if Figma is provided, use it as the visual source of truth only; Linear remains canonical for behavior/scope. Otherwise ask about layout, data fields, actions, and empty states. Don't invent features.
+5. Build prototype: create page structure matching codebase patterns. Use exactly one feature-level mock integration boundary; only it imports all feature mocks and carries the replacement TODO. Presentational components receive typed props and never import mocks. Read `../references/mock-registry.md`, resolve the runtime's `storage_root` and `project_slug` without reconstructing them, and register that boundary with schema 1.1. Never use an agent-specific directory.
+6. Verification: reuse the project's test/router patterns. Run a narrow smoke test proving the route renders primary content and real router/navigation reaches it, then relevant typecheck/build. If no harness exists, smoke the real local app; do not install a framework just for this.
+7. Report: canonical PRD URL/provenance, files, single boundary, mocks, reused components, exact smoke commands/results, next steps (`$vorbit-epic` or `$vorbit-cleanup-mocks`).

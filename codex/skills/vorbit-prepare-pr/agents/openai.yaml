@@ -1,0 +1,7 @@
+interface:
+  display_name: "Vorbit Prepare PR"
+  short_description: "Finalize a branch and open its pull request"
+  default_prompt: "Use $vorbit-prepare-pr to check this feature branch and open the approved pull request."
+
+policy:
+  allow_implicit_invocation: false

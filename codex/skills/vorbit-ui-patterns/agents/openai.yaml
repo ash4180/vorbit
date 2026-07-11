@@ -1,0 +1,7 @@
+interface:
+  display_name: "Vorbit UI Patterns"
+  short_description: "Apply accessible and performant UI patterns"
+  default_prompt: "Use $vorbit-ui-patterns to apply the project UI constraints to this frontend work."
+
+policy:
+  allow_implicit_invocation: true

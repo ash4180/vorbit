@@ -1,0 +1,7 @@
+interface:
+  display_name: "Vorbit Webflow"
+  short_description: "Build pages, templates, and components in Webflow"
+  default_prompt: "Use $vorbit-webflow to plan and build the requested deliverable in the connected Webflow site."
+
+policy:
+  allow_implicit_invocation: true

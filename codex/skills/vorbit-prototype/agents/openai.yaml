@@ -1,0 +1,7 @@
+interface:
+  display_name: "Vorbit Prototype"
+  short_description: "Build production-shaped UI with mock data"
+  default_prompt: "Use $vorbit-prototype to build this frontend prototype with tracked mock data and project patterns."
+
+policy:
+  allow_implicit_invocation: true

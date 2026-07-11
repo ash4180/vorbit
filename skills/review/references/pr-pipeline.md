@@ -86,9 +86,9 @@ Read **all** blast radius files into context before dispatching agents.
 
 ---
 
-## Layer 3: AI Review (Team Agents)
+## Layer 3: Independent Review Passes
 
-Use `TeamCreate` to spin up a review team, then dispatch **6 `general-purpose` agents in a single message** via the Task tool (parallel execution). Each agent sends findings back via `SendMessage`. Collect all results, compile the report, then `TeamDelete`.
+Use the environment's native subagent mechanism when available. Run independent passes in parallel up to the environment's safe concurrency limit; otherwise run the same focuses locally and sequentially. Do not require `TeamCreate`, `SendMessage`, or any named agent package.
 
 ### What each agent receives
 
@@ -97,22 +97,22 @@ Use `TeamCreate` to spin up a review team, then dispatch **6 `general-purpose` a
 - The review rules (from `.claude/review-rules.md`)
 - The CLAUDE.md project standards
 - Their specific focus (in the prompt)
-- Instruction to send findings back via `SendMessage` to the team lead
+- Instruction to return findings with exact files/lines, severity, and evidence
 
-### Agent dispatch table
+### Review focus table
 
-| Name | Focus | Prompt guidance |
+| Pass | Focus | Prompt guidance |
 |------|-------|-----------------|
-| `code-reviewer` | Logic correctness, patterns, CLAUDE.md compliance | Include diff, blast radius files, review rules, CLAUDE.md. Ask for logic errors, pattern violations, standard compliance. Specify which files are changed vs. context. |
-| `silent-failure-hunter` | Error handling gaps, silent failures, swallowed exceptions | Include diff and blast radius files. Examine error handling in changed code. Check if blast radius files have affected error handling. |
-| `pr-test-analyzer` | Test coverage gaps, missing edge cases | Include diff and changed file list. Analyze whether tests adequately cover the changes. |
-| `type-design-analyzer` | Type design quality, invariant expression | Include diff. Review new or modified types for encapsulation and invariant quality. |
-| `comment-analyzer` | Comment accuracy and completeness | Include diff. Check that comments match the code they describe. Flag misleading, stale, or missing comments on complex logic. |
-| `code-simplifier` | Over-engineering, unnecessary complexity | Include diff and blast radius files. Identify logic that can be simplified, dead code, and over-abstracted patterns. |
+| `correctness` | Logic correctness, regressions, repository-policy compliance | Include diff, blast radius files, review rules, and repository instructions. Distinguish changed files from context. |
+| `failure-handling` | Error handling gaps, silent failures, swallowed exceptions | Examine changed code and affected callers. |
+| `tests` | Coverage gaps and missing realistic edge cases | Check whether tests exercise observable behavior and each changed branch. |
+| `types-and-simplicity` | Invariants, unnecessary complexity, dead code, comments | Review modified types and abstractions; flag only comments that are stale, misleading, or restate obvious code. |
+
+Prefer four strong passes over six overlapping agents. The orchestrator must deduplicate findings and verify each one against the source before reporting it.
 
 ### Failure handling
 
-If any agent fails or times out → note the failure in that report section, continue with remaining agents' results. Never block the whole report on one agent.
+If any pass fails or times out, note the gap and continue. Never present an unverified subagent claim as a finding.
 
 ---
 
@@ -122,7 +122,7 @@ If any agent fails or times out → note the failure in that report section, con
 # PR Review Report
 
 ## TL;DR
-[1-3 sentences — brutally honest assessment, most critical finding]
+[1-3 sentences with the most critical finding and merge risk]
 
 ## Static Analysis
 [Results per tool, or "All clear — no issues found"]
@@ -157,7 +157,7 @@ If any agent fails or times out → note the failure in that report section, con
 
 ## Review Rules Applied
 [Rules from .claude/review-rules.md that matched]
-[Or "No review rules file yet — rules accumulate through the learn system"]
+[Or "No review rules file yet"]
 
 ## Action Items
 [Numbered list ordered by severity]

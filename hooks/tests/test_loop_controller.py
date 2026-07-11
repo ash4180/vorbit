@@ -1,10 +1,12 @@
-"""Tests for loop_controller.py hook — migrated from test-loop-controller.sh."""
+"""Tests for the implement-loop stop hook."""
 
 import json
 
 from hooks.tests.conftest import SCRIPTS
 
 HOOK = SCRIPTS["loop_controller"]
+COMMAND = "/vorbit:implement:implement VIB-100 --loop"
+SIGNAL = "<!-- VORBIT_LOOP_COMPLETE -->"
 
 
 def _write_state(project_path, state: dict):
@@ -14,72 +16,81 @@ def _write_state(project_path, state: dict):
     return state_file
 
 
-def test_no_state_file(test_project, run_hook):
-    """No state file → exits 0, does nothing."""
-    state_file = test_project["path"] / ".claude" / ".loop-state.json"
-    assert not state_file.exists()
+def _active_state(**overrides):
+    state = {
+        "version": 2,
+        "active": True,
+        "status": "running",
+        "command": COMMAND,
+        "completionSignal": SIGNAL,
+        "maxIterations": 50,
+        "iteration": 1,
+    }
+    state.update(overrides)
+    return state
 
-    exit_code, stdout, _ = run_hook(HOOK, stdin="some claude output", cwd=test_project["path"])
+
+def test_no_state_file(test_project, run_hook):
+    """No state file exits cleanly after draining stdin."""
+    state_file = test_project["path"] / ".claude" / ".loop-state.json"
+
+    exit_code, stdout, _ = run_hook(HOOK, stdin="some output", cwd=test_project["path"])
 
     assert exit_code == 0
+    assert stdout == ""
     assert not state_file.exists()
 
 
-def test_inactive_loop(test_project, run_hook):
-    """active: false → exits 0, state file left in place."""
+def test_inactive_loop_leaves_state_for_inspection(test_project, run_hook):
     state_file = _write_state(
         test_project["path"],
-        {"active": False, "iteration": 1, "maxIterations": 50},
+        _active_state(active=False, status="blocked"),
     )
 
-    exit_code, stdout, _ = run_hook(HOOK, stdin="some claude output", cwd=test_project["path"])
+    exit_code, stdout, _ = run_hook(HOOK, stdin="some output", cwd=test_project["path"])
 
     assert exit_code == 0
+    assert stdout == ""
     assert state_file.exists()
 
 
-def test_increments_iteration(test_project, run_hook):
-    """Active loop, no completion signal → increments iteration, exits 2, echoes command."""
-    cmd = "test-command-12345"
-    state_file = _write_state(
-        test_project["path"],
-        {
-            "active": True,
-            "command": cmd,
-            "completionSignal": "LOOP_DONE",
-            "maxIterations": 50,
-            "iteration": 3,
-        },
-    )
+def test_unreadable_state_blocks_and_is_preserved(test_project, run_hook):
+    state_file = test_project["path"] / ".claude" / ".loop-state.json"
+    state_file.parent.mkdir(parents=True, exist_ok=True)
+    state_file.write_text("{not-json")
 
-    exit_code, stdout, _ = run_hook(
+    exit_code, stdout, stderr = run_hook(
         HOOK,
-        stdin="some output without the signal",
+        stdin="some output",
         cwd=test_project["path"],
     )
+
+    assert exit_code == 2
+    assert stdout == ""
+    assert "state is unreadable" in stderr
+    assert state_file.read_text() == "{not-json"
+
+
+def test_active_loop_increments_atomically_and_reinjects_loop_command(test_project, run_hook):
+    state_file = _write_state(test_project["path"], _active_state(iteration=3))
+
+    exit_code, stdout, _ = run_hook(HOOK, stdin="work remains", cwd=test_project["path"])
 
     updated_state = json.loads(state_file.read_text())
     assert exit_code == 2
     assert updated_state["iteration"] == 4
-    assert stdout.strip() == cmd
-    assert state_file.exists()
+    assert stdout.strip() == COMMAND
 
 
-def test_completion_signal_stops_loop(test_project, run_hook):
-    """Completion signal in Claude's output → deletes state file, exits 0."""
+def test_completed_status_and_exact_signal_delete_state(test_project, run_hook):
     state_file = _write_state(
         test_project["path"],
-        {
-            "active": True,
-            "completionSignal": "ALL_DONE",
-            "maxIterations": 50,
-            "iteration": 2,
-        },
+        _active_state(active=False, status="completed"),
     )
 
-    exit_code, stdout, _ = run_hook(
+    exit_code, _, _ = run_hook(
         HOOK,
-        stdin="Work complete. ALL_DONE",
+        stdin=f"Queue verified. {SIGNAL}",
         cwd=test_project["path"],
     )
 
@@ -87,44 +98,113 @@ def test_completion_signal_stops_loop(test_project, run_hook):
     assert not state_file.exists()
 
 
-def test_max_iterations_stops_loop(test_project, run_hook):
-    """iteration >= maxIterations → deletes state file, exits 0."""
+def test_completed_state_without_signal_is_preserved(test_project, run_hook):
     state_file = _write_state(
         test_project["path"],
-        {
-            "active": True,
-            "completionSignal": "DONE",
-            "maxIterations": 10,
-            "iteration": 10,
-        },
+        _active_state(active=False, status="completed"),
+    )
+
+    exit_code, stdout, _ = run_hook(
+        HOOK,
+        stdin="Queue verified, but marker omitted.",
+        cwd=test_project["path"],
+    )
+
+    assert exit_code == 0
+    assert stdout == ""
+    assert state_file.exists()
+
+
+def test_signal_alone_cannot_stop_running_loop(test_project, run_hook):
+    state_file = _write_state(test_project["path"], _active_state(status="running"))
+
+    exit_code, stdout, _ = run_hook(HOOK, stdin=SIGNAL, cwd=test_project["path"])
+
+    assert exit_code == 2
+    assert stdout.strip() == COMMAND
+    assert state_file.exists()
+
+
+def test_max_iterations_blocks_and_preserves_state(test_project, run_hook):
+    state_file = _write_state(
+        test_project["path"],
+        _active_state(iteration=10, maxIterations=10),
     )
 
     exit_code, stdout, _ = run_hook(HOOK, stdin="still going", cwd=test_project["path"])
 
+    state = json.loads(state_file.read_text())
     assert exit_code == 0
-    assert not state_file.exists()
+    assert "blocked after 10 iterations" in stdout
+    assert state["active"] is False
+    assert state["status"] == "blocked"
+    assert state["blockReason"] == "Reached maxIterations (10)"
 
 
-def test_no_signal_continues_loop(test_project, run_hook):
-    """No signal in output → exits 2, echoes command, state file kept."""
-    cmd = "test-command-67890"
+def test_command_without_loop_flag_fails_closed(test_project, run_hook):
     state_file = _write_state(
         test_project["path"],
-        {
-            "active": True,
-            "command": cmd,
-            "completionSignal": "LOOP_COMPLETE",
-            "maxIterations": 50,
-            "iteration": 1,
-        },
+        _active_state(command="/vorbit:implement:implement VIB-100"),
     )
 
-    exit_code, stdout, _ = run_hook(
-        HOOK,
-        stdin="output with no signal here",
-        cwd=test_project["path"],
+    exit_code, stdout, _ = run_hook(HOOK, stdin="continue", cwd=test_project["path"])
+
+    state = json.loads(state_file.read_text())
+    assert exit_code == 0
+    assert stdout == ""
+    assert state["active"] is False
+    assert state["status"] == "failed"
+    assert "--loop" in state["blockReason"]
+
+
+def test_lookalike_loop_flag_fails_closed(test_project, run_hook):
+    state_file = _write_state(
+        test_project["path"],
+        _active_state(command="/vorbit:implement:implement VIB-100 --loophole"),
     )
 
-    assert exit_code == 2
-    assert stdout.strip() == cmd
-    assert state_file.exists()
+    exit_code, stdout, _ = run_hook(HOOK, stdin="continue", cwd=test_project["path"])
+
+    state = json.loads(state_file.read_text())
+    assert exit_code == 0
+    assert stdout == ""
+    assert state["active"] is False
+    assert state["status"] == "failed"
+
+
+def test_noncanonical_completion_signal_fails_closed(test_project, run_hook):
+    state_file = _write_state(
+        test_project["path"],
+        _active_state(status="completed", completionSignal="DONE"),
+    )
+
+    exit_code, stdout, _ = run_hook(HOOK, stdin="DONE", cwd=test_project["path"])
+
+    state = json.loads(state_file.read_text())
+    assert exit_code == 0
+    assert stdout == ""
+    assert state["active"] is False
+    assert state["status"] == "failed"
+    assert "completion signal" in state["blockReason"]
+
+
+def test_invalid_iteration_values_fail_closed(test_project, run_hook):
+    state_file = _write_state(test_project["path"], _active_state(iteration="three"))
+
+    exit_code, _, _ = run_hook(HOOK, stdin="continue", cwd=test_project["path"])
+
+    state = json.loads(state_file.read_text())
+    assert exit_code == 0
+    assert state["active"] is False
+    assert state["status"] == "failed"
+
+
+def test_nonpositive_iteration_values_fail_closed(test_project, run_hook):
+    state_file = _write_state(test_project["path"], _active_state(iteration=0))
+
+    exit_code, _, _ = run_hook(HOOK, stdin="continue", cwd=test_project["path"])
+
+    state = json.loads(state_file.read_text())
+    assert exit_code == 0
+    assert state["active"] is False
+    assert state["status"] == "failed"

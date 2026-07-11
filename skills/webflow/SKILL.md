@@ -1,12 +1,13 @@
 ---
 name: webflow
-version: 1.1.0
-description: Use when user says "build in Webflow", "create Webflow page", "develop Webflow template", "Figma to Webflow", "create Webflow component", "add page slots", "create static page template", "build directly in Webflow", "develop from Figma design", or wants to develop layouts and components in Webflow. Supports pages, templates with page slots, and reusable components - with or without Figma designs.
+description: Use when the user explicitly asks to create or modify a Webflow page, reusable template, page slot, CMS structure, or component, either from requirements or a Figma reference. It requires a connected target Webflow site, confirms ambiguous or live-site changes, and writes to Webflow. Do not use for Figma design creation, general frontend code, publishing-only requests, or advice that does not require Webflow changes.
 ---
 
 # Webflow Development Skill
 
 Develop Webflow pages, templates, and components. Optionally use Figma designs as reference, or build directly in Webflow from requirements.
+
+Read and follow `../_shared/execution-contract.md` before starting.
 
 ## Core Concept
 

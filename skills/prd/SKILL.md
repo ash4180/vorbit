@@ -1,26 +1,34 @@
 ---
 name: prd
-version: 2.0.0
-description: Use when user says "write PRD", "create requirements", "define feature", "document requirements", "product spec", "create ticket", or wants to capture a feature spec as a single Linear ticket. Creates a Linear ticket directly with user stories, acceptance criteria, user flows, constraints, and success criteria.
+description: Use when the user asks to define a feature as a product requirements document or to review whether sub-issues cover an existing PRD. In creation mode it clarifies requirements, drafts user stories, acceptance criteria, flows, constraints, and success metrics, then creates one Linear ticket after approval. Requires Linear for creation; do not use for early brainstorming, engineering issue decomposition, implementation, or a multi-ticket epic plan.
 ---
 
 # PRD Skill
 
 Create a Linear ticket that captures a product requirement. No fluff, just what needs building.
 
-> **Linear MCP namespace**: All Linear calls in this skill use `mcp__plugin_linear_linear__*` (the namespace shipped with the vorbit plugin). Bare verb names below (`get_user`, `list_teams`, `save_issue`, etc.) refer to the corresponding `mcp__plugin_linear_linear__<verb>` tool.
+Read and follow `../_shared/execution-contract.md` before starting.
+
+Before any Linear call, read `_shared/mcp-tool-routing.md`, discover the connected Linear capability, and inspect its current operation/parameter schemas. Verb names below describe intent; never substitute an operation name remembered from another runtime.
 
 ## Step 1: Gather Context (Draft First)
 
 The goal is a drafted PRD before touching Linear. Connection problems must never block drafting.
 
-**IF a Linear ticket URL or ID is provided (existing draft, similar feature, etc.):**
-1. Use `get_issue` to fetch the source ticket and read its description for context
-2. Restructure: keep the source intent, normalize wording to the schema below, mark gaps as `TBD`
+**Source-of-truth rule:** Linear is the canonical PRD provider and the confirmed output is a Linear **spec ticket**. Pasted text and explicit local files are legacy import inputs, not competing sources of truth. Preserve their intent, record their provenance in the draft, and normalize them into the Linear ticket rather than continuing to maintain two PRDs.
 
-**IF the user pastes content from elsewhere (Notion, a doc, an old spec):**
-1. Use the pasted text directly as input — the skill's Linear-only `allowed-tools` cannot fetch external docs
-2. Ask the user for any sections they referenced but did not paste, then restructure as above
+Resolve context in this order:
+
+**IF a Linear ticket URL or ID is provided (canonical PRD, existing draft, similar feature, etc.):**
+1. Use `get_issue` to fetch the source ticket and read its description for context
+2. Restructure: keep the source intent, normalize wording to the schema below, mark gaps as `TBD-###`
+
+**ELSE IF the user pastes legacy content or gives an explicit local file path:**
+1. Use the pasted text directly, or `Read` the user-specified local file
+2. Record `Imported from: [pasted content | local path]` in the draft working notes
+3. Ask for referenced content that is missing, then restructure as above
+
+**ELSE IF a non-Linear URL is provided:** ask the user to paste/export its contents. Do not imply that the external document is canonical and do not guess its contents.
 
 **IF conversation already covers the feature:** use that context as input.
 
@@ -28,7 +36,7 @@ The goal is a drafted PRD before touching Linear. Connection problems must never
 
 ## Step 2: Clarify Requirements
 
-**Rule: ask about every meaningful uncertainty. Do not silently guess.**
+**Rule: ask about every meaningful uncertainty. Do not silently guess.** Every factual requirement and numeric target must trace to user input, a cited source artifact, or a durable rule. Treat inferred privacy, persistence, retention, permissions, exclusions, and metric targets as questions, not facts.
 
 Use `AskUserQuestion`, batch related unknowns together, max 3 rounds. Focus on:
 1. **Problem** — user pain and why this matters
@@ -39,10 +47,10 @@ Use `AskUserQuestion`, batch related unknowns together, max 3 rounds. Focus on:
 6. **Success metrics** — measurable outcomes
 
 For anything still unknown:
-1. Mark it `TBD` inline where it would appear in the PRD
+1. Mark it inline as `TBD-001`, `TBD-002`, ... where it would appear in the PRD
 2. Ask the user via `AskUserQuestion` (batched, max 3 rounds)
-3. Replace the `TBD` with the answer before the final draft
-4. If still unresolved after 3 rounds, leave the `TBD` with a short label
+3. Replace the `TBD` with the answer before ticket confirmation
+4. If still unresolved after 3 rounds, leave the ID with a short label and classify it as `implementation-affecting` or `non-blocking`
 
 Every `TBD` must have a matching question attempt. No silent guessing.
 
@@ -54,12 +62,16 @@ Use the template below. Match VIB-2978's prose style — no big tables.
 - Feature name (3-8 words, no jargon) — this becomes the Linear ticket **title**
 - Description: one short paragraph under the H1
 - Problem: 1-2 short paragraphs, no tech detail
-- User Stories: `US-001`, `US-002`, ... each with `AC-N` items
-- User Flows: at least one happy flow in prose Entry/Exit form
+- User Stories: `US-001`, `US-002`, ... with story-scoped AC IDs such as `US-001.AC-01`
+- User Flows: at least one happy flow with explicit step IDs such as `F1-S1`
 - Constraints
-- Success Criteria with numbers
+- Success Criteria with confirmed, sourced numbers; use `TBD-###` when a target is unknown
 
-After showing the draft, ask: **"Does this look good? Ready to create the Linear ticket?"**
+Do not fill required sections by invention. Put unresolved assumptions in `## Open Questions` with their provenance and impact classification. A structurally complete review draft may contain permitted TBDs.
+
+Before showing the draft, run the coverage gate: every AC ID is unique, every flow step ID is unique, and every AC appears in at least one flow step's `Covers` list.
+
+If the user requested a draft or review only, stop after showing it; do not ask to create or call Linear. Report `needs_input` when an implementation-affecting TBD remains, otherwise `completed`. For creation requests, ask after the draft: **"Does this look good? Ready to create the Linear ticket?"**
 
 ### Template
 
@@ -82,8 +94,8 @@ As a [user], I want [goal], so [benefit].
 
 **Acceptance Criteria:**
 
-- [ ] AC-1 [Specific testable criterion]
-- [ ] AC-2 [Another specific criterion]
+- [ ] US-001.AC-01 [Specific testable criterion]
+- [ ] US-001.AC-02 [Another specific criterion]
 
 ### US-002: [Title]
 
@@ -91,22 +103,27 @@ As a [user], I want [goal], so [benefit].
 
 **Acceptance Criteria:**
 
-- [ ] AC-3 ...
-- [ ] AC-4 ...
+- [ ] US-002.AC-01 ...
+- [ ] US-002.AC-02 ...
 
 ## User Flows
 
-### Flow 1: [Name] (Happy flow)
+### F1: [Name] (Happy flow)
 
-**Entry:** [Start screen] → [Step] → [Step] → [Step] → **Exit:** [End state]
+- `F1-S1` — **Entry:** [surface and starting state]. [User action and visible result]. Covers: `US-001.AC-01`
+- `F1-S2` — [surface]. [User action and visible result]. Covers: `US-001.AC-01`, `US-001.AC-02`
+- `F1-S3` — **Exit:** [observable end state]. Covers: `US-001.AC-02`
 
-### Flow 2: [Name] (Happy flow, second main path)
+### F2: [Name] (Happy flow, second main path)
 
-**Entry:** [Start] → [Step] → [Step] → **Exit:** [End]
+- `F2-S1` — **Entry:** [surface and starting state]. [Action and visible result]. Covers: `US-002.AC-01`
+- `F2-S2` — **Exit:** [observable end state]. Covers: `US-002.AC-01`
 
-### Flow 3: [Name] (alternate / error)
+### F3: [Name] (alternate / error / recovery)
 
-Entry: [Start] → [Step] → Server returns error → Error toast, values preserved → Exit: [State]
+- `F3-S1` — **Entry:** [branch point or starting state]. Covers: `US-001.AC-02`
+- `F3-S2` — [Failure is shown; values remain available]. Covers: `US-001.AC-02`
+- `F3-S3` — [User retries]. Next: `F1-S2`. Covers: `US-001.AC-02`
 
 ## Constraints
 
@@ -115,44 +132,60 @@ Entry: [Start] → [Step] → Server returns error → Error toast, values prese
 
 ## Success Criteria
 
-* [Measurable target with a number]
-* [Another measurable target]
+* [Confirmed measurable target with a sourced number, or `TBD-###`]
+* [Another confirmed target, or `TBD-###`]
+
+## Open Questions
+
+* `TBD-001` — [question] — Impact: [implementation-affecting | non-blocking]
 ```
 
 ### Flow rules
 
 - Every PRD needs at least one happy flow
-- Flow steps use prose `Entry: X → step → step → **Exit:** Y` form
-- Each step names what the user does, the surface they touch, and the visible result
+- Number flows `F1`, `F2`, ... and steps `F1-S1`, `F1-S2`, ...; IDs never repeat
+- Each step names the user action, the surface touched, and the visible result
+- Mark the first step `Entry` and an observable terminal step `Exit`; use `Next: F#-S#` for real retries or loops
 - Add a separate flow for any materially different path (second happy path, alternate, error)
-- Every user story should be covered by at least one flow step
-- Keep flows ticket-sized: typically 3-8 arrows per flow
+- Every `US-###.AC-##` must appear in at least one step's `Covers` list; do not claim coverage at the flow-title level
+- Every user story must be covered by at least one flow step
+- Keep a single flow readable; split a complex journey into multiple flows without deleting branches, retries, loops, or requirements
+
+### Identifier and coverage rules
+
+- User story IDs are document-unique: `US-001`, `US-002`, ...
+- Acceptance criteria are globally unique because they include their owning story: `US-001.AC-01`, `US-002.AC-01`, ...
+- Never use bare `AC-1`, `AC-2`, or a document-wide counter detached from a story
+- Flow step IDs are document-unique: `F1-S1`, `F1-S2`, `F2-S1`, ...
+- Coverage gate: `all AC IDs - AC IDs named by flow steps = empty set`. Resolve any gap before confirmation
 
 ### TBD rules
 
-- `TBD` is fine in Constraints, Success Criteria numbers, and flow details that depend on later design decisions
+- `TBD-###` is fine in Constraints, Success Criteria numbers, and flow details that depend on later design decisions
+- Never invent a number or promote an inference into a constraint merely to remove a TBD
 - `TBD` is **not** allowed in Problem, Users, or User Stories — those must be concrete before the ticket is created
 - Every `TBD` must have a matching `AskUserQuestion` attempt
+- Classify every remaining TBD. Anything that can change observable behavior, AC wording, flow branches, API/data contracts, issue boundaries, dependencies, or test criteria is `implementation-affecting`; epic planning must block until it is resolved
 
 ## Step 4: Confirm Draft
 
-Only proceed after the user confirms the draft. If they ask for changes, edit the draft in chat and re-confirm.
+Only proceed after the user confirms the draft and any implementation-affecting TBDs are resolved. If they ask for changes, edit the draft in chat and re-confirm. A request for a draft, review, or analysis is not approval to create the ticket.
 
 ## Step 5: Create the Linear Ticket
 
-1. `get_user` with `query: "me"` to verify Linear auth/session
-2. `list_teams` (scoped `limit`, e.g. 10-20). If multiple teams, ask the user which one
-3. `list_projects` with the selected team (scoped `limit`). If multiple, ask the user which one. If the team has no projects, skip the project field
-4. `save_issue` to create the ticket:
+1. Use the connector's verified lightweight identity/read operation to verify auth/session.
+2. Use its verified team-list operation with a scoped limit (for example 10-20). If multiple teams exist, ask the user which one.
+3. Use its verified project-list operation scoped to the selected team. If multiple projects exist, ask; if none exist, omit the project field.
+4. Call the operation whose inspected schema explicitly **creates an issue**. Do not assume `save_issue` or `create_issue` across runtimes. Supply:
    - `title`: the feature name (the H1 line, without the `#`)
-   - `team`: selected team name (string, name-based — not `teamId`)
-   - `project`: selected project name if any (string, name-based — not `projectId`)
+   - team: the selected team value in the exact field/type required by the inspected schema
+   - project: the selected project value, if any, in the exact field/type required by the schema
    - `description`: the full PRD body in markdown, starting at `## Description` and including everything below
 
 **Reliability rules:**
-- Keep calls scoped with `team` and `limit`. Don't run unfiltered workspace-wide listing
+- Keep reads scoped by the selected team and a limit when the schema supports them. Don't run unfiltered workspace-wide listing
 - On temporary MCP/API error, retry once with the same parameters
-- If `list_teams` fails, ask the user to type the team name directly
+- If team listing fails but creation accepts a typed team, ask the user for the team value required by the schema
 - Only block execution when auth fails
 
 ## Step 6: Report
@@ -160,6 +193,7 @@ Only proceed after the user confirms the draft. If they ask for changes, edit th
 - Linear ticket **URL**
 - Team and project used
 - Quick summary: X user stories, Y flows, Z success criteria
+- Source note: Linear is now canonical; include legacy import provenance when applicable
 - Suggested next step:
   - `/vorbit:implement:epic <ticket-id>` to break the ticket into engineering sub-issues
   - `/vorbit:design:journey` to draw a flow diagram in FigJam
@@ -170,10 +204,11 @@ Only proceed after the user confirms the draft. If they ask for changes, edit th
 
 When asked to review whether sub-issues fulfill a parent PRD ticket:
 
-1. Read the parent ticket (`get_issue`) and all sub-issues (`list_issues` with the parent's `parentId`)
-2. Map each User Story and `AC-N` to the sub-issue(s) covering it
-3. Flag work that **cannot be bundled** into an existing sub-issue as a gap; bundle-able housekeeping is not a gap
-4. Report: coverage matrix (story → sub-issues), gaps, verdict (covered / has gaps)
+1. Read the PRD spec ticket (`get_issue`) and its `## Implementation Parents` index. The spec ticket is not an implementation parent. For a legacy ticket without the index, ask for the implementation-parent URLs; never treat the spec's direct children as the new topology by assumption.
+2. Fetch every indexed implementation parent, then use `list_issues` with each implementation parent's `parentId` to fetch only its children.
+3. Verify one indexed parent per `US-###`, and map every exact `US-###.AC-##` to child issue(s) under that story's parent.
+4. Flag missing/duplicate parents, cross-parent children, and work that **cannot be bundled** into an existing child as gaps; bundle-able housekeeping is not a gap.
+5. Report: topology check, coverage matrix (story → parent → children), gaps, verdict (covered / has gaps).
 
 ---
 
@@ -186,27 +221,27 @@ When asked to review whether sub-issues fulfill a parent PRD ticket:
 | Title (H1) | Yes | 3-8 words, no jargon. Becomes Linear ticket title. |
 | Description | Yes | 1-2 short sentences, no tech detail |
 | Problem | Yes | 1-2 short paragraphs, user pain not tech gap |
-| User Stories | Yes | `As a [user], I want ..., so ...` plus `AC-N` items |
-| User Flows | Yes | At least one happy flow in Entry/Exit prose form |
+| User Stories | Yes | `As a [user], I want ..., so ...` plus `US-###.AC-##` items |
+| User Flows | Yes | At least one happy flow with explicit `F#-S#` steps and Entry/Exit anchors |
 | Constraints | Yes | Limits the implementation must respect |
-| Success Criteria | Yes | Measurable with numbers |
+| Success Criteria | Yes | Confirmed numeric targets, or classified `TBD-###` placeholders in a review draft |
 
 ## Validation Rules
 
 - **Title**: 3-8 words, no jargon
 - **Description**: short, plain English, no tech detail
 - **Problem**: describes user pain, not the technical fix
-- **User Stories**: `As a [user], I want [goal], so [benefit]`. Each story has at least one `AC-N`
-- **User Flows**: at least one. Use Entry/Exit anchors. 3-8 arrows per flow is the sweet spot
-- **AC coverage**: every `AC-N` should be reflected in at least one flow step
-- **Success Criteria**: contain real numbers (percentages, times, counts)
-- **TBD**: allowed in Constraints, Success Criteria numbers, and flow details only — never in Problem, Users, or User Stories. Every `TBD` must have a matching `AskUserQuestion` attempt
+- **User Stories**: `As a [user], I want [goal], so [benefit]`. Each story has at least one story-scoped `US-###.AC-##`
+- **User Flows**: at least one. Every step has a unique `F#-S#`; use Entry/Exit anchors and preserve real loops
+- **AC coverage**: every exact AC ID appears in at least one flow step's `Covers` list
+- **Success Criteria**: contain sourced numbers (percentages, times, counts), or classified `TBD-###` placeholders until the user supplies them
+- **TBD**: allowed in Constraints, Success Criteria numbers, and flow details only — never in Problem, Users, or User Stories. Every `TBD-###` has a matching question attempt and impact classification
 
 ## Common Mistakes
 
 | Wrong | Right | Why |
 |-------|-------|-----|
 | "We need JWT auth" | "Users cannot access personalized features without accounts" | Problem describes user pain, not the technical fix |
-| "Users should be happy with login" | "90% of users complete login in under 10 seconds" | Success criteria need real numbers |
+| "Users should be happy with login" | `TBD-001` — target completion rate and time threshold — Impact: non-blocking | Unknown targets stay explicit until the user supplies real numbers |
 | "OAuth2 JWT Token Auth Implementation" | "User Login and Signup" | Title avoids jargon |
-| Flow as steps only (`User → API → DB → API → User`) | `Entry: Login → Click Submit → Loading → Token returned → Exit: Home` | Flows describe what the user sees, with Entry/Exit anchors |
+| Flow without IDs (`Entry → Submit → Home`) | `F1-S1` Entry, `F1-S2` Submit, `F1-S3` Exit, each with `Covers` IDs | Stable IDs make requirements traceable into implementation |

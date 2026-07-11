@@ -1,0 +1,7 @@
+interface:
+  display_name: "Vorbit UX Clarification"
+  short_description: "Clarify UX through exhaustive user questions"
+  default_prompt: "Use $vorbit-ux to resolve the remaining experience decisions into explicit acceptance criteria."
+
+policy:
+  allow_implicit_invocation: false

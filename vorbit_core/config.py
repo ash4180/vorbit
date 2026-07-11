@@ -125,8 +125,14 @@ class VorbitConfig:
 
 
 def project_slug_for(project_root: Path, override: str | None = None) -> str:
-    if override:
-        return override
+    if override is not None:
+        candidate = override.strip()
+        if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]{0,127}", candidate):
+            raise ValueError(
+                "project slug override must be one safe path component "
+                "(1-128 ASCII letters, numbers, dots, underscores, or hyphens)"
+            )
+        return candidate
     resolved = project_root.resolve()
     name = _slugify(resolved.name) or "project"
     digest = hashlib.sha1(str(resolved).encode("utf-8")).hexdigest()[:8]
@@ -162,7 +168,6 @@ def resolve_config(
         project_config = _load_toml(project_path / ".vorbit" / "config.toml")
 
     storage_root = _resolve_storage_root(home, global_config)
-    storage_root.mkdir(parents=True, exist_ok=True)
 
     global_obsidian_enabled = _nested_get(global_config, "exporters", "obsidian", "enabled")
     project_obsidian_enabled = _nested_get(project_config, "exporters", "obsidian", "enabled")
@@ -237,4 +242,3 @@ def resolve_config(
         ),
         legacy_claude_bridge=legacy_claude_bridge,
     )
-

@@ -1,23 +1,25 @@
 ---
 name: epic
-version: 1.4.2
-description: Use when user says "create issues", "break down PRD", "set up epic", "create Linear tasks", "plan sprint", "convert to issues", or wants to transform PRD user stories into Linear epics and sub-issues.
+description: Use when the user asks to turn an approved PRD spec ticket into one Linear implementation parent per user story plus traceable ordered sub-issues. It analyzes the codebase, presents the full topology for approval, then creates and links Linear issues. Requires Linear and PRD-level requirements; do not use for generic sprint scheduling, writing the PRD, implementing code, or brainstorming.
 ---
 
 # Epic Planning Skill
 
-Transform User Stories (from PRD) into executable Engineering Tasks (Epics/Issues) in Linear.
+Transform User Stories from one PRD spec ticket into deterministic implementation-parent trees in Linear.
+
+Read and follow `../_shared/execution-contract.md` before starting.
 
 > **Linear MCP namespace**: All Linear calls in this skill use `mcp__plugin_linear_linear__*` (the namespace shipped with the vorbit plugin). Bare verb names below (`get_user`, `list_teams`, `list_issues`, etc.) refer to the corresponding `mcp__plugin_linear_linear__<verb>` tool.
 
 **Key Features:**
 - Sub-issues include plain-language "Why" section
-- Each sub-issue references parent epic's acceptance criteria
+- Each sub-issue references its implementation parent's acceptance criteria
 - Each sub-issue references related PRD flow steps
 - File paths are specified with exact locations
 - Existing code patterns and constants are identified for reuse
 - UI components reference the ui-patterns skill
 - Visual dependency tree shows implementation order by phase
+- One implementation parent per user story, with its own sub-issues and persisted order
 
 ## Step 1: Verify Linear Connection
 
@@ -25,26 +27,44 @@ PRDs live as Linear tickets (see [`/vorbit:design:prd`](../../skills/prd/SKILL.m
 
 ## Step 2: Gather Context
 
+Linear is the canonical PRD provider. The PRD is a **spec ticket**, not the implementation parent.
+
+Resolve source context in this order:
+
 **IF Linear ticket URL or ID provided:**
-1. Use `get_issue` to fetch the parent ticket
-2. Extract user stories (`US-*` IDs), acceptance criteria (`AC-*` IDs), user flows, constraints, and success criteria from the ticket description
+1. Use `get_issue` to fetch the PRD spec ticket
+2. Extract user stories (`US-###`), story-scoped acceptance criteria (`US-###.AC-##`), flow steps (`F#-S#`), constraints, success criteria, and `TBD-###` items
 
 **IF feature name provided (no ticket ID):**
 1. Use `list_issues` scoped to the team with a title-based filter to locate the PRD ticket
 2. If multiple candidates, ask the user which one via `AskUserQuestion`
 3. Fetch with `get_issue` and extract as above
 
-**IF no PRD ticket exists:**
-1. Ask the user if they want to create the PRD first via `/vorbit:design:prd` — recommend that path so the source-of-truth lives in Linear
-2. If the user prefers to skip the PRD step, gather requirements via conversation and capture them inline so the epic still has US/AC/flow content to trace against
+If a fetched Linear PRD uses legacy bare ACs or unnumbered flow steps, draft an ID-only normalization, show the exact mapping, and get approval to update the spec before planning. Do not change requirement meaning while adding stable IDs.
+
+**IF explicit pasted PRD content or a user-specified local file is provided:**
+1. Read it as a legacy fallback and record its provenance
+2. Normalize missing IDs to `US-###`, `US-###.AC-##`, and `F#-S#` without changing meaning
+3. Mark the plan as `canonicalization required`: after user approval, create/import the Linear PRD spec ticket before any implementation parent
+
+**IF no Linear PRD and no explicit legacy artifact exists:** stop and direct the user to `/vorbit:design:prd`. Do not invent a PRD from casual conversation inside epic planning.
 
 **Traceability requirements before planning:**
-- Every user story has at least one `AC-*`
-- Every `AC-*` is reflected in at least one user flow step (the new prose flows replace the old Story-to-Flow Mapping table)
-- If any user story has no AC, or any AC has no flow coverage, use `AskUserQuestion` to resolve before Step 5
+- Every user story has at least one unique, story-scoped `US-###.AC-##`
+- Every flow step has a stable `F#-S#`
+- Every AC is reflected in at least one flow step's coverage list, or has an explicit non-journey reason
+- If any user story has no AC, any AC has no flow coverage/reason, or any flow step is unnumbered, resolve it before Step 4
+
+### Implementation-Affecting TBD Gate (Blocking)
+
+Inspect every inline `TBD`, `TBD-###`, "unknown", and unresolved question. A TBD is implementation-affecting when its answer can change observable behavior, AC wording, a flow branch, API/data contracts, issue boundaries, dependencies, file changes, or test criteria.
+
+- Ask focused questions to resolve every implementation-affecting TBD.
+- If any remains unresolved, **STOP before codebase analysis and technical planning**. Report the blocking IDs and their impact; do not create an SDD, implementation parents, or sub-issues.
+- A genuinely non-blocking TBD may remain only when it cannot change implementation scope or ordering. Carry it into Risks & Unknowns with its explicit classification.
 
 **PRD-first sequencing rule (required):**
-- Lock requirement baseline first: `US-* -> AC-* -> Flow`
+- Lock requirement baseline first: `US-### -> US-###.AC-## -> F#-S#`
 - Do NOT start codebase analysis until the requirement baseline is complete
 - Codebase analysis is used to implement PRD requirements, not redefine them
 - If existing code conflicts with PRD intent, raise the conflict and resolve with user before creating issues
@@ -110,12 +130,12 @@ Use a **pattern-first, paths-second** strategy:
 
 ### 4.3 Discover Constants (NO MAGIC NUMBERS)
 ```bash
-# Find constant files
-find . -name "constants*" -o -name "config*" | head -20
+# Find likely constant/config files
+rg --files | rg '(^|/)(constants|config)(\.|/|$)' | head -20
 ```
 - List relevant constants for this feature
 - Identify where new constants should go
-- **Rule:** Every hardcoded value must reference a constant
+- Reuse constants for shared domain values and policy limits; do not create constants for obvious one-off literals
 
 ### 4.4 Check for Mock Data
 If prototype exists with mock data:
@@ -144,16 +164,16 @@ Examples of coupling:
 
 **Rule:** Never split tightly coupled file changes across separate tickets without explicitly documenting the shared contract in both. Partial implementation of one ticket will break the system until the other is also done.
 
-**For large codebases:** If the dependency graph is unclear, spawn a team or use `/vorbit:review` to map it before planning tickets. Blast radius analysis — who imports what, what reads what — prevents silent coupling errors.
+**For large codebases:** If the dependency graph is unclear, run an independent blast-radius analysis before planning tickets. Who imports what and what consumes each contract matters more than directory guesses.
 
 ## Step 5: Create Technical Plan (SDD)
 
-**RULE: If ANY requirement is unclear, use AskUserQuestion.**
+**RULE: If ANY requirement is unclear, use AskUserQuestion. Never plan past an implementation-affecting TBD.**
 
 Create SDD (Specification-Driven Development) document:
 - Technical Overview
-- Flow Impact Matrix (flow step -> system/module/API/UI touchpoints)
-- PRD Compliance Check (confirm all planned changes satisfy PRD `US/AC/Flow` baseline)
+- Flow Impact Matrix (`F#-S#` -> system/module/API/UI touchpoints)
+- PRD Compliance Check (confirm all planned changes satisfy the exact `US -> AC -> Flow` baseline)
 - Data Model Changes
 - API Changes
 - Component Breakdown
@@ -169,22 +189,35 @@ Present plan and ask:
 - "Any concerns?"
 - "Ready to create Linear issues?"
 
+Show the full proposed topology before asking: PRD spec ticket -> one implementation parent for each `US-###` -> that parent's executable sub-issues -> that parent's implementation order. If using a legacy fallback, include creation of the canonical Linear PRD spec ticket in this approval.
+
 **DO NOT proceed until user confirms.**
 
-## Step 7: Plan Epics from User Stories
+## Step 7: Plan Implementation Parents from User Stories
 
-**1 User Story = 1 Epic**
+**Exactly 1 User Story = 1 implementation parent.**
+
+The topology is deterministic:
+
+```text
+Linear PRD spec ticket (requirements source; not an implementation parent)
+├── US-001 -> implementation parent A -> A's sub-issues -> A's Implementation Order
+├── US-002 -> implementation parent B -> B's sub-issues -> B's Implementation Order
+└── US-003 -> implementation parent C -> C's sub-issues -> C's Implementation Order
+```
+
+The arrows from the PRD are traceability links in each parent's description, not `parentId` nesting. Reserve `parentId` for executable sub-issues under their implementation parent so implement-loop can query one parent tree at a time.
 
 For each User Story, create:
-- **Title**: Write a clear, human-readable epic title derived from the user story goal
+- **Title**: Write a clear, human-readable implementation-parent title derived from the user story goal
 - **Description**: User story + related flow context + acceptance criteria + **test criteria (REQUIRED for TDD)**
-- **Sub-issues** (if complex): Apply **Parallel** label only when truly independent
+- **Sub-issues**: Create at least one executable sub-issue. Even a small story gets one child; the parent remains the coordination/spec node. Apply **Parallel** only when truly independent
 
-**TDD rule:** Every issue MUST include `## Test Criteria` section. Tests are written FIRST before implementation.
+**Verification rule:** Every issue MUST include a `## Test Criteria` section. Behavior tests are written first when the repository has a runnable harness; otherwise specify an honest observable validation method.
 
 **Epic planning inputs per story (required):**
-- User story ID (`US-*`)
-- Relevant AC IDs (`AC-*`)
+- User story ID (`US-###`)
+- Relevant exact AC IDs (`US-###.AC-##`)
 - Flow step IDs and surfaces from PRD (for example `F1-S3`, `API /orders`)
 
 **Ticket derivation rule:**
@@ -201,7 +234,7 @@ For EACH sub-issue, include all these sections:
 | Section | Required | Purpose |
 |---------|----------|---------|
 | **Why This Is Needed** | ✅ | What it does + why it matters |
-| **Related Epic AC** | ✅ | Copy relevant ACs from parent epic |
+| **Related Parent AC** | ✅ | Copy exact PRD ACs from the implementation parent |
 | **Related Flow Steps** | ✅ | Copy relevant flow step IDs + touched surfaces |
 | **Reuse & Patterns** | ✅ | Existing code, utilities, constants |
 | **File Changes** | ✅ | Exact file paths with action (CREATE/MODIFY) |
@@ -209,43 +242,52 @@ For EACH sub-issue, include all these sections:
 | **Acceptance Criteria** | ✅ | Sub-issue specific criteria |
 | **Test Criteria** | ✅ | TDD requirements |
 
-### Mapping Epic AC to Sub-issues
+### Mapping Parent AC to Sub-issues
 
-1. List all Epic Acceptance Criteria (`AC-*`)
-2. List all related flow steps for the story (`F*-S*`)
-3. For each sub-issue, identify which Epic ACs and flow steps it satisfies
-4. Copy those specific ACs into "Related Epic AC" and flow steps into "Related Flow Steps"
-5. **Rule:** Every Epic AC must be covered by at least one sub-issue
+1. List all parent Acceptance Criteria (`US-###.AC-##`)
+2. List all related flow steps for the story (`F#-S#`)
+3. For each sub-issue, identify which parent ACs and flow steps it satisfies
+4. Copy those specific ACs into "Related Parent Acceptance Criteria" and flow steps into "Related Flow Steps"
+5. **Rule:** Every parent AC must be covered by at least one sub-issue
 6. **Rule:** Every in-scope flow step with implementation impact must be covered by at least one sub-issue
 
 ## Step 7.5: Traceability Gate (Required)
 
 Before creating Linear issues, validate this matrix:
-- `US-*` -> `AC-*`
-- `AC-*` -> `Flow step(s)` (`F*-S*`) or explicit non-journey reason
-- `Flow step(s)` -> sub-issue(s)
+- `US-###` -> exactly one planned implementation parent
+- `US-###` -> its `US-###.AC-##`
+- `US-###.AC-##` -> flow step(s) (`F#-S#`) or explicit non-journey reason
+- In-scope `F#-S#` -> sub-issue(s) under that story's parent
+- Every planned sub-issue -> exactly one implementation parent
+- Every remaining TBD -> explicitly non-blocking
 
 If any link is missing, stop and resolve via `AskUserQuestion` before Step 8.
 
 ## Step 8: Create in Linear
 
-Using plan from Step 7:
-1. Create parent issue (epic) first
-2. Create sub-issues with `parentId` = epic ID
-3. Use team's existing labels/states
+Using the approved plan:
+
+1. If the source was a legacy fallback, create the approved Linear PRD spec ticket first. Its URL becomes the canonical PRD reference for every implementation parent.
+2. Use `(canonical PRD ID, US-###)` as the idempotency key. Before creating anything, search for an existing indexed parent and resume/repair it rather than duplicating it.
+3. Iterate user stories in PRD order. For each `US-###`, create exactly one top-level implementation parent. Do not reuse the PRD spec ticket as a parent and do not combine stories.
+4. Create only that story's executable sub-issues with `parentId` = that implementation parent's ID; lookup by planned stable child ID/title before create.
+5. Use the team's existing labels/states.
+6. **Persist that parent's Implementation Order**: after its sub-issues exist, update that implementation parent's description (`save_issue`) to append its own `## Implementation Order` phased tree with real child IDs. Never put another parent's children in this section. This preserves the existing implement-loop contract; an order that only appears in chat is lost when the session ends.
+7. Re-fetch each implementation parent and verify its child IDs and persisted order before moving to the next story.
+8. After every parent verifies, re-read the canonical PRD spec ticket and append or replace `## Implementation Parents` with `US-### -> [parent ID and URL]` entries in PRD order. Preserve all existing PRD content. This index is the deterministic link from the spec to its implementation trees.
 
 ## Step 9: Report
 
 Present the following:
 
-1. **Parent issue URL**
-2. **Sub-issue count:** X total (P1: Y, P2: Z, P3: W)
-3. **PRD ticket URL** (the source Linear ticket the epic was derived from)
-4. **Implementation Order** (dependency tree)
+1. **PRD spec ticket URL** (canonical source)
+2. **All implementation parent URLs**, in PRD user-story order, with the owning `US-###`
+3. **Per parent:** sub-issue count by priority and its own Implementation Order (the same tree persisted in Step 8 item 6)
+4. **Topology verification:** X user stories, X implementation parents, Y total sub-issues; flag any mismatch instead of claiming success
 
 ### Implementation Order Format
 
-Implementation order based on dependencies:
+Implementation order is calculated independently for each implementation parent:
 
   Phase 1 (Parallel - no dependencies)
   - ABC-101: [Issue title]
@@ -264,14 +306,15 @@ Implementation order based on dependencies:
 - Each subsequent phase depends on previous phase completing
 - Show `blocked by:` for each issue with dependencies
 - Group parallel work within same phase
+- Include only children whose `parentId` is the implementation parent being reported
 
-Next: Start with Phase 1 issues using `/vorbit:implement:implement ABC-101`
+Next: choose one implementation parent and start its Phase 1 using `/vorbit:implement:implement ABC-101`
 
 ---
 
 # Epic Schema & Standards
 
-## Title Format
+## Implementation Parent Title Format
 
 **Transform the User Story Goal into a clear, human-readable epic title.**
 
@@ -282,16 +325,16 @@ Next: Start with Phase 1 issues using `/vorbit:implement:implement ABC-101`
 
 ## Issue Structure
 
-### Epic (Parent)
+### Implementation Parent (one per User Story)
 
 **Description template:**
 ```markdown
 ## User Story
-US-XXX: As a [user], I want [goal]...
+US-001: As a [user], I want [goal]...
 
 ## Acceptance Criteria
-- [ ] AC-1 Criterion 1
-- [ ] AC-2 Criterion 2
+- [ ] US-001.AC-01 Criterion 1
+- [ ] US-001.AC-02 Criterion 2
 
 ## Related PRD Flow Context
 | Flow Step | Surface | Why it matters |
@@ -311,7 +354,16 @@ US-XXX: As a [user], I want [goal]...
 
 ## PRD Reference
 [Link]
+
+## Implementation Order
+Phase 1 (Parallel - no dependencies)
+- [ISSUE-ID]: [Issue title]
+
+Phase 2 (depends on Phase 1)
+- [ISSUE-ID]: [Issue title]
 ```
+
+*The `## Implementation Order` section is appended per parent in Step 8.5, after that parent's sub-issues exist and their IDs are known.*
 
 ### Sub-issue (Child)
 
@@ -323,10 +375,10 @@ US-XXX: As a [user], I want [goal]...
 **What this does:** [Simple 1-sentence explanation]
 **Why it matters:** [Business/user impact - what breaks without this?]
 
-## Related Epic Acceptance Criteria
-> This sub-issue must satisfy these goals from the parent epic:
-- [ ] AC-1 [Epic AC that this sub-issue addresses]
-- [ ] AC-2 [Epic AC that this sub-issue addresses]
+## Related Parent Acceptance Criteria
+> This sub-issue must satisfy these goals from the implementation parent:
+- [ ] US-001.AC-01 [Parent AC that this sub-issue addresses]
+- [ ] US-001.AC-02 [Parent AC that this sub-issue addresses]
 
 ## Related Flow Steps
 > Implementation context from PRD flow:
@@ -373,11 +425,11 @@ Run `/vorbit:design:ui-patterns` before implementing UI components.
 | None expected | - | N/A |
 
 > **Handover note:** Run `/vorbit:implement:cleanup-mocks [feature]` before backend takes over.
-> Mocks will be registered in `.claude/mock-registry.json` for tracking.
+> Mocks must be registered in the runtime-neutral Vorbit project registry; copy the exact resolved registry path from the prototype/implementation context into this issue. Never hardcode an agent-specific directory.
 
 ## Acceptance Criteria (Sub-issue specific)
-- [ ] AC-SUB-1 Criterion 1
-- [ ] AC-SUB-2 Criterion 2
+- [ ] US-001.T01.AC-01 Criterion 1
+- [ ] US-001.T01.AC-02 Criterion 2
 
 ## Test Criteria (TDD - write tests FIRST)
 
@@ -391,6 +443,8 @@ Run `/vorbit:design:ui-patterns` before implementing UI components.
 - [ ] E2E: [false positive / negative case] — inputs that must NOT trigger
 ```
 
+`T01` is the sub-issue's stable sequence within `US-001`; the next child uses `T02`. This keeps child-level AC IDs globally unique and tied to their user story.
+
 **Priority Mapping**:
 - P1 (Urgent): Core / Blocker
 - P2 (High): Important
@@ -400,40 +454,19 @@ Run `/vorbit:design:ui-patterns` before implementing UI components.
 
 ## TDD Requirement
 
-**CRITICAL: All implementation follows Test-Driven Development.**
+**CRITICAL: Every issue defines honest verification; behavior changes use TDD when the repository has a runnable harness.**
 
 Every issue (epic and sub-issue) MUST include `## Test Criteria` section:
-- Tests are written FIRST before implementation code
+- Behavior tests are written first when a runnable harness exists
+- When no honest automated surface exists, the issue must define a real approved validation command or observable check
 - Implementation is only "done" when all tests pass
-- No issue is complete without corresponding tests
+- No issue is complete without its specified verification evidence
 
 ---
 
 ## E2E Test Quality Rules
 
-Apply these rules when writing E2E test criteria for any sub-issue, regardless of stack (API, UI, script, service):
-
-**1. Fixtures must match the real data format**
-Before writing any E2E fixture (mock API response, database seed, file, event payload), sample the real system output first. Never hand-write fixtures based on assumptions — simplified formats hide bugs that only surface in production.
-> Verify the actual shape of the data from the real system, then write fixtures that match it exactly.
-
-**2. Assert observable output, not internal signals**
-E2E tests must assert what the end user or downstream system actually observes:
-- UI: rendered content, visible state, navigation
-- API: response body, status code, database state after the request
-- Script/service: files written, messages sent, external state changed
-
-Internal signals (exit codes, log lines, intermediate variables) are not the observable output. Always trace through to the final effect.
-
-**3. Every code path needs at least one E2E test**
-If the feature has multiple flows or branches (happy path, error path, empty state, retry), each needs its own E2E test. Coverage of one path does not imply correctness of another.
-
-**4. Assertions must be non-vacuous**
-Before asserting on the content of something (file, response, record), first assert it exists. An assertion on a missing resource trivially passes and gives false confidence.
-> Asserting "file does not contain X" when the file doesn't exist always passes — even if the code was supposed to create it.
-
-**5. Test the integrated system, not parts in isolation**
-E2E tests should exercise the full stack end-to-end — real HTTP calls, real DB writes, real file I/O. Mocking internals in an E2E test defeats the purpose. Reserve mocking for unit tests.
+Before writing E2E criteria for any sub-issue, read and apply `references/e2e-test-quality.md` relative to this skill.
 
 ---
 

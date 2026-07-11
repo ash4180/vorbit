@@ -5,9 +5,9 @@ Use for Figma design-system sync and front-end-ready Figma mockups.
 ## Required Setup
 
 1. Load Vorbit durable rules before doing anything else.
-2. Load `figma-use` before any Figma write or unique Figma read.
-3. For Figma screen/mockup creation, load `figma-generate-design`.
-4. For Figma design-system creation or reconciliation, load `figma-generate-library`.
+2. Before any Figma write or unique Figma read, load the installed Figma prerequisite whose unqualified name is `figma-use`; invoke its current catalog-qualified name.
+3. For Figma screen/mockup creation, likewise load the installed `figma-generate-design` prerequisite by its catalog-qualified name.
+4. For Figma design-system creation or reconciliation, likewise load the installed `figma-generate-library` prerequisite by its catalog-qualified name.
 5. Work incrementally. Never batch unrelated Figma mutations into one call.
 
 ## Shared Mindset

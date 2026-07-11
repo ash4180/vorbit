@@ -1,289 +1,166 @@
 ---
 name: implement-loop
-version: 1.0.0
-description: Use when user says "implement --loop", "loop mode", "iterate on issues", "auto-continue", or adds --loop flag to implement. Manages autonomous iteration through sub-issues until completion.
+description: Use only when the user explicitly invokes loop mode, supplies --loop or --cancel, or asks to autonomously work through an ordered Linear epic or sub-issue queue. After one queue confirmation it changes code, runs tests, and updates Linear statuses and comments until completion. Loop execution requires a Linear issue; do not use for a one-off implementation, issue planning, or unattended work without explicit loop intent.
 ---
 
 # Implement Loop Skill
 
-Manages Ralph Wiggum-style iteration loops for the implement command. Handles sub-issue tracking, state management, and completion detection.
+Run an approved Linear implementation queue as a bounded, resumable state machine. Use the normal implement skill's search, scope, TDD, and verification rules for each queue item.
 
-> **Linear MCP namespace**: All Linear calls in this skill use `mcp__plugin_linear_linear__*` (the namespace shipped with the vorbit plugin). Bare verb names below (`list_issues`, `update_issue`, `create_comment`, `list_issue_statuses`) and `Tool: <verb>` blocks refer to the corresponding `mcp__plugin_linear_linear__<verb>` tool.
+Read and follow `../_shared/execution-contract.md` before starting.
 
-## When to Use
+Use the connected Linear tools only after verifying their current schemas. The Vorbit Claude plugin normally exposes `get_issue`, `list_issues`, `save_issue`, `save_comment`, and `list_issue_statuses`.
 
-- User runs `/vorbit:implement:implement [issue] --loop`
-- User runs `/vorbit:implement:implement [issue] --cancel`
+## Inputs and Preconditions
 
-## Loop Initialization
+Require:
 
-### Step 1: Parse Arguments
+- a Linear issue ID or URL;
+- explicit `--loop` intent, unless resuming an active state file;
+- a working Linear connection;
+- a repository with a clean or understood worktree;
+- one queue confirmation before a multi-issue run.
 
-Extract from `$ARGUMENTS`:
-- Issue ID or URL (required for loop mode)
-- `--loop` flag (activates loop mode)
-- `--cancel` flag (stops active loop)
-- `--completion-signal "text"` (optional custom signal)
+Use the fixed completion marker `<!-- VORBIT_LOOP_COMPLETE -->`. Do not accept arbitrary completion text: ordinary prose must never stop the hook accidentally.
 
-### Step 2: Handle --cancel
+## State File
 
-If `--cancel` detected:
-1. Delete `.claude/.loop-state.json` if exists
-2. Output: "🛑 Loop cancelled"
-3. Stop immediately
+Store runtime state at `.claude/.loop-state.json`. It is local runtime state and must not be committed.
 
-### Step 3: Check for Sub-issues
-
-**CRITICAL: Always check for sub-issues first!**
-
-1. Fetch the parent issue from Linear
-2. **Parse the "Implementation Order" section from description**
-   - This section defines the sequence to follow
-   - Extract issue IDs in order
-3. Call `list_issues` with filter `parentId: [issue ID]` to get sub-issue details
-4. Match sub-issues to the Implementation Order sequence
-
-### Step 3b: Build Work Queue from Implementation Order
-
-**Read the parent issue description and find "Implementation Order" section:**
-
-```markdown
-## Implementation Order
-1. VIB-1862 - analyze-codebase-compatibility
-2. VIB-1863 - update-incident-types
-3. VIB-1878 - setup-incident-dashboard-folder
-...
-```
-
-**Build work queue:**
-1. Parse issue IDs from Implementation Order
-2. For each issue, fetch its status from Linear
-3. **Skip** issues with status: Done, Completed, Cancelled
-4. **Keep** remaining issues in the Implementation Order sequence
-
-**Example:**
-```
-Implementation Order from parent:
-1. VIB-1862 → Status: Done → SKIP
-2. VIB-1863 → Status: Done → SKIP
-3. VIB-1878 → Status: Backlog → Queue position 1
-4. VIB-1879 → Status: Backlog → Queue position 2
-5. VIB-1864 → Status: In Progress → Queue position 3
-...
-
-Work queue = [VIB-1878, VIB-1879, VIB-1864, ...]
-```
-
-### Step 4: Create State File
-
-Create `.claude/.loop-state.json`:
-
-**If sub-issues exist:**
 ```json
 {
+  "version": 2,
   "active": true,
-  "command": "/vorbit:implement:implement [issue ID]",
-  "completionSignal": "✅ All acceptance criteria met",
+  "status": "running",
+  "command": "/vorbit:implement:implement VIB-100 --loop",
+  "completionSignal": "<!-- VORBIT_LOOP_COMPLETE -->",
   "maxIterations": 50,
   "iteration": 1,
-  "issueId": "[issue ID]",
-  "hasSubIssues": true,
-  "subIssues": ["[sub-1-id]", "[sub-2-id]", "..."],
-  "parallelSubIssues": ["[ids with Parallel label]"],
-  "currentSubIssueIndex": 0,
-  "completedSubIssues": []
+  "parentIssueId": "VIB-100",
+  "sourceUpdatedAt": "2026-01-01T00:00:00Z",
+  "queue": [
+    {"id": "VIB-101", "phase": 1, "priority": "High"},
+    {"id": "VIB-102", "phase": 1, "priority": "Normal"},
+    {"id": "VIB-103", "phase": 2, "priority": "High"}
+  ],
+  "currentIndex": 0,
+  "completedIssueIds": [],
+  "lastFailureFingerprint": null,
+  "repeatedFailureCount": 0,
+  "blockReason": null
 }
 ```
 
-**If NO sub-issues (single issue):**
-```json
-{
-  "active": true,
-  "command": "/vorbit:implement:implement [issue ID]",
-  "completionSignal": "✅ All acceptance criteria met",
-  "maxIterations": 50,
-  "iteration": 1,
-  "issueId": "[issue ID]",
-  "hasSubIssues": false,
-  "subIssues": [],
-  "currentSubIssueIndex": 0,
-  "completedSubIssues": []
-}
+The `command` must include `--loop`; the stop hook re-injects it on every iteration.
+
+## Initialization
+
+### 1. Handle Cancel
+
+For `--cancel`:
+
+1. Read the state before deleting it.
+2. Report the current issue, completed items, and worktree state.
+3. If a Linear issue was started, add a cancellation comment; do not claim the code was reverted.
+4. Delete the state file and stop.
+
+Never discard or reset code during cancellation.
+
+### 2. Resume or Build the Queue
+
+If an active `running` state exists, resume it. Re-fetch the parent first; if its description changed since `sourceUpdatedAt`, set `active: false`, `status: "needs_input"`, and a precise `blockReason`, then preserve state and stop to reconcile the queue.
+
+If an inactive `needs_input`, `blocked`, or `failed` state exists, report its reason and resume point instead of replacing it. Resume only after the user supplies or confirms the missing resolution: reconcile the source/queue as needed, update the baseline, clear failure tracking, then set `active: true` and `status: "running"`. A completed state is left for the stop hook to validate and delete.
+
+For a new run:
+
+1. Fetch the parent and its sub-issues.
+2. Parse the parent's `## Implementation Order` section phase by phase.
+3. Within a phase, sort by Linear priority (`Urgent`, `High`, `Normal`, `Low`), then creation time.
+4. Skip `Done`, `Completed`, and `Cancelled` issues.
+5. Accept a flat numbered list as a single sequential phase.
+6. Append Linear sub-issues missing from the section as an `unplanned` final phase and call them out.
+7. If the section is absent, build a priority-ordered fallback and label it as a guess.
+
+A `Parallel` label means dependency independence, not permission for concurrent writers in one worktree. Process items deterministically unless the environment provides isolated worktrees and the user explicitly approves parallel execution.
+
+### 3. Confirm and Persist
+
+For a multi-issue queue, show issue IDs, titles, phases, priorities, skipped items, unplanned items, and whether fallback ordering was used. Ask once:
+
+- **Start** — persist state and begin;
+- **Reorder** — accept a revised order, show it again, and re-confirm;
+- **Cancel** — do not write state.
+
+For a single issue explicitly started with `--loop`, persist and begin without another confirmation.
+
+## Iteration
+
+For the current `queue[currentIndex]` item, or the parent when the queue is empty:
+
+1. Re-fetch the issue and compare its update timestamp with the baseline used for the current cycle.
+2. Move it to the team's exact In Progress state and add one start comment.
+3. Apply the normal implement workflow without re-entering loop initialization:
+   - search for existing code and tests first;
+   - map `US-*.AC-*` and `F*-S*` requirements;
+   - write or update an honest focused test when a harness exists;
+   - implement only the current issue;
+   - run focused and relevant regression checks.
+4. Record AC-by-AC evidence and test commands.
+
+### Complete Current Item
+
+Only when every current-item AC passes and relevant tests pass:
+
+1. Add a completion comment containing files and verification evidence.
+2. For a sub-issue, move it to the team's Done/Completed state.
+3. Add its ID to `completedIssueIds`, increment `currentIndex`, clear failure tracking, and write state atomically.
+4. Continue with the next item.
+
+### Incomplete or Failed Current Item
+
+If work remains, keep the same queue index. Report the unmet AC or failing check.
+
+Create a failure fingerprint from the failing command/error plus unmet AC IDs. If the same fingerprint occurs three consecutive cycles:
+
+1. set `active: false`, `status: "blocked"`, and `blockReason`;
+2. preserve the state file for inspection;
+3. add a concise Linear blocker comment when authorized;
+4. stop and ask for the missing decision or external change.
+
+Do not burn iterations repeating the same failure.
+
+## Queue Completion
+
+After all sub-issues finish:
+
+1. Re-fetch the parent and verify every parent AC against accumulated evidence.
+2. If an AC is unmet and no remaining issue owns it, set `active: false`, `status: "needs_input"`, and `blockReason`, then preserve state and stop; do not invent unplanned scope.
+3. Keep the implementation parent In Progress and add a "ready for verification/PR" comment. A parent becomes In Review after PR creation and Done only after merge.
+4. Set state to `active: false`, `status: "completed"`.
+5. Emit the exact marker `<!-- VORBIT_LOOP_COMPLETE -->` once.
+
+The stop hook deletes a completed state only when both the stored status and exact marker agree.
+
+## Terminal States
+
+- `completed` — queue and parent ACs verified; emit the marker.
+- `needs_input` — a requirement, queue, or source revision needs a user decision.
+- `blocked` — the same failure repeated three times or iteration limit reached.
+- `failed` — a non-recoverable tool or state error.
+- `canceled` — user canceled; state deleted, code left untouched.
+
+At `maxIterations`, preserve state as blocked and report the current issue and reason. Never delete evidence silently.
+
+## Progress Output
+
+Each cycle reports:
+
+```text
+Current: VIB-102 — title
+Phase: 1
+Acceptance criteria: 3/4 passed
+Queue progress: 1/3 complete
+Tests: command + result
+Status: running | needs_input | blocked | failed | completed
 ```
-
-### Step 5: Output Summary
-
-```
-🔄 Loop mode activated
-
-📋 Issue: [issue title]
-   Type: [Parent with N sub-issues | Single issue]
-
-📝 Work queue:
-   1. [first item to work on]
-   2. [second item]
-   ...
-
-🎯 Completion: [completion signal]
-```
-
-## During Implementation
-
-### Which Issue to Work On
-
-Read `.claude/.loop-state.json` and determine current target:
-
-**If `hasSubIssues: true`:**
-- Get `subIssues[currentSubIssueIndex]`
-- Fetch THAT sub-issue's details from Linear
-- Work on THAT sub-issue's acceptance criteria
-- Ignore parent issue until all sub-issues done
-
-**If `hasSubIssues: false`:**
-- Work on the main `issueId` directly
-- Check its acceptance criteria
-
-### Parallel Sub-issues
-
-Sub-issues with the **"Parallel"** label in Linear can run in parallel:
-- Check if current sub-issue is in `parallelSubIssues`
-- If yes, can use Task tool to spawn agents for other parallel issues
-- Mark all parallel issues complete together
-
-## Loop Completion
-
-### After Each Implementation Cycle
-
-1. **Read current state** from `.claude/.loop-state.json`
-
-2. **Get current target issue:**
-   - If `hasSubIssues`: use `subIssues[currentSubIssueIndex]`
-   - If not: use `issueId`
-
-3. **Check completion for CURRENT issue:**
-   - Fetch its acceptance criteria from Linear
-   - Verify ALL criteria are met
-   - Verify tests pass
-
-4. **If current issue COMPLETE:**
-
-   For sub-issues:
-   - Update Linear: mark sub-issue "Done"
-   - Add comment with what was implemented
-   - Update state: add to `completedSubIssues`, increment `currentSubIssueIndex`
-   - Output: "✅ Sub-issue complete: [title] ([done]/[total])"
-
-   For single issue:
-   - Update Linear: mark issue "Done"
-   - Output completion signal: "✅ All acceptance criteria met"
-
-5. **If all sub-issues done:**
-   - Check if `currentSubIssueIndex >= subIssues.length`
-   - Fetch PARENT issue acceptance criteria
-   - If parent criteria met: Output completion signal
-   - If not: Continue loop to address parent requirements
-
-6. **If current issue NOT complete:**
-   - Don't update state
-   - Describe what still needs work
-   - Loop continues on same issue
-
-### Progress Output
-
-Each iteration should show:
-```
-📍 Current: [issue title]
-   Acceptance criteria:
-   - [x] Criteria 1 (done)
-   - [ ] Criteria 2 (pending)
-
-📊 Progress: [completed]/[total] issues done
-```
-
-## State File Location
-
-- Path: `.claude/.loop-state.json`
-- Gitignored (runtime only, not committed)
-- Deleted when loop completes or is cancelled
-
-## Stop Hook Integration
-
-The stop hook (`hooks/scripts/loop-controller.sh`):
-- Reads state file
-- Checks for completion signal in Claude's output
-- If found: deletes state, allows exit
-- If not found: increments iteration, re-feeds command
-- Enforces max iterations limit
-
-## Linear Updates (REQUIRED)
-
-**You MUST call Linear MCP tools to update issues. Don't just describe updates - actually call the tools!**
-
-### When Starting a Sub-issue
-
-**IMMEDIATELY call Linear to update status:**
-```
-Tool: update_issue
-Parameters:
-  - issueId: [current sub-issue ID]
-  - stateId: [In Progress state ID]
-```
-
-**Add a comment:**
-```
-Tool: create_comment
-Parameters:
-  - issueId: [current sub-issue ID]
-  - body: "🤖 Starting implementation via loop mode (iteration [N])"
-```
-
-### During Implementation
-
-**Add progress comments for significant updates:**
-```
-Tool: create_comment
-Parameters:
-  - issueId: [current sub-issue ID]
-  - body: "Progress: [what was done]\n\nFiles changed:\n- [file1]\n- [file2]"
-```
-
-### When Sub-issue Completes
-
-**Update status to Done:**
-```
-Tool: update_issue
-Parameters:
-  - issueId: [current sub-issue ID]
-  - stateId: [Done state ID]
-```
-
-**Add completion comment:**
-```
-Tool: create_comment
-Parameters:
-  - issueId: [current sub-issue ID]
-  - body: "✅ Implementation complete\n\n## What was done\n[summary]\n\n## Files changed\n- [files]\n\n## Tests\n[test status]"
-```
-
-### When All Sub-issues Done
-
-**Update parent issue:**
-```
-Tool: update_issue
-Parameters:
-  - issueId: [parent issue ID]
-  - stateId: [Done state ID]
-
-Tool: create_comment
-Parameters:
-  - issueId: [parent issue ID]
-  - body: "✅ All sub-issues complete\n\nCompleted: [count] sub-issues\nIterations: [total]"
-```
-
-### Getting State IDs
-
-Before updating, get available states:
-```
-Tool: list_issue_statuses
-```
-Find the state IDs for "In Progress" and "Done" from the response.

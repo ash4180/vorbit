@@ -1,6 +1,6 @@
 ---
 name: vorbit-webflow
-description: Use when the user wants to build Webflow pages, templates, or components, with or without Figma designs as reference.
+description: Use when the user explicitly asks to create or modify a Webflow page, reusable template, page slot, CMS structure, or component, either from requirements or a Figma reference. It requires a connected target Webflow site, confirms ambiguous or live-site changes, and writes to Webflow. Do not use for Figma design creation, general frontend code, publishing-only requests, or advice that does not require Webflow changes.
 ---
 
 # Vorbit Webflow

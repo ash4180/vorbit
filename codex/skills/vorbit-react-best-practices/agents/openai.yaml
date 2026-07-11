@@ -1,0 +1,7 @@
+interface:
+  display_name: "Vorbit React Best Practices"
+  short_description: "Apply React and Next.js performance guidance"
+  default_prompt: "Use $vorbit-react-best-practices to apply the relevant performance rules to this React or Next.js task."
+
+policy:
+  allow_implicit_invocation: true

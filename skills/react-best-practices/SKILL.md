@@ -1,14 +1,15 @@
 ---
 name: react-best-practices
-version: 1.0.0
-description: React and Next.js performance optimization guidelines from Vercel Engineering. This skill should be used when writing, reviewing, or refactoring React/Next.js code to ensure optimal performance patterns. Triggers on tasks involving React components, Next.js pages, data fetching, bundle optimization, or performance improvements.
+description: Apply when writing, reviewing, or refactoring React or Next.js code where performance patterns such as waterfall removal, bundle reduction, server rendering, data fetching, or re-render control are relevant. This is supporting guidance, not a standalone authorization to edit files. Do not trigger for non-React code, visual design work, or generic frontend questions with no React or Next.js implementation.
 ---
 
 # React Best Practices
 
+Read and follow `../_shared/execution-contract.md` before applying this policy.
+
 ## Overview
 
-Comprehensive performance optimization guide for React and Next.js applications, containing 40+ rules across 8 categories. Rules are prioritized by impact to guide automated refactoring and code generation.
+Performance heuristics for React and Next.js applications. Treat every rule as conditional on the repository's React/Next version, runtime, existing dependencies, and measured or clearly evidenced bottleneck.
 
 ## When to Apply
 
@@ -18,6 +19,15 @@ Reference these guidelines when:
 - Reviewing code for performance issues
 - Refactoring existing React/Next.js code
 - Optimizing bundle size or load times
+
+Before applying a rule:
+
+1. inspect the framework/runtime version and existing data/cache libraries;
+2. confirm the rule targets the actual code path;
+3. prefer structural fixes over new dependencies;
+4. verify behavior and, for performance-only changes, capture a meaningful before/after signal when practical.
+
+Do not add SWR, `better-all`, an LRU package, or any other dependency merely because it appears below.
 
 ## Priority-Ordered Guidelines
 
@@ -42,25 +52,25 @@ Rules are prioritized by impact:
 - Defer await until needed (move into branches)
 - Use `Promise.all()` for independent async operations
 - Start promises early, await late
-- Use `better-all` for partial dependencies
+- Restructure partial dependencies with existing primitives; use `better-all` only if the repository already depends on it
 - Use Suspense boundaries to stream content
 
 **Reduce Bundle Size:**
 - Avoid barrel file imports (import directly from source)
-- Use `next/dynamic` for heavy components
+- Use the framework's existing lazy/dynamic loading mechanism for genuinely heavy, non-critical components
 - Defer non-critical third-party libraries
 - Preload based on user intent
 
 ### High-Impact Server Patterns
 
-- Use `React.cache()` for per-request deduplication
-- Use LRU cache for cross-request caching
+- Use the runtime-supported request cache for repeated request-local work
+- Add cross-request caching only with explicit freshness, invalidation, and resource bounds
 - Minimize serialization at RSC boundaries
 - Parallelize data fetching with component composition
 
 ### Medium-Impact Client Patterns
 
-- Use SWR for automatic request deduplication
+- Reuse the project's client data library for request deduplication
 - Defer state reads to usage point
 - Use lazy state initialization for expensive values
 - Use derived state subscriptions
@@ -70,7 +80,7 @@ Rules are prioritized by impact:
 
 - Animate SVG wrappers, not SVG elements directly
 - Use `content-visibility: auto` for long lists
-- Prevent hydration mismatch with inline scripts
+- Prevent hydration mismatch using the repository's established SSR-safe pattern; inline scripts require a security/CSP review
 - Use explicit conditional rendering (`? :` not `&&`)
 
 ### JavaScript Patterns
@@ -78,7 +88,7 @@ Rules are prioritized by impact:
 - Batch DOM CSS changes via classes
 - Build index maps for repeated lookups
 - Cache repeated function calls
-- Use `toSorted()` instead of `sort()` for immutability
+- Avoid mutating shared arrays; use `toSorted()` only when the target runtime supports it
 - Early length check for array comparisons
 
 ## References
@@ -88,11 +98,11 @@ Full documentation with code examples is available in:
 - `references/react-performance-guidelines.md` - Complete guide with all patterns
 - `references/rules/` - Individual rule files organized by category
 
-To look up a specific pattern, grep the rules directory:
+To look up a specific pattern, search the rules directory:
 ```
-grep -l "suspense" references/rules/
-grep -l "barrel" references/rules/
-grep -l "swr" references/rules/
+rg -l "suspense" references/rules/
+rg -l "barrel" references/rules/
+rg -l "swr" references/rules/
 ```
 
 ## Rule Categories in `references/rules/`

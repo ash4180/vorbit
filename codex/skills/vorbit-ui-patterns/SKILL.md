@@ -1,6 +1,6 @@
 ---
 name: vorbit-ui-patterns
-description: Use when implementing UI components, building interfaces, creating forms, or any frontend work. Provides opinionated constraints for accessible, performant UI.
+description: Apply when implementing or reviewing user-facing frontend components, forms, interactions, layout, accessibility, animation, or UI performance. It supplies implementation constraints and should accompany the relevant build, prototype, or review workflow; it does not by itself authorize edits. Do not use for backend work, Figma or Pencil design-only tasks, Webflow authoring, or generic UX research.
 ---
 
 # Vorbit UI Patterns

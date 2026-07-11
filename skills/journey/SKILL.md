@@ -1,23 +1,39 @@
 ---
 name: journey
-version: 1.1.0
-description: Use when user says "create user flow", "user journey", "flow diagram", "map user steps", "FigJam diagram", or wants to visualize user flows. Creates Mermaid diagrams in FigJam.
+description: Use when the user asks for a user journey or product flow visualization in FigJam. It gathers requirements, drafts the flow for approval, preserves requirement IDs and real loops, splits dense flows into linked Mermaid diagrams, and may link them to the source PRD. Requires a connected FigJam or Figma surface for final creation; do not use for architecture diagrams, Figma screen design, or code implementation.
 ---
 
 # Journey Skill
 
 Create user journey diagrams in FigJam using Mermaid syntax.
 
-## Step 1: Detect Platform & Verify Connection
+Read and follow `../_shared/execution-contract.md` before starting.
 
-Read and follow `_shared/mcp-tool-routing.md` (glob for `**/skills/_shared/mcp-tool-routing.md`). Discover connected platforms, ask user which to use, and verify connection.
+## Step 1: Load Diagram Prerequisite and Verify Tools
 
-## Step 2: Gather Context
+Read `_shared/mcp-tool-routing.md` (glob for `**/skills/_shared/mcp-tool-routing.md`) before using an external tool.
 
-1. IF Notion PRD URL provided, use `notion-find` to fetch the PRD
-2. IF Anytype PRD URL or object ID provided, use `API-get-object` to fetch the PRD
-3. IF feature name provided, search the detected platform for existing PRD
-4. Extract user stories and acceptance criteria if available
+Before every `generate_diagram` call, load the installed Figma prerequisite whose unqualified skill name is `figma-generate-diagram` (use its catalog-qualified name when the host prefixes plugin skills). Read the flowchart reference it routes to and treat its current Mermaid constraints, density guidance, and tool parameters as authoritative. Do not call the tool first or rely on stale copied limits.
+
+If the prerequisite or Figma connection is unavailable, draft and validate the complete text flow, then report diagram creation as `blocked_missing_capability`; do not lose the work.
+
+## Step 2: Gather PRD Context
+
+Linear is the canonical PRD provider. Resolve context in this order:
+
+1. Linear PRD URL or ID -> use `get_issue`.
+2. Feature name -> use `list_issues` with a scoped title search, ask if multiple candidates match, then use `get_issue`.
+3. Explicit pasted PRD text or user-specified local file -> use it as a legacy fallback and record the provenance.
+4. Non-Linear URL with no accessible content -> ask the user to paste/export it; do not guess.
+
+Extract and preserve:
+
+- User stories (`US-###`)
+- Story-scoped ACs (`US-###.AC-##`)
+- Flow steps (`F#-S#`), including Entry/Exit markers, branches, retries, and loops
+- Constraints and implementation-affecting `TBD-###` items
+
+For a legacy PRD without stable IDs, assign draft `US-###`, `US-###.AC-##`, and `F#-S#` IDs without changing meaning. Show the normalization to the user before updating any source.
 
 ## Step 3: Confirm Flow Details
 
@@ -30,87 +46,88 @@ Ask about:
 4. **Error scenarios** - "What can go wrong? How to handle?"
 5. **Exit points** - "Where can the user complete or leave?"
 
+Do not ask again when the PRD already answers the question. If an answer changes a canonical requirement, flag the conflict and get explicit confirmation before changing the flow or PRD.
+
 ## Step 4: Draft Flow in Chat
 
-**Show the flow as a text outline for review:**
+Show the complete flow and coverage ledger for review:
 
 ```
 User Flow: [Feature Name]
 
-1. [Entry] User lands on...
+F1-S1. [Entry] User lands on... (covers US-001.AC-01)
    ↓
-2. [Action] User clicks...
+F1-S2. [Action] User clicks... (covers US-001.AC-01)
    ↓
-3. [Decision] Is valid?
-   → Yes: Continue to step 4
-   → No: Show error → End
-   ↓
-4. [Action] System processes...
-   ↓
-5. [Success] User sees confirmation → End
+F1-S3. [Decision] Is valid? (covers US-001.AC-02)
+   → Yes: F1-S4
+   → No: F1-S5
+F1-S4. [Action] System processes... → F1-S6
+F1-S5. [Recovery] Show error and preserve values → Retry: F1-S2 (covers US-001.AC-02)
+F1-S6. [Exit] User sees confirmation
+
+Coverage:
+- US-001.AC-01 → F1-S1, F1-S2
+- US-001.AC-02 → F1-S3, F1-S5
 ```
 
 **After showing draft, ask:** "Does this flow look correct? Ready to create in FigJam?"
+
+Before asking, verify:
+
+- Every source `F#-S#` appears in the outline exactly once as a defined step
+- Every source AC maps to at least one step
+- Every branch reaches an exit or an explicit loop/continuation
+- No retry, alternate path, or requirement was removed to simplify the picture
 
 ## Step 5: Create User Flow in FigJam
 
 **Only proceed after user confirms the draft.**
 
-**CRITICAL: Max 15 nodes total. Split complex flows.**
+Use `generate_diagram` with the parameters and syntax required by the prerequisite loaded in Step 1. Include the stable step ID in every requirement-bearing node label, for example `F1-S2 · User submits form`.
 
-Use `mcp__plugin_figma_figma__generate_diagram` with:
-- `name`: Descriptive title (e.g., "User Login Flow")
-- `mermaidSyntax`: Flowchart using LR direction, all text in quotes
-- `userIntent`: Brief description of what user is accomplishing
+### Split Complex Flows Without Dropping Behavior
 
-### Mermaid Syntax Rules for FigJam
+Use the current prerequisite's density guidance. When the complete journey is too dense:
+
+1. Split at cohesive sub-flow boundaries, not by deleting alternate/error paths.
+2. Generate a small overview plus every required detail diagram.
+3. Add explicit continuation nodes such as `Continue: F2-S1` and `Return: F1-S2` so cross-diagram loops remain traceable.
+4. Preserve real retry/re-entry loops. A loop is not an error in the model; simplify its routing only if the prerequisite says the rendered graph is unreadable.
+5. Reuse the first returned FigJam `fileKey` for related diagrams so the set stays in one file.
+6. Keep a coverage ledger: `AC -> F#-S# -> diagram name/node`. Generation is incomplete until every AC and flow step is represented.
+
+Illustrative flowchart only; the loaded prerequisite wins if syntax guidance changes:
 
 ```mermaid
 flowchart LR
-    A(["Entry"]):::startend --> B["Action"]:::action
-    B --> C{"Decision?"}:::decision
-    C -->|"Yes"| D["Continue"]:::action
-    C -->|"No"| E["Error"]:::negative
-    D --> F(["Success"]):::positive
-
-    classDef startend fill:#CBD5E1,color:#334155,stroke:#94A3B8
-    classDef action fill:#BAE6FD,color:#0c4a6e,stroke:#7DD3FC
-    classDef condition fill:#C4B5FD,color:#4c1d95,stroke:#A78BFA
-    classDef decision fill:#FED7AA,color:#7c2d12,stroke:#FDBA74
-    classDef positive fill:#A7F3D0,color:#14532d,stroke:#6EE7B7
-    classDef negative fill:#FECDD3,color:#881337,stroke:#FB7185
+    entry(["F1-S1 · Entry: Open checkout"]) --> submit["F1-S2 · Submit order"]
+    submit --> valid{"F1-S3 · Details valid?"}
+    valid -->|"Yes"| success(["F1-S4 · Exit: Order confirmed"])
+    valid -->|"No"| error["F1-S5 · Show errors and keep values"]
+    error -->|"Retry"| submit
 ```
-
-Note: Error state `E` is terminal. User sees the error and retries implicitly - no back-loop needed.
-
-**IMPORTANT**:
-- Use `LR` direction (left-to-right)
-- Put ALL text in quotes (`["text"]`, `{"text?"}`, `-->|"label"|`)
-- Apply color classes to ALL nodes using `:::className` syntax
-- No emojis in Mermaid code
-- No `\n` for newlines
 
 ## Step 6: Update PRD
 
-If PRD exists from Step 2:
+If the canonical Linear PRD exists, use `get_issue` to re-read its latest description, then `save_issue` to add or replace a `## Journey Diagrams` section containing:
 
-### If Notion PRD:
-1. Use `notion-fetch` to get the PRD page
-2. Add FigJam URL under "User Flow" section
-3. Include the Mermaid source code as backup
+- Every FigJam URL and diagram name
+- The covered flow-step range
+- The Mermaid source as a recovery artifact
+- The coverage ledger
 
-### If Anytype PRD:
-1. Use `API-get-object` to fetch the PRD
-2. Use `API-update-object` to add FigJam URL under "User Flow" section
-3. Include the Mermaid source code as backup
+Preserve every existing PRD section and requirement. Do not overwrite concurrent edits. For legacy fallback input, report the URLs in chat and offer the updated section for import; do not claim a local/pasted source was updated.
 
-**IMPORTANT**: After calling generate_diagram, show the returned URL as a markdown link so user can view and edit.
+After each `generate_diagram` call, expose the returned URL as a markdown link. For a split journey, return every diagram URL, not only the overview.
 
 ## Step 7: Report
 
-- FigJam flow created: Yes (with URL)
-- PRD updated: Yes/No (with URL)
-- Node count: X nodes, Y decisions, Z error paths
+- FigJam flow created: Yes (all URLs)
+- PRD source: Linear canonical ticket or named legacy fallback
+- PRD updated: Yes/No (with URL when canonical)
+- Coverage: X/X ACs and Y/Y flow steps
+- Split summary: diagram name -> covered `F#-S#` range
 - Next: `/vorbit:design:prototype` or `/vorbit:implement:epic`
 
 ---
@@ -119,89 +136,43 @@ If PRD exists from Step 2:
 
 ## FigJam Integration
 
-Use `mcp__plugin_figma_figma__generate_diagram` tool:
+Load `figma-generate-diagram`, then use its current `generate_diagram` tool:
 - Input: Mermaid syntax + name + userIntent
 - Output: Shareable FigJam URL
-- Supports: flowchart, sequenceDiagram, stateDiagram, gantt
+- Diagram type for this workflow: flowchart (as routed by the prerequisite for user journeys)
 
 ## Required Elements
 
 | Element | Required | Rules |
 |---------|----------|-------|
-| Entry point | Yes | Exactly one |
+| Entry point | Yes | At least one explicit entry for the journey or sub-flow |
 | Exit points | Yes | At least one success state |
-| Decisions | Yes | All paths labeled |
-| Error states | No | Must have recovery path if present |
-
-## CRITICAL: 15 Node Maximum
-
-**The diagram MUST have 15 or fewer total nodes.**
-
-Count every shape as one node:
-- `A["action"]` = 1 node
-- `B{"decision"}` = 1 node
-- `C(["entry"])` = 1 node
-
-If your flow needs more than 15 nodes:
-1. **Split into multiple diagrams** - e.g., "Login Flow" + "Registration Flow"
-2. **Abstract sub-flows** - Replace detailed steps with `["See Sub-flow X"]`
-3. **Focus on primary path** - Detail the happy path, simplify alternatives
+| Decisions | When present in requirements | Every real branch is represented and all paths are labeled; never invent a branch to satisfy the template |
+| Error states | No | Must terminate or have an explicit recovery/loop path |
+| Requirement coverage | Yes | Every AC and `F#-S#` appears in the coverage ledger |
 
 ## Node Types
 
 | Type | Syntax | Use For |
 |------|--------|---------|
-| Start | `A(["Entry: ..."]):::startend` | Single entry point |
-| Action | `B["User does X"]:::action` | User takes action |
-| Condition | `C["Filter setting"]:::condition` | Settings/filter nodes |
-| Decision | `D{"Question?"}:::decision` | Branch point |
-| Success | `E(["Success: ..."]):::positive` | Happy path end |
-| Error | `F["Error: ..."]:::negative` | Failure state |
-| Sub-flow | `G["See: Flow Name"]:::action` | Reference another diagram |
-
-## Color Palette (Required)
-
-Apply these styles to ALL diagrams:
-
-| Node Type | Fill | Stroke | Use For |
-|-----------|------|--------|---------|
-| Start & End | `#CBD5E1` | `#94A3B8` | Entry/exit points |
-| Action | `#BAE6FD` | `#7DD3FC` | User actions |
-| Condition | `#C4B5FD` | `#A78BFA` | Filter/settings nodes |
-| Decision | `#FED7AA` | `#FDBA74` | Branch points |
-| Positive | `#A7F3D0` | `#6EE7B7` | Success states |
-| Negative | `#FECDD3` | `#FB7185` | Error states |
-
-## CRITICAL: No Back-Loops
-
-**Back-loops break left-to-right layout.** Mermaid's layout algorithm (Dagre) cannot maintain LR direction when edges point backward.
-
-❌ **Don't do this:**
-```mermaid
-A --> B --> C{"Valid?"}
-C -->|"No"| D["Error"]
-D --> B  // Back-loop breaks layout!
-```
-
-✅ **Do this instead:**
-```mermaid
-A --> B --> C{"Valid?"}
-C -->|"No"| D["Error shown"]  // Terminal - user retries implicitly
-C -->|"Yes"| E["Continue"]
-```
-
-**Error states should be terminal nodes.** The user's retry action is implicit.
+| Start | `A(["F1-S1 · Entry: ..."])` | Entry point |
+| Action | `B["F1-S2 · User does X"]` | User takes action |
+| Condition | `C["F1-S3 · Filter setting"]` | Settings/filter nodes |
+| Decision | `D{"F1-S4 · Question?"}` | Branch point |
+| Success | `E(["F1-S5 · Exit: Success"])` | Happy path end |
+| Error | `F["F1-S6 · Error shown"]` | Failure state |
+| Sub-flow | `G["Continue: F2-S1"]` | Reference another diagram without losing traceability |
 
 ## Validation Rules
 
-- Exactly one entry point
+- Every diagram has an explicit entry/continuation point
 - At least one exit point with success state
 - All decision nodes have labeled paths (`-->|"Yes"|`, `-->|"No"|`)
-- **No back-loops** - error states are terminal (implicit retry)
-- **MAX 15 nodes total** - split if more needed
+- Real retries and re-entry loops remain explicit
+- Complex flows are split according to current prerequisite guidance, with overview/detail continuity
+- Every source `F#-S#` and `US-###.AC-##` appears in the coverage ledger
 - Labels describe user actions, not technical operations
-- **All text in quotes** for FigJam compatibility
-- Use `LR` direction by default (left-to-right)
+- Mermaid passes the prerequisite's pre-call validation
 
 ## Template
 
@@ -216,13 +187,15 @@ C -->|"Yes"| E["Continue"]
 Name: [Feature] User Flow
 Mermaid:
 flowchart LR
-    START(["Entry: User opens feature"]):::startend --> A["First action"]:::action
-    A --> B{"Condition?"}:::decision
-    B -->|"Yes"| C["Second action"]:::action
-    B -->|"No"| D["Error: Invalid input"]:::negative
-    C --> END(["Success: Goal achieved"]):::startend
+    entry(["F1-S1 · Entry: User opens feature"]) --> action["F1-S2 · First action"]
+    action --> condition{"F1-S3 · Condition?"}
+    condition -->|"Yes"| success(["F1-S4 · Exit: Goal achieved"])
+    condition -->|"No"| error["F1-S5 · Show invalid input"]
+    error -->|"Retry"| action
 
-Node count: 5/15
+Coverage:
+- US-001.AC-01 -> F1-S1, F1-S2 -> [Feature] User Flow
+- US-001.AC-02 -> F1-S3, F1-S5 -> [Feature] User Flow
 
 ## FigJam URL
 [Generated URL from tool]
@@ -232,9 +205,8 @@ Node count: 5/15
 
 | Wrong | Right | Why |
 |-------|-------|-----|
-| `Error --> Retry` (back-loop) | `Error` as terminal node | Back-loops break LR layout |
+| Delete retry/alternate branches to reduce density | Split into overview + complete detail flows | Readability cannot erase requirements |
 | `POST /api/users` | `["User submits form"]` | Labels describe user actions |
-| 20+ node diagram | Split into sub-flows | Max 15 nodes per diagram |
-| No quotes on text | `["Text in quotes"]` | FigJam requires quotes |
-| `flowchart TD` | `flowchart LR` | LR is default for FigJam |
-| No error states | Include error states | Real flows have failures |
+| Omit `F#-S#` from labels | Prefix requirement-bearing nodes with their stable IDs | Diagram stays traceable to the PRD |
+| Regenerate each split into a new file | Reuse the returned `fileKey` | Related diagrams stay together |
+| Copy old Mermaid limits here | Load `figma-generate-diagram` before every call | Current prerequisite stays authoritative |

@@ -1,6 +1,6 @@
 ---
 name: vorbit-figma
-description: Use when the user wants to sync a Figma design system from code, use linked Figma design-system components/tokens, create Figma mockups from a PRD or journey, or plan front-end-ready Figma screens from complex flows.
+description: Use when the requested deliverable is a Figma design-system sync, component or variable update, mockup, or front-end-ready screen derived from code, a PRD, or a journey. It requires a working Figma connection, checks linked libraries first, confirms plans before writing, and modifies the target Figma file. Do not trigger merely because a Figma link is reference input to implementation, prototyping, or Webflow work.
 ---
 
 # Vorbit Figma

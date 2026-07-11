@@ -2,13 +2,16 @@
 
 Use for autonomous iteration through sub-issues until completion.
 
-1. Load Vorbit durable rules before doing anything else.
-2. Parse arguments: issue ID (required), `--loop` flag, `--cancel` flag, optional `--completion-signal`.
-3. If `--cancel`: delete `.claude/.loop-state.json` and stop.
-4. Check for sub-issues: fetch parent issue, parse "Implementation Order" section, build work queue (skip Done/Completed/Cancelled issues).
-5. Create state file (`.claude/.loop-state.json`): active, command, completion signal, max iterations (50), issue tracking.
-6. During implementation: read state file, work on `subIssues[currentSubIssueIndex]` if parent has sub-issues, otherwise work on main issue directly.
-7. After each cycle: verify acceptance criteria met and tests pass. If complete: update Linear to "Done", add completion comment, advance to next sub-issue. If not complete: describe remaining work, continue same issue.
-8. Linear updates are REQUIRED: update status to "In Progress" when starting, add progress comments, mark "Done" when complete. Actually call the tools — don't just describe updates.
-9. When all sub-issues done: check parent acceptance criteria, mark parent "Done" if met.
-10. State file is gitignored, deleted on completion or cancel.
+1. Load the Vorbit runtime contract and durable rules. Require an explicit Linear issue plus loop/auto-continue intent.
+2. Resolve runtime storage from `vorbit-resolve-rules` and use `<storage-root>/state/<project-slug>/codex-implement-loop.json`; do not write Claude-specific state into the repository.
+3. For cancel: read and report state, optionally add a Linear cancellation comment, delete runtime state, and leave code untouched.
+4. For resume: never overwrite an existing state. Re-fetch the parent. If its source update timestamp changed, persist `active: false`, `status: needs_input`, and the reason. An inactive `needs_input`, `blocked`, or `failed` state resumes only after the user supplies or confirms the missing resolution; then reconcile, update the baseline, clear failure tracking, and set it back to `active: true`, `status: running`.
+5. For a new queue, parse each parent's `## Implementation Order` by phase. Within a phase sort by priority then creation time; skip terminal issues; accept a flat list as sequential. Append missing sub-issues as an `unplanned` final phase. If no order exists, build a labeled fallback guess.
+6. A Parallel label expresses dependency independence, not permission for concurrent writers. Use isolated worktrees only with explicit approval; otherwise process deterministically.
+7. Show the multi-issue queue once and confirm Start/Reorder/Cancel before persisting. A single issue explicitly started in loop mode begins directly.
+8. Persist version, active/status, source timestamp, queue entries with phase, current index, completed IDs, iteration/max (50), and repeated-failure fingerprint/count. Write state atomically.
+9. For each item, apply the normal implement workflow to that item only: search/reuse, mapped ACs/flows, honest focused test, implementation, regression checks. Move to In Progress and comment when starting.
+10. Mark a sub-issue Done only after its ACs and tests pass; record evidence, advance state, and continue. Keep the implementation parent In Progress until a PR exists.
+11. If the same failure fingerprint repeats three cycles, or 50 iterations are reached, persist `active: false`, `status: blocked`, and the reason, then stop for input. Do not retry blindly.
+12. After the queue, verify parent ACs. If covered, comment "ready for verification/PR", mark runtime state completed, and delete it. Otherwise persist `active: false`, `status: needs_input`, and the missing ACs rather than inventing work.
+13. Report `completed`, `needs_input`, `blocked`, `failed`, or `canceled`, with current issue, AC evidence, tests, queue progress, and next action.

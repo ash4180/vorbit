@@ -1,0 +1,7 @@
+interface:
+  display_name: "Vorbit Pencil"
+  short_description: "Sync project tokens and components to Pencil"
+  default_prompt: "Use $vorbit-pencil to configure the active Pencil canvas from this project design system."
+
+policy:
+  allow_implicit_invocation: true

@@ -1,12 +1,13 @@
 ---
 name: figma
-version: 1.0.0
-description: Use when user says "figma", "figma it", "sync figma", "figma mockup", "create figma file", "design to figma", "figma from PRD", "figma from journey", "build in figma", "figma design system", or wants to create, sync, or update anything in Figma (design system, components, variables, mockups, or front-end-ready screens). Always checks linked Figma libraries first; asks the user when no linked library exists rather than inventing primitives.
+description: Use when the requested deliverable is a Figma design-system sync, component or variable update, mockup, or front-end-ready screen derived from code, a PRD, or a journey. It requires a working Figma connection, checks linked libraries first, confirms plans before writing, and modifies the target Figma file. Do not trigger merely because a Figma link is reference input to implementation, prototyping, or Webflow work.
 ---
 
 # Figma Skill
 
 Create Figma design-system assets and front-end-ready mockups that engineers can implement without guessing.
+
+Read and follow `../_shared/execution-contract.md` before starting.
 
 ## Core Principles
 

@@ -1,43 +1,48 @@
 ---
 name: implement-cleanup-mocks
-version: 1.0.0
-description: Use when user says "cleanup mocks", "handover to backend", "remove mock data", "prepare for backend", or wants to clean up mock data and generate API contract docs before backend handover.
+description: Use only when the user explicitly asks to remove registered prototype or implementation mock data for backend handoff. It reviews an existing mock registry, drafts an API contract for approval, and removes mocks only after a real backend integration passes; otherwise it preserves them and reports needs_backend. Requires a project with tracked mocks; do not use for creating mocks, deleting test fixtures, or general code cleanup.
 ---
 
 # Cleanup Mocks Skill
 
 Clean up mock data created during prototyping/implementation and generate API contract documentation for backend handover.
 
+Read and follow `../_shared/execution-contract.md` before starting.
+
 ## Purpose
 
-When frontend development is ready for backend handover:
-1. Generate API contract doc from mock data shapes
-2. Update PRD in Notion or Anytype with API requirements
-3. Delete mock files and state
-4. Leave clean branch for backend
+When frontend development is ready for backend integration:
+1. Inventory application mocks and the exact UI fields they support
+2. Confirm and save an API contract
+3. Integrate the real repository-native API path when it exists
+4. Remove mocks only after the real path passes tests
 
-## Step 1: Detect Platform & Verify Connection
+## Step 1: Resolve Contract Destination
 
-Read and follow `_shared/mcp-tool-routing.md` (glob for `**/skills/_shared/mcp-tool-routing.md`). Discover connected platforms, ask user which to use, and verify connection.
+Use the linked Linear PRD/specification ticket when available. Otherwise use `docs/api-contracts/[feature-name].md`. Do not require an external platform to produce a local contract.
 
 ## Step 2: Load Mock Registry
 
 **Check for mock registry file:**
 ```
-.claude/mock-registry.json
+<storage_root>/projects/<project_slug>/mock-registry.json
 ```
+
+Resolve these values through the current runtime. If this legacy Claude surface has no resolver, use `.vorbit/mock-registry.json` and report the fallback.
 
 **Registry format:**
 ```json
 {
-  "version": "1.0",
+  "version": "1.1",
   "mocks": [
     {
       "feature": "user-profile",
+      "type": "file",
       "path": "src/pages/UserProfile/mocks/user.json",
-      "endpoint": "GET /api/users/:id",
+      "endpoint": "proposed:GET /api/users/:id",
       "createdBy": "prototype",
-      "createdAt": "2024-01-15T10:00:00Z"
+      "createdAt": "2024-01-15T10:00:00Z",
+      "components": ["src/pages/UserProfile/data-source.ts"]
     }
   ]
 }
@@ -48,27 +53,28 @@ Read and follow `_shared/mcp-tool-routing.md` (glob for `**/skills/_shared/mcp-t
 - Ask: "Clean up mocks for which feature? (or 'all')"
 
 **IF registry doesn't exist:**
-- Scan codebase for mock patterns:
+- Scan production source for mock patterns, excluding tests, fixtures, stories, seeds, examples, and static demo/sample content:
   - `**/mocks/*.json` - mock data files
   - `**/mocks/*.ts` - mock data exports
   - Files with `// TODO: Replace with real API`
   - `MOCK_` prefixed constants
-  - **Mock state patterns:**
+  - **Mock state patterns** only when code evidence ties them to a temporary API substitute:
     - `useState(MOCK_` or `useState([{` with hardcoded data
     - `const [data, setData] = useState(mockData)`
     - Zustand/Redux stores with hardcoded initial state
     - Context providers with mock values
-- Present findings grouped by type (files vs state) and ask which to clean up
+- Present findings grouped by type and evidence. A hardcoded initial state alone is not proof that data is disposable.
 
 ## Step 3: Generate API Contract
 
 **For each mock file being cleaned up:**
 
 1. **Read mock file content** - extract data shape
-2. **Infer endpoint** from filename/location:
+2. **Propose endpoint** from filename/location and existing client conventions:
    - `users.json` → `GET /api/users`
    - `user-detail.json` → `GET /api/users/:id`
-   - Check for comments indicating endpoint
+   - Check for comments and existing routes indicating endpoint
+   - Label any unverified method/path/auth detail as a question; never turn an inference into a contract fact
 3. **Generate contract entry:**
 
 ```markdown
@@ -120,117 +126,37 @@ Generated from frontend mock data for backend implementation.
 - Frontend expects these exact field names (case-sensitive)
 ```
 
-**Ask:** "Does this API contract look correct? Ready to save to PRD?"
+**Ask:** "Does this inventory and API contract look correct? Ready to save it?"
 
 **Wait for confirmation before proceeding.**
 
-## Step 5: Save API Contract to PRD
+## Step 5: Save Approved Contract
 
-### If Notion PRD:
-1. Use `notion-fetch` to get current PRD content
-2. Use `notion-update-page` to append API Contract section:
-   - Command: `insert_content_after`
-   - Find appropriate location (after User Stories or at end)
-   - Insert the API contract markdown
+1. Append the approved contract to the linked Linear PRD/specification ticket when authorized, using the current connector's verified update operation.
+2. Otherwise create `docs/api-contracts/[feature-name].md`.
+3. Record the source mock paths, approval date, and source issue revision/update timestamp.
 
-### If Anytype PRD:
-1. Use `API-get-object` to fetch current PRD content
-2. Use `API-update-object` to append API Contract section to the PRD body
-   - Find appropriate location (after User Stories or at end)
-   - Insert the API contract markdown
+## Step 6: Integrate Before Removing
 
-### If no platform detected:
-1. Create local file: `docs/api-contracts/[feature-name].md`
-2. Report file location
+1. Preflight the real backend endpoint and the repository's API client pattern.
+2. If the endpoint, auth, or required response semantics do not exist, stop with `needs_backend`. Keep the working mocks; contract generation is still a valid completed output.
+3. When the real API exists, write an integration test at the existing data boundary and observe it fail for the missing connection.
+4. Implement the repository-native client/adapter and switch the single mock integration boundary to it. Presentational components continue to receive props.
+5. Verify loading, success, empty, and error behavior required by the approved contract and ACs.
+6. Run the focused and relevant regression suites.
+7. Only after the real path passes, prove each mock has no remaining production consumers, delete it, remove empty directories, and update the registry atomically.
 
-## Step 6: Clean Up Mock Files and State
-
-**For each mock in cleanup scope:**
-
-### 6.1 Mock Files
-1. **Delete mock JSON/TS files** in `mocks/` folders
-2. **Update imports** - replace mock imports with placeholder:
-   ```tsx
-   // BEFORE:
-   import mockData from './mocks/data.json';
-   // TODO: Replace with real API
-
-   // AFTER:
-   // TODO: Connect to real API - see PRD for contract
-   // API endpoint: GET /api/users
-   const data = null; // Backend will implement
-   ```
-3. **Remove empty mocks/ directories**
-
-### 6.2 Mock State
-1. **Replace hardcoded useState** with empty/loading state:
-   ```tsx
-   // BEFORE:
-   const [users, setUsers] = useState([
-     { id: 1, name: 'John' },
-     { id: 2, name: 'Jane' }
-   ]);
-
-   // AFTER:
-   // TODO: Connect to real API - GET /api/users
-   const [users, setUsers] = useState<User[]>([]);
-   const [loading, setLoading] = useState(true);
-   ```
-
-2. **Clean Zustand/Redux stores** - replace mock initial state:
-   ```tsx
-   // BEFORE:
-   const useStore = create((set) => ({
-     users: MOCK_USERS,
-     // ...
-   }));
-
-   // AFTER:
-   // TODO: Connect to real API - GET /api/users
-   const useStore = create((set) => ({
-     users: [],
-     loading: true,
-     // ...
-   }));
-   ```
-
-3. **Clean Context providers** - replace mock values:
-   ```tsx
-   // BEFORE:
-   <UserContext.Provider value={mockUserData}>
-
-   // AFTER:
-   // TODO: Connect to real API - GET /api/users/:id
-   <UserContext.Provider value={null}>
-   ```
-
-### 6.3 Update Registry
-- Remove cleaned entries from `.claude/mock-registry.json`
+Never replace working mock behavior with `null`, empty arrays, permanent loading state, or TODO-only placeholders. That is a broken partial implementation, not cleanup.
 
 ## Step 7: Report
 
-**Present summary:**
-
-```
-## Mock Cleanup Complete
-
-### API Contract
-- Saved to: [Notion PRD URL / Anytype object ID / local file path]
-- Endpoints documented: [count]
-
-### Files Removed
-- src/pages/Feature/mocks/data.json
-- src/pages/Feature/mocks/users.json
-
-### Files Updated
-- src/pages/Feature/index.tsx (mock import → API placeholder)
-- src/pages/Feature/components/List.tsx (mock import → API placeholder)
-
-### Next Steps for Backend
-1. Review API contract in PRD
-2. Implement endpoints matching documented shapes
-3. Frontend will connect via [API client pattern]
-```
+Report:
+- terminal status: `completed`, `needs_backend`, `blocked`, or `failed`
+- contract destination and revision
+- endpoint details confirmed vs still unknown
+- integration and regression evidence
+- files updated and mocks removed
+- remaining registered mocks and next owner/action
 
 ---
 
@@ -238,8 +164,10 @@ Generated from frontend mock data for backend implementation.
 
 ## Registry File Location
 ```
-.claude/mock-registry.json
+<storage_root>/projects/<project_slug>/mock-registry.json
 ```
+
+Legacy fallback: `.vorbit/mock-registry.json`.
 
 ## Registry Format
 ```json
@@ -251,7 +179,7 @@ Generated from frontend mock data for backend implementation.
       "type": "file | state",
       "path": "string - relative path to file",
       "location": "string - for state: line number or function name",
-      "endpoint": "string - inferred API endpoint (e.g., GET /api/users)",
+      "endpoint": "string - confirmed endpoint, or proposed:<method path> until approved",
       "stateType": "useState | zustand | redux | context (only for type: state)",
       "createdBy": "string - 'prototype' | 'implement'",
       "createdAt": "string - ISO 8601 timestamp",
@@ -281,7 +209,7 @@ Generated from frontend mock data for backend implementation.
 - Type: `file` or `state`
 - File path
 - Location (for state: line number, hook name, or store name)
-- Inferred endpoint
+- Confirmed endpoint, or an inferred route labeled with the `proposed:` prefix
 - State type (for state: useState, zustand, redux, context)
 - Which skill created it
 - Timestamp
@@ -350,7 +278,7 @@ Generated from frontend mock data for backend implementation.
 - All field names are case-sensitive
 - Frontend expects exact shapes documented above
 - Dates should be ISO 8601 format
-- IDs can be string or number (frontend handles both)
+- ID types and nullability must match the approved contract exactly
 
 ## Questions for Backend
 [Any unclear requirements or decisions needed]

@@ -1,0 +1,7 @@
+interface:
+  display_name: "Vorbit Figma"
+  short_description: "Build design-system-backed Figma assets"
+  default_prompt: "Use $vorbit-figma to plan and create the requested Figma deliverable from the available product context."
+
+policy:
+  allow_implicit_invocation: true

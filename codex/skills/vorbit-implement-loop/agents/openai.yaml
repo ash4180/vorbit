@@ -1,0 +1,7 @@
+interface:
+  display_name: "Vorbit Implement Loop"
+  short_description: "Run an autonomous Linear implementation queue"
+  default_prompt: "Use $vorbit-implement-loop to confirm and execute the ordered Linear work queue until completion."
+
+policy:
+  allow_implicit_invocation: false

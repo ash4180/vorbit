@@ -1,12 +1,13 @@
 ---
 name: pencil
-version: 1.0.0
-description: Scan codebase and sync design tokens, components, and conventions to Pencil canvas — or start from scratch using Pencil style guides when no codebase exists. Use when user says "pencil", "sync pencil", "configure pencil", "setup pencil", "pencil sync", "sync tokens to pencil", "design from scratch", "pick a style guide", or wants Pencil to generate project-aware code. Also triggers on "build component library", "pencil components", "start designing", or when mockup quality from Pencil is poor.
+description: Use when the user explicitly asks to configure Pencil for a project, sync codebase design tokens or components to Pencil, refresh a Pencil library, or start a Pencil design system from a style guide. It requires an active Pencil canvas, writes variables and reusable components, and updates project Pencil rules. Do not use for generic frontend coding, Figma work, or image-only mockups.
 ---
 
 # Pencil Skill
 
 Scan a codebase to detect its stack, extract design tokens, build a component inventory, create reusable Pencil components on canvas, and write project rules so AI-generated mockups and code match project conventions.
+
+Read and follow `../_shared/execution-contract.md` before starting.
 
 ## Core Principles
 
@@ -30,7 +31,7 @@ Read and follow `_shared/mcp-tool-routing.md` (glob for `**/skills/_shared/mcp-t
 
 **Goal**: Detect framework, styling, component library, icon library, and target platform with screen sizes.
 
-Read the detection tables at `skills/pencil/references/detection.md`.
+Read the detection tables at `references/detection.md` relative to this skill.
 
 **Actions**:
 1. Create todo list with all phases (0-6)
@@ -43,7 +44,7 @@ Read the detection tables at `skills/pencil/references/detection.md`.
 5. **Detect platform and screen sizes** — two paths:
 
    **Path A — Project detected** (package.json or framework signals found):
-   - Read the platform-specific reference: `skills/pencil/references/platforms/{detected}.md` `[Skill ref]`
+   - Read the platform-specific reference: `references/platforms/{detected}.md` `[Skill ref]`
      - Mobile detected → `platforms/mobile.md`
      - Web detected → `platforms/web.md`
      - Desktop detected → `platforms/desktop.md`
@@ -86,7 +87,7 @@ Read the detection tables at `skills/pencil/references/detection.md`.
       ```
    3. Call `mcp__pencil__get_style_guide(tags)` with the user's chosen tags + platform tag (e.g., `mobile`, `webapp`)
       - The response includes a **named design system** with complete tokens: colors, typography, spacing, radii, icons
-   4. **Use AskUserQuestion** `[User]` — show the style guide preview:
+   4. **Use AskUserQuestion** `[User]` — show the style guide preview (Path B confirmation 1 of 2):
       ```
       Style: [name] — [description summary]
         Colors:     [count] ([list key names])
@@ -133,7 +134,7 @@ Read the detection tables at `skills/pencil/references/detection.md`.
 
    Path B omits Framework, Styling, Components, Icons — those only matter when a codebase exists. The design system comes from Pencil's style guide, not code.
 
-This is **Confirmation 1 of 2**. The user can adjust screens, page layout pattern, etc.
+For Path A this is confirmation 1 of 2. For Path B it is confirmation 2 of 2 because the style guide was already approved. The user can adjust screens, page layout pattern, or style.
 
 **Output**: Confirmed stack configuration
 
@@ -188,7 +189,7 @@ Follow the "Component Inventory Scan" section in `detection.md` `[Skill ref]`:
 5. **Apply library-specific extraction** (Shadcn/cva, Radix compound, MUI wrapper, Custom)
 6. **Cap at 30 components.** Prioritize `ui/` and `common/`.
 
-**Combined sync preview — Confirmation 2 of 2:**
+**Combined sync preview — Path A confirmation 2 of 2:**
 
    **Path A (codebase detected):**
    ```
@@ -219,7 +220,7 @@ Follow the "Component Inventory Scan" section in `detection.md` `[Skill ref]`:
    Proceed?
    ```
 
-   **Path B (no codebase) — skip Confirmation 2 entirely.** There are no tokens to extract from code and no components to inventory. The style guide tokens (selected in Phase 1 Step 2) go straight to Phase 4. The user already approved screens, layout, and design system in Confirmation 1.
+   **Path B (no codebase) — skip this combined sync preview.** There are no code tokens or components to inventory. The user already approved the style guide and the final platform/screen summary in the two Path B confirmations, so continue to Phase 4.
 
 **Use AskUserQuestion** with this preview (Path A only). User can adjust what gets synced.
 
@@ -261,7 +262,7 @@ This is the key performance improvement. Without this phase, every mockup builds
 
 ### Step 1: Load layout model and Pencil guidelines
 
-**First**, read `skills/pencil/references/layout-model.md` `[Skill ref]` — the CSS→Pencil mental model. This teaches how block vs inline elements work, when to wrap text in frames, how flex layout maps to Pencil, and platform safe area rules. Understanding this prevents layout bugs at the source.
+**First**, read `references/layout-model.md` relative to this skill — the CSS→Pencil mental model. This teaches how block vs inline elements work, when to wrap text in frames, how flex layout maps to Pencil, and platform safe area rules. Understanding this prevents layout bugs at the source.
 
 **Then** load the appropriate Pencil guidelines based on the path and detected platform:
 
@@ -447,134 +448,7 @@ Input: "ghi789"
 
 **Goal**: Write `.claude/rules/pencil.md` with both code generation AND Pencil mockup rules.
 
-**Actions**:
-1. Generate rules file with TWO sections — code rules and Pencil rules:
-
-```markdown
-# Pencil: Project Conventions
-
-Generated by pencil v2. Re-run with --refresh to update.
-
-## Stack
-- Framework: [detected]
-- Styling: [detected]
-- Component Library: [detected]
-- Icon Library: [detected]
-- Platform: [detected — e.g., iOS + Android, Web, etc.]
-
-## Screen Presets
-
-When creating mockups in .pen files, **always start by instancing a Screen Shell** — never create bare frames at arbitrary sizes.
-
-### Available Screen Shells
-
-| Shell | ID | Width × Height | Safe Areas (top / bottom) | Use For |
-|-------|-----|---------------|--------------------------|---------|
-| [primary device name] | `[pencil-node-id]` | [w] × [h] | [top]pt / [bottom]pt | Primary mockups |
-| [secondary device name] | `[pencil-node-id]` | [w] × [h] | [top]pt / [bottom]pt | [purpose] |
-| [compact device name] | `[pencil-node-id]` | [w] × [h] | [top]pt / [bottom]pt | Compact layout testing |
-
-### How to use
-
-```
-screen=I(parent, {type: "ref", ref: "[shell-id]"})
-I(screen+"/content", { ... your page content ... })
-```
-
-The `content` slot has `placeholder: true` — insert all page content there. The status bar and home indicator regions are already sized correctly. Never place content outside the `content` slot.
-
-## Code Generation Rules
-- Import components from [detected paths]
-- Use [detected styling approach] for all styling
-- Use [detected icon library] for icons
-- Follow [framework] conventions for file structure
-
-## Pencil Mockup Rules
-
-When building mockups in .pen files, use these reusable components instead of raw frames.
-
-### Component Library Reference
-
-[For each component built in Phase 5:]
-
-**[ComponentName]** — ID: `[pencil-node-id]`
-- Insert: `I(parent, {type: "ref", ref: "[pencil-node-id]"})`
-- Override label: `U(instance+"/label", {content: "New Text"})`
-- Variants: [list variant names if built as separate reusable components]
-
-### Token Usage Map
-
-Map project tokens to visual properties:
-- **Button background:** $--color-primary
-- **Button text:** $--color-primary-foreground
-- **Card background:** $--color-card
-- **Card border:** $--color-border, radius: $--radius-lg
-- **Body text:** $--font-sans, $--text-base
-- **Heading text:** $--font-sans, $--text-xl, weight: 600
-- **Standard padding:** $--spacing-4 (16px)
-- **Standard gap:** $--spacing-3 (12px)
-[... derived from Phase 2 token-to-usage mapping]
-
-### Layout Patterns — Screen Bone (REQUIRED)
-
-Every mockup screen MUST use the Screen Bone pattern. Build the structural skeleton first, then fill zones with components.
-
-**Bone structure** (insert inside Screen Shell's `content` slot):
-```
-U(screen+"/content", {layout: "none"})                        ← stacking mode for floating elements
-bone=I(screen+"/content", {..., layout: "vertical",
-  width: [W], height: [H], x:0, y:0})                        ← explicit size (fill_container won't work in layout:none)
-  header=I(bone, {..., height: "fit_content"})                ← fixed header zone
-  scroll=I(bone, {..., height: "fill_container", scroll: true}) ← scrollable content (fill_container OK — bone IS flex parent)
-nav=I(screen+"/content", {..., layout: "none",
-  width: [W], height: [H], x:0, y:0})                        ← floating overlay (SIBLING of bone, not child)
-```
-Where `W = shell_width`, `H = shell_height - status_bar - home_indicator`.
-
-Read the target screen file to determine which zones exist. See detection/platform reference "Screen Bone Pattern" for full patterns (A/B/C).
-
-Common content layouts within zones:
-- **Card stack:** vertical layout, gap: [detected]
-- **Card grid:** horizontal wrap, gap: [detected], min-width per card: [detected]
-- **Form stack:** vertical layout, gap: [detected]
-
-## Design Tokens
-Synced to Pencil canvas as variables:
-- Colors: [list token names]
-- Spacing: [list token names]
-- Typography: [list token names]
-
-## Component Inventory
-[For each component — same format as v1:]
-
-### [ComponentName]
-- **Import:** `import { [Name] } from "[path]"`
-- **Variants:** [prop] ([values]), ...
-- **Defaults:** [prop]="[default]", ...
-- **Required props:** [prop]: [type], ...
-- **Optional props:** [prop]?: [type], ...
-- **Sub-components:** [if compound]
-- **Pattern:** [Shadcn/cva | Radix compound | MUI wrapper | Custom]
-- **Pencil ref:** `[pencil-node-id]` (use for mockups)
-```
-
-2. Write to `.claude/rules/pencil.md`
-3. Present summary:
-
-```
-Pencil sync complete:
-  Stack:        Next.js + Tailwind v4 + Shadcn + Lucide
-  Platform:     Web (Desktop 1440×900, Tablet 768×1024, Mobile 390×844)
-  Tokens:       23 synced to Pencil canvas
-  Components:   14 inventoried, 10 built as reusable Pencil components
-  Rules:        .claude/rules/pencil.md written
-
-  Pencil mockups will now use existing components via copy/instance.
-  Screen presets ensure mockups match real device dimensions.
-  Run --refresh after changing tokens or adding components.
-```
-
-4. Mark all todos complete
+Read `references/project-rules-output.md` relative to this skill now. Fill its required template from the confirmed stack, extracted tokens, screen shells, and real Pencil component IDs; never leave bracket placeholders or example values in the written file. Write the result to `.claude/rules/pencil.md`, report the exact destination and sync counts, then mark all todos complete.
 
 ## Refresh Mode (`--refresh`)
 

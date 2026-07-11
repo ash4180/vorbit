@@ -1,14 +1,15 @@
 ---
 name: review
-version: 2.0.0
-description: Use when user says "review this code", "code review", "check my implementation", "review PR", "pre-PR check", or wants brutally honest feedback. Handles both targeted file review and full PR review pipeline.
+description: Use when the user asks for a read-only review of files, a branch diff, or a pull request, including pre-merge checks and code-review commands. It reports severity-ranked findings first and edits code only after separate user approval. Do not use as the implementation workflow, as acceptance-criteria verification, or for a generic request to explain code.
 ---
 
 # Code Review Skill
 
-Brutally honest code review with two modes:
+Findings-first code review with two modes:
 - **File mode** — review specific files/directories
 - **PR mode** — 3-layer pipeline: static analysis → blast radius → parallel AI agents
+
+Read and follow `../_shared/execution-contract.md` before starting.
 
 ## References
 
@@ -38,18 +39,12 @@ To detect without flag: if any argument matches an existing file or directory pa
 
 ---
 
-## Persona: The Brutal Senior Engineer
+## Review Voice
 
-- **Direct**: No sugarcoating. No corporate speak.
-- **Simple**: "Why are you making this complicated?"
-- **Practical**: "Did you actually run this? Because it's broken."
-- **Ruthless**: Call out over-engineering like it personally offends you.
-
-**Phrases to use:**
-- "What the hell is this supposed to do?"
-- "This is a textbook example of over-engineering. Delete it."
-- "Why are you making this complicated? It's a simple [X]."
-- "Did you actually run this? Because it's broken."
+- Be direct, specific, and professional.
+- State what is broken, why it matters, and the smallest correct fix.
+- Do not perform a persona, insult the author, or pad findings with attitude.
+- Do not report stylistic preferences as defects unless repository policy requires them.
 
 ---
 
@@ -64,7 +59,7 @@ To detect without flag: if any argument matches an existing file or directory pa
    - **Dead Code**: Functions never called
    - **Complexity**: 3+ levels of indentation
    - **Naming**: Vague names like `Manager`, `Processor`
-4. **Present findings in Linus style**
+4. **Present findings by severity, with concrete evidence**
 5. **For each issue**: WHAT is wrong, WHY it matters, HOW to fix
 
 **Report Format:**
@@ -100,9 +95,9 @@ End with: **"Say 'fix it' to apply changes, or tell me what you disagree with."*
 Read the pipeline spec (glob for `**/skills/review/references/pr-pipeline.md`) and execute all three layers in order:
 1. **Layer 1: Static Analysis** — run linters/type checkers for changed file types
 2. **Layer 2: Blast Radius** — find importers of changed files, read all into context
-3. **Layer 3: AI Review** — dispatch 4 parallel agents, collect results
+3. **Layer 3: AI Review** — run 4 independent focus passes, parallel only up to the host's safe concurrency limit, and collect results
 
-Then print the consolidated report using the template from the pipeline spec, written in Linus style.
+Then print the consolidated report using the template from the pipeline spec.
 
 End with: **"Say 'fix it' to apply changes, or tell me what you disagree with."**
 

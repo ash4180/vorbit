@@ -1,16 +1,17 @@
 ---
 name: explore
-version: 1.1.0
-description: Use when user says "explore idea", "quick exploration", "brainstorm feature", "investigate approach", "research options", or wants to do lightweight idea exploration before creating a full PRD. Saves to Notion or Anytype.
+description: Use when the user asks to brainstorm, research options, or explore an early feature idea before committing to requirements. It asks at least 10 questions, compares approaches, recommends one, and saves the approved exploration to Notion or Anytype when connected. Do not use for writing a final PRD, decomposing tickets, or implementing code.
 ---
 
 # Explore Skill
 
 Quick idea exploration before PRD creation. Supports saving to Notion or Anytype.
 
+Read and follow `../_shared/execution-contract.md` before starting.
+
 ## Step 1: Detect Platform & Verify Connection
 
-Read and follow `_shared/mcp-tool-routing.md` (glob for `**/skills/_shared/mcp-tool-routing.md`). Discover connected platforms, ask user which to use, and verify connection.
+Read and follow `_shared/mcp-tool-routing.md` (glob for `**/skills/_shared/mcp-tool-routing.md`) before any external call. Saving is optional: discover and verify Notion/Anytype when the user wants a saved artifact, but lack of a connection must not block questioning, analysis, or an approved chat draft.
 
 ## Step 2: Ask 10+ Questions
 
@@ -92,6 +93,10 @@ After gathering context:
 
 ## Recommendation
 [Which option and why, addressing constraints]
+
+## PRD Handoff
+- Confirmed decisions: [facts the user explicitly chose]
+- Unresolved decisions: [questions to clarify in PRD; not requirements yet]
 ```
 
 **After showing draft, ask:** "Does this look good? Ready to save?"
@@ -100,14 +105,17 @@ After gathering context:
 
 **Only proceed after user confirms the draft.**
 
-Save using the platform selected in Step 1. Follow the "Save Content" section in `_shared/mcp-tool-routing.md`. Pass the exploration content as markdown body.
+If a connected destination was selected, save using the "Save Content" section in `_shared/mcp-tool-routing.md` and pass the exploration content as markdown body. Otherwise keep the approved document in chat and report it as unsaved.
+
+An exploration document is a decision input, not a PRD source of truth. Do not label it a PRD or create implementation issues from it directly. The PRD workflow imports the confirmed decisions and creates the canonical Linear spec ticket.
 
 ## Step 6: Report
 
 - URL or object ID (if saved)
 - Platform used (Notion/Anytype)
 - Recommended approach summary
-- Next: `/vorbit:design:prd`
+- Unresolved decisions to carry into PRD clarification (do not silently convert them into requirements)
+- Next: `/vorbit:design:prd [pasted PRD Handoff or local export]` (include the exploration URL only as provenance)
 
 ---
 
@@ -121,6 +129,7 @@ Save using the platform selected in Step 1. Follow the "Save Content" section in
 | Problem Statement | Yes | One sentence, root cause focus |
 | Options | Yes | 2-3 approaches with pros/cons |
 | Recommendation | Yes | Which option and why |
+| PRD Handoff | Yes | Separate confirmed decisions from unresolved questions |
 
 ## Options Format
 
@@ -180,6 +189,13 @@ Competitors: [existing solutions mentioned]
 
 ## Recommendation
 [Which option and why, addressing constraints]
+
+## PRD Handoff
+**Confirmed decisions:**
+- [Explicit user choice]
+
+**Unresolved decisions:**
+- [Question for PRD clarification — do not convert to a requirement]
 ```
 
 ## Notion Mapping

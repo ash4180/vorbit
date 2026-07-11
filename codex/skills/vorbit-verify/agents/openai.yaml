@@ -1,0 +1,7 @@
+interface:
+  display_name: "Vorbit Verify"
+  short_description: "Validate code against tests and acceptance criteria"
+  default_prompt: "Use $vorbit-verify to test this implementation and report evidence for every acceptance criterion."
+
+policy:
+  allow_implicit_invocation: true

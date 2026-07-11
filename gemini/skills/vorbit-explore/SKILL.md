@@ -1,6 +1,6 @@
 ---
 name: vorbit-explore
-description: Use when the user wants to explore an idea, brainstorm a feature, investigate approaches, or do lightweight research before creating a full PRD.
+description: Use when the user asks to brainstorm, research options, or explore an early feature idea before committing to requirements. It asks at least 10 questions, compares approaches, recommends one, and saves the approved exploration to Notion or Anytype when connected. Do not use for writing a final PRD, decomposing tickets, or implementing code.
 ---
 
 # Vorbit Explore

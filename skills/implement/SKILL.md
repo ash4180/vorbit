@@ -1,25 +1,26 @@
 ---
 name: implement
-version: 1.3.0
-description: Use when user says "implement this", "build feature", "fix this bug", "code this", "work on issue", "start coding", or asks to implement from a Linear issue or description. Standard TDD workflow for coding tasks.
+description: Use when the user explicitly asks to build a production feature, fix a bug, or implement a Linear issue in an existing codebase. It searches for reusable code, changes project files with TDD, runs the real test suite, and may update the linked Linear issue. Route explicit --loop requests to implement-loop. Do not use for review-only, verification-only, planning, or mock-data prototype requests.
 ---
 
 # Implementation Skill
 
 A disciplined, Test-Driven Development (TDD) workflow for implementing features or fixing bugs.
 
-> **Linear MCP namespace**: All Linear calls in this skill use `mcp__plugin_linear_linear__*` (the namespace shipped with the vorbit plugin). Bare verb names below (`list_issues`, `update_issue`, etc.) refer to the corresponding `mcp__plugin_linear_linear__<verb>` tool.
+Read and follow `../_shared/execution-contract.md` before starting.
+
+> **Linear tools**: Use the connected Linear tools shipped with Vorbit. Verify the available operation and parameter schema before calling it; never guess a verb or field name.
 
 ## Handle Loop Mode
 
-**If `--loop` or `--cancel` in arguments:**
+**If `--loop` or `--cancel` is present, or `.claude/.loop-state.json` contains an active loop:**
 Use the **implement-loop** skill for loop state management and sub-issue tracking.
 
 **If no loop flags:** Continue with normal implementation below.
 
-## Step 1: Detect Platform & Verify Connection
+## Step 1: Resolve Input and Capabilities
 
-Read and follow `_shared/mcp-tool-routing.md` (glob for `**/skills/_shared/mcp-tool-routing.md`). Discover connected platforms, ask user which to use, and verify connection. If no PRD is needed, skip this step.
+Read and follow `_shared/mcp-tool-routing.md` (glob for `**/skills/_shared/mcp-tool-routing.md`). Only require Linear for a Linear issue or URL. A connection failure blocks Linear tracking, not implementation from a complete user-provided description.
 
 ## Step 2: Determine Context
 
@@ -29,18 +30,20 @@ Read and follow `_shared/mcp-tool-routing.md` (glob for `**/skills/_shared/mcp-t
 2. **IF args = Linear URL**: Extract issue ID from URL, fetch details
 3. **IF no args, check conversation**: Look for Linear issue URLs from recent `/vorbit:implement:epic` output
    - If found: "I see you just created [issue title]. Work on this one?" (Yes/No)
-4. **IF nothing found**: Use `list_issues` with `assignee: "me"` to show assigned issues, ask which to work on
+4. **IF nothing found**: Ask what to implement. Do not select assigned work without the user's request
 5. **IF description only**: Work directly on what user describes (no Linear tracking)
+
+For a Linear issue, record the issue ID and description update timestamp used as the requirement baseline. If it changes during implementation, stop and reconcile the new requirements.
 
 ## Step 3: Before Starting
 
 For Linear issues:
-- Update issue status to "In Progress"
 - Read issue description for requirements
 - Check parent issue for SDD and style findings
-- Check linked PRD if available:
-  - **Notion PRD**: Use `notion-find` to fetch
-  - **Anytype PRD**: Use `API-get-object` to fetch
+- Fetch the linked Linear PRD/specification ticket when available
+- Map the issue to its `US-*`, globally unique `US-*.AC-*`, and `F*-S*` identifiers
+- Confirm no implementation-affecting `TBD` remains
+- Only after those gates pass, update the selected implementation issue to the team's exact In Progress state before editing code
 
 ## Step 3.5: Parse Enhanced Issue Format
 
@@ -62,21 +65,21 @@ If present:
 ### Check "File Changes"
 If present:
 1. This is your implementation plan
-2. CREATE files at exact paths listed
-3. MODIFY files at exact paths listed
-4. **Rule:** Don't deviate without updating the issue
+2. Treat listed paths as the approved plan, not proof that the current codebase still matches it
+3. If code evidence requires a different path, explain why before editing and update the issue after approval
+4. Never create a duplicate merely to match a stale path
 
 ### Detect UI Work
 If issue involves UI components:
 - Check for ui-patterns reference in issue
 - If UI work detected, use ui-patterns skill for constraints
-- Follow: Tailwind, motion/react, accessibility primitives
+- Preserve the repository's existing styling and primitive stack; apply Tailwind or `motion/react` only when already present or explicitly approved
 
 ## Step 4: Learn Codebase Style
 
 **CRITICAL: Before writing ANY code:**
 
-1. **Find similar code** - Grep for similar features in codebase
+1. **Find similar code** - Use `rg` to find similar features and call sites
 2. **Study patterns** - Import style, naming conventions, file structure
 3. **Test patterns** - How does project structure tests?
 4. **Note 2-3 example files** - Use as style reference
@@ -92,13 +95,13 @@ If issue involves UI components:
 1. **Search for common i18n patterns:**
 ```bash
 # Check package.json for ANY i18n library
-grep -E "i18n|intl|locale|translation|l10n|gettext|fluent" package.json 2>/dev/null
+rg -n "i18n|intl|locale|translation|l10n|gettext|fluent" package.json
 
 # Find locale/translation directories (check common locations)
 find . -maxdepth 3 -type d \( -name "locales" -o -name "locale" -o -name "i18n" -o -name "translations" -o -name "messages" -o -name "lang" -o -name "languages" \) 2>/dev/null
 
 # Check for translation files
-find . -maxdepth 4 -type f \( -name "*.po" -o -name "*.pot" -o -name "*.mo" -o -name "*.xliff" -o -name "*.arb" -o -name "**/en.json" -o -name "**/en-US.json" \) 2>/dev/null | head -10
+find . -maxdepth 4 -type f \( -name "*.po" -o -name "*.pot" -o -name "*.mo" -o -name "*.xliff" -o -name "*.arb" -o -name "en.json" -o -name "en-US.json" \) 2>/dev/null | head -10
 ```
 
 2. **Check config files** for i18n setup:
@@ -109,9 +112,9 @@ find . -maxdepth 4 -type f \( -name "*.po" -o -name "*.pot" -o -name "*.mo" -o -
    - `.env*` files for locale settings
    - Any `i18n.*` config file
 
-3. **Grep for translation function usage:**
+3. **Search for translation function usage:**
 ```bash
-grep -rE "useTranslations|useIntl|useT|t\(|i18n\.|formatMessage|gettext|__|_t\(|\$t\(|trans\(" src/ app/ components/ --include="*.ts" --include="*.tsx" --include="*.js" --include="*.vue" --include="*.svelte" 2>/dev/null | head -10
+rg -n -g '*.ts' -g '*.tsx' -g '*.js' -g '*.vue' -g '*.svelte' "useTranslations|useIntl|useT|i18n\.|formatMessage|gettext|_t\(|\$t\(|trans\(" src app components
 ```
 
 ### If i18n detected:
@@ -143,31 +146,23 @@ grep -rE "useTranslations|useIntl|useT|t\(|i18n\.|formatMessage|gettext|__|_t\(|
 
 **Rule**: If the project has ANY localization setup, missing translations = broken UX. This is a blocker.
 
-## Step 5: Check for Sub-issues
+## Step 5: Handle Parent Issues
 
-**For parent issues (epics):**
-
-1. Use `list_issues` with `parentId: [issue ID]` to fetch all sub-issues
-2. Filter sub-issues that have the **Parallel** label
-3. Group parallel sub-issues by shared dependencies
-4. For each parallel group:
-   - Use Task tool to spawn one agent per sub-issue
-   - Each agent follows TDD approach below
-   - Wait for all agents in group to complete before next group
-5. Process non-parallel sub-issues sequentially after all parallel groups
+If the selected issue has open sub-issues, do not silently implement the whole tree. Show the queue from the parent's `## Implementation Order` section and ask the user to choose one sub-issue or explicitly start loop mode. Normal implementation owns one issue at a time; implement-loop owns multi-issue progression.
 
 ## Step 6: TDD Implementation
 
 **RULE: Task is NOT done until tests pass.**
 
-**RULE**: If you implement backend API changes, also implement the corresponding frontend site API integration. Use explicit `TODO:` markers only for temporary placeholders.
+Keep the change within the selected issue. Do not add a frontend or backend counterpart unless its acceptance criteria require it.
 
 For each task:
 
 ### Red (Write Test First)
-- Create test that validates acceptance criteria
-- Follow project's test file patterns
-- Run test - **MUST FAIL** (proves test is valid)
+- When the repository has a runnable harness, create a test that validates the changed behavior
+- Follow the project's test patterns
+- Run the focused test and confirm it fails for the expected reason
+- If no suitable harness exists, agree on a real verification surface; do not invent a cheater test
 
 ### Green (Implement)
 - Write the minimum code to pass the test
@@ -182,7 +177,9 @@ For each task:
 - Ensure no regressions
 
 ### If Creating Mock Data During Implementation
-**Register mock in `.claude/mock-registry.json`:**
+**Register mock in the resolved project registry** (`<storage_root>/projects/<project_slug>/mock-registry.json`; fallback `.vorbit/mock-registry.json`):
+
+The registry root is `{ "version": "1.1", "mocks": [...] }`. The snippets below are individual entries appended to `mocks`.
 
 **For mock files:**
 ```json
@@ -190,7 +187,7 @@ For each task:
   "feature": "[Feature name]",
   "type": "file",
   "path": "src/path/to/mock.json",
-  "endpoint": "GET /api/[resource]",
+  "endpoint": "proposed:GET /api/[resource]",
   "createdBy": "implement",
   "createdAt": "[ISO timestamp]",
   "components": ["src/path/to/component.tsx"]
@@ -204,7 +201,7 @@ For each task:
   "type": "state",
   "path": "src/path/to/component.tsx",
   "location": "useState:items (line 23)",
-  "endpoint": "GET /api/[resource]",
+  "endpoint": "proposed:GET /api/[resource]",
   "stateType": "useState | zustand | redux | context",
   "createdBy": "implement",
   "createdAt": "[ISO timestamp]",
@@ -219,50 +216,31 @@ For each task:
 - [ ] Unit test exists and passes
 - [ ] Code matches team's style
 - [ ] No regressions in existing tests
-- [ ] No mock data remains (check for `MOCK_`, mock imports, `.json` test data) **OR mocks registered in `.claude/mock-registry.json`**
+- [ ] No application mock data remains **OR every temporary application mock is registered in the resolved project registry** (test fixtures are excluded)
 - [ ] **All "Related Epic Acceptance Criteria" satisfied** (if present in issue)
 - [ ] **File changes match planned paths** (if "File Changes" section exists)
 - [ ] **Used utilities/constants from "Reuse & Patterns"** (no magic numbers, no recreated functions)
-- [ ] **No dead code or leftover TODOs**
+- [ ] **No dead code or unregistered placeholder TODOs** (registered prototype mocks are allowed until backend integration)
 - [ ] **i18n complete** (if project has localization): All user-facing strings use translation system, keys added to ALL locale files
 
 ## Step 7: On Task Completion
 
-- Update Linear status to "Done" or "In Review"
-- Add comment: what was done, files changed
+- Keep the implementation parent "In Progress" until a PR exists. Implementation sub-issues may move to "Done" after their own ACs and tests pass.
+- Add a Linear comment with changed files, verification evidence, and remaining release steps.
 
 ## Step 8: On Feature Completion
 
-**After ALL tasks done, create memory.md:**
-
-```markdown
-# Feature: [Name]
-
-## What Was Built
-[Summary]
-
-## Technical Decisions
-[Why chose approach X]
-
-## Lessons Learned
-[What worked, what was hard]
-
-## Code Patterns
-[Reference README.md or CLAUDE.md if patterns documented there, otherwise note new patterns discovered]
-```
+Do not create a generic `memory.md`. Record durable decisions only in an existing repository-approved location, and only when future maintainers need them.
 
 ## Step 9: Report
 
 - What was implemented
 - Files changed
 - Tests added/updated
-- memory.md location
 - Next: `/vorbit:implement:verify` to verify
 
 ## Quick Mode
 
 For simple tasks (< 30 lines):
-- Just implement it
-- Run existing tests
-- Skip memory.md
-
+- Keep the same search, scope, and verification rules
+- Skip issue ceremony only when no Linear issue was supplied

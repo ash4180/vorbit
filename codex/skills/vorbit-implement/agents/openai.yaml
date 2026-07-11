@@ -1,0 +1,7 @@
+interface:
+  display_name: "Vorbit Implement"
+  short_description: "Implement features and fixes with project rules"
+  default_prompt: "Use $vorbit-implement to build this change with repository reuse, TDD, and real verification."
+
+policy:
+  allow_implicit_invocation: true

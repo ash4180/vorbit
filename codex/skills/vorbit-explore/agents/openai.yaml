@@ -1,0 +1,7 @@
+interface:
+  display_name: "Vorbit Explore"
+  short_description: "Explore product ideas before writing a PRD"
+  default_prompt: "Use $vorbit-explore to question, compare, and document options for this early product idea."
+
+policy:
+  allow_implicit_invocation: true

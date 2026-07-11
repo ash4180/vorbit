@@ -11,5 +11,5 @@ Use for syncing design tokens, components, and conventions to Pencil.
 7. Show combined sync preview (Confirmation 2 of 2, codebase only).
 8. Phase 4 — Sync tokens to Pencil as variables. Diff against existing — add new, update changed, skip unchanged.
 9. Phase 5 — Build component library on canvas: Screen Shells first (one per screen size), then top 10-12 components ranked by import frequency. Read actual StyleSheet for exact values. Build 2-3 variants per component. Cap at 15 reusable components.
-10. Phase 6 — Write `.claude/rules/pencil.md` with stack, screen presets, code generation rules, Pencil mockup rules, component IDs, token usage map, layout patterns.
+10. Phase 6 — Write `pencil.md` into the resolver's project-scoped shared-rule directory (`<storage-root>/rules/projects/<project-slug>/`) with stack, screen presets, code generation rules, Pencil mockup rules, component IDs, token usage map, layout patterns.
 11. Flags: `--refresh` (skip detection, update only), `--components-only` (skip tokens).

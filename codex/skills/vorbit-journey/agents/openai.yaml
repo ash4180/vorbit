@@ -1,0 +1,7 @@
+interface:
+  display_name: "Vorbit Journey"
+  short_description: "Create approved product flows in FigJam"
+  default_prompt: "Use $vorbit-journey to draft, confirm, and create this product flow in FigJam."
+
+policy:
+  allow_implicit_invocation: true

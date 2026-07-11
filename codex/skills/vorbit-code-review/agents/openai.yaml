@@ -1,0 +1,7 @@
+interface:
+  display_name: "Vorbit Code Review"
+  short_description: "Review code and PR diffs for concrete risks"
+  default_prompt: "Use $vorbit-code-review to review the current changes and report findings before proposing fixes."
+
+policy:
+  allow_implicit_invocation: true

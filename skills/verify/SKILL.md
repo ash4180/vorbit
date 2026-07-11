@@ -1,24 +1,25 @@
 ---
 name: verify
-version: 1.1.0
-description: Use when user says "verify implementation", "check acceptance criteria", "validate feature", "does this meet requirements", "QA check", or wants to confirm code meets the original requirements and passes quality checks.
+description: Use when the user asks for a post-implementation validation against explicit acceptance criteria or a linked issue or PRD. It runs the real project tests, checks each criterion and code hygiene with evidence, reports pass or fail, and may comment on or update the Linear issue. Do not use to implement fixes, perform an open-ended code review, or validate requirements that have not been supplied.
 ---
 
 # Verify Skill
 
 Confirm that implementation meets Requirements, passes Tests, and maintains Quality.
 
-## Step 1: Detect Platform & Verify Connection
+Read and follow `../_shared/execution-contract.md` before starting.
 
-Read and follow `_shared/mcp-tool-routing.md` (glob for `**/skills/_shared/mcp-tool-routing.md`). Discover connected platforms, ask user which to use, and verify connection. If no PRD is needed, skip to Step 2.
+## Step 1: Resolve Requirements
+
+Read and follow `_shared/mcp-tool-routing.md` only when the user supplied an external artifact. Linear is the canonical PRD source; pasted acceptance criteria and local descriptions remain valid read-only inputs.
 
 ## Step 2: Determine Context
 
 1. **IF Linear issue ID**: Fetch issue and its acceptance criteria
-2. **IF Notion PRD URL**: Fetch PRD from Notion and use success criteria
-3. **IF Anytype PRD URL or object ID**: Fetch PRD from Anytype and use success criteria
-4. **IF description**: Ask user for acceptance criteria
-5. **IF no args**: Ask what to validate
+2. **IF description**: Use explicit criteria; otherwise propose a checklist and label it as proposed
+3. **IF no args**: Ask what to validate
+
+Map every globally unique `US-*.AC-*` to an observable check before running tests.
 
 ## Step 3: Run Tests
 
@@ -28,7 +29,7 @@ Detect and run project test suite:
 - Go: `go test ./...`
 - Rust: `cargo test`
 
-**STOP if tests fail** - run `/vorbit:implement:implement` to fix first
+A failing command makes the result fail, but continue other safe checks so the report is complete. Record every command, exit status, and material output.
 
 ## Step 4: Validate Acceptance Criteria
 
@@ -55,11 +56,10 @@ Report findings with file:line locations.
 ```markdown
 # Verification Report
 
-## Status: [PASS / FAIL]
+## Status: [PASS / FAIL / BLOCKED]
 
 ### Tests
-- Passed: [X]
-- Failed: [Y]
+- `[command]` → exit [code] — [result]
 
 ### Acceptance Criteria
 - [x] Criterion 1
@@ -68,14 +68,17 @@ Report findings with file:line locations.
 ### Hygiene
 - Found 2 console.logs in `utils.ts`
 - Clean? [Yes/No]
+
+### Unverified
+- [Anything not run or not observable, with reason]
 ```
 
-## Step 7: Update Linear
+## Step 7: Optional Linear Update
 
 If validating a Linear issue:
-- Add validation comment with results
-- Update status if passed
-- Link any relevant PRs
+- Stay read-only unless the user explicitly requested a Linear update
+- After a full pass, add the validation evidence and move to the team's review-ready state if authorized
+- Never mark the implementation parent Done before merge
 
 ---
 
@@ -85,7 +88,7 @@ If validating a Linear issue:
 
 ### 1. Automated Tests
 - Run the project's test suite (Node, Python, Go, etc.)
-- **Constraint**: If tests fail, STOP. Fix the code first.
+- A test failure is evidence for a FAIL result; continue independent safe checks and do not fix code in verification mode
 
 ### 2. Acceptance Criteria (AC)
 - Retrieve AC from the Issue, PRD, or Request

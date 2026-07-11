@@ -1,0 +1,7 @@
+interface:
+  display_name: "Vorbit Cleanup Mocks"
+  short_description: "Remove tracked mocks for backend handoff"
+  default_prompt: "Use $vorbit-cleanup-mocks to prepare the backend contract and remove tracked mocks only after real integration passes."
+
+policy:
+  allow_implicit_invocation: false
