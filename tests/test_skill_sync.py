@@ -7,6 +7,8 @@ from pathlib import Path
 
 import pytest
 
+from vorbit_core.sync import build_sync_plan
+
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 RESOLVER_SCRIPT = REPO_ROOT / "scripts" / "vorbit-resolve-rules"
@@ -230,6 +232,26 @@ def test_sync_refuses_a_non_directory_install_root_without_partial_changes(temp_
     assert skills_path.read_text() == "user data"
     assert not (agent_home / "bin").exists()
     assert not (agent_home / ".vorbit-managed-links.json").exists()
+
+
+def test_legacy_link_under_a_symlinked_repo_spelling_is_not_a_false_conflict(tmp_path):
+    # Reproduce the first-run-over-legacy-links case: the repo is addressed
+    # through a symlink (a different spelling than the link's resolved target),
+    # and no manifest exists yet. The link is genuinely Vorbit-owned and must
+    # be adopted, not misclassified as an unowned collision.
+    linked_repo = tmp_path / "linked-vorbit"
+    linked_repo.symlink_to(REPO_ROOT)
+    agent_home = tmp_path / ".codex"
+    (agent_home / "skills").mkdir(parents=True)
+    skill_name = next(iter(sorted((REPO_ROOT / "codex" / "skills").iterdir()))).name
+    legacy_link = agent_home / "skills" / skill_name
+    legacy_link.symlink_to((REPO_ROOT / "codex" / "skills" / skill_name).resolve())
+
+    plan = build_sync_plan(linked_repo, agent_home, "codex")
+
+    assert plan.conflicts == ()
+    replaced = {action.relative_path for action in plan.actions if action.kind == "replace"}
+    assert f"skills/{skill_name}" not in replaced
 
 
 def test_sync_check_and_dry_run_report_drift_without_writing(temp_home):

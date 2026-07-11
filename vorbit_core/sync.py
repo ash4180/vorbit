@@ -44,7 +44,11 @@ class SyncPlan:
 
 
 def _normalized_absolute(path: Path) -> Path:
-    return Path(os.path.abspath(path.expanduser()))
+    # Resolve symlinks, not just `..`: ownership checks compare a link's on-disk
+    # target against the repo source, and those can be spelled differently (macOS
+    # /tmp vs /private/tmp, a symlinked checkout, the plugin cache). abspath would
+    # leave the spellings divergent and misclassify a Vorbit-owned link as unowned.
+    return Path(os.path.realpath(path.expanduser()))
 
 
 def _safe_relative_path(value: str) -> str:
