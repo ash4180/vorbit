@@ -29,27 +29,18 @@ Detect and run project test suite:
 - Go: `go test ./...`
 - Rust: `cargo test`
 
-A failing command makes the result fail, but continue other safe checks so the report is complete. Record every command, exit status, and material output.
+Record every command, exit status, and material output.
 
 ## Step 4: Validate Acceptance Criteria
 
 For each criterion:
 1. Check if implementation satisfies requirement
-2. Mark PASS or FAIL with evidence
+2. Mark PASS or FAIL with evidence (output format per the Verification Schema below)
 3. Note any gaps
-
-Output format:
-- `[PASS] Criterion 1`
-- `[FAIL] Criterion 2 - [reason]`
 
 ## Step 5: Code Hygiene
 
-Scan for issues:
-- TODO/FIXME comments
-- Debug statements (console.log, print, etc.)
-- Commented-out code
-
-Report findings with file:line locations.
+Scan for the leftovers listed in the Verification Schema below. Report findings with file:line locations.
 
 ## Step 6: Report
 

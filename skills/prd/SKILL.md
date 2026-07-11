@@ -38,7 +38,7 @@ Resolve context in this order:
 
 **Rule: ask about every meaningful uncertainty. Do not silently guess.** Every factual requirement and numeric target must trace to user input, a cited source artifact, or a durable rule. Treat inferred privacy, persistence, retention, permissions, exclusions, and metric targets as questions, not facts.
 
-Use `AskUserQuestion`, batch related unknowns together, max 3 rounds. Focus on:
+Use `AskUserQuestion` and batch related unknowns together. A few rounds normally suffice; when unknowns remain after that, park them as TBDs (below) rather than continuing to interrogate. Focus on:
 1. **Problem** — user pain and why this matters
 2. **Users** — who is affected, primary vs secondary
 3. **Scope** — what is in and what is out
@@ -48,11 +48,11 @@ Use `AskUserQuestion`, batch related unknowns together, max 3 rounds. Focus on:
 
 For anything still unknown:
 1. Mark it inline as `TBD-001`, `TBD-002`, ... where it would appear in the PRD
-2. Ask the user via `AskUserQuestion` (batched, max 3 rounds)
+2. Ask the user via `AskUserQuestion` (batched)
 3. Replace the `TBD` with the answer before ticket confirmation
-4. If still unresolved after 3 rounds, leave the ID with a short label and classify it as `implementation-affecting` or `non-blocking`
+4. If the user can't or won't resolve it, leave the ID with a short label and classify it as `implementation-affecting` or `non-blocking`. Anything that can change observable behavior, AC wording, flow branches, API/data contracts, issue boundaries, dependencies, or test criteria is `implementation-affecting`; epic planning must block until it is resolved. Never invent a number or promote an inference into a constraint merely to remove a TBD
 
-Every `TBD` must have a matching question attempt. No silent guessing.
+Every `TBD` must have a matching question attempt.
 
 ## Step 3: Generate Draft
 
@@ -159,14 +159,6 @@ As a [user], I want [goal], so [benefit].
 - Flow step IDs are document-unique: `F1-S1`, `F1-S2`, `F2-S1`, ...
 - Coverage gate: `all AC IDs - AC IDs named by flow steps = empty set`. Resolve any gap before confirmation
 
-### TBD rules
-
-- `TBD-###` is fine in Constraints, Success Criteria numbers, and flow details that depend on later design decisions
-- Never invent a number or promote an inference into a constraint merely to remove a TBD
-- `TBD` is **not** allowed in Problem, Users, or User Stories — those must be concrete before the ticket is created
-- Every `TBD` must have a matching `AskUserQuestion` attempt
-- Classify every remaining TBD. Anything that can change observable behavior, AC wording, flow branches, API/data contracts, issue boundaries, dependencies, or test criteria is `implementation-affecting`; epic planning must block until it is resolved
-
 ## Step 4: Confirm Draft
 
 Only proceed after the user confirms the draft and any implementation-affecting TBDs are resolved. If they ask for changes, edit the draft in chat and re-confirm. A request for a draft, review, or analysis is not approval to create the ticket.
@@ -235,7 +227,7 @@ When asked to review whether sub-issues fulfill a parent PRD ticket:
 - **User Flows**: at least one. Every step has a unique `F#-S#`; use Entry/Exit anchors and preserve real loops
 - **AC coverage**: every exact AC ID appears in at least one flow step's `Covers` list
 - **Success Criteria**: contain sourced numbers (percentages, times, counts), or classified `TBD-###` placeholders until the user supplies them
-- **TBD**: allowed in Constraints, Success Criteria numbers, and flow details only — never in Problem, Users, or User Stories. Every `TBD-###` has a matching question attempt and impact classification
+- **TBD**: allowed in Constraints, Success Criteria numbers, and flow details that depend on later design decisions only — never in Problem, Users, or User Stories. Every `TBD-###` has a matching question attempt and impact classification
 
 ## Common Mistakes
 

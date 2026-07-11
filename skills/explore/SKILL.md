@@ -1,6 +1,6 @@
 ---
 name: explore
-description: Use when the user asks to brainstorm, research options, or explore an early feature idea before committing to requirements. It asks at least 10 questions, compares approaches, recommends one, and saves the approved exploration to Notion or Anytype when connected. Do not use for writing a final PRD, decomposing tickets, or implementing code.
+description: Use when the user asks to brainstorm, research options, or explore an early feature idea before committing to requirements. It asks targeted questions until the PRD-blocking unknowns are resolved, compares approaches, recommends one, and saves the approved exploration to Notion or Anytype when connected. Do not use for writing a final PRD, decomposing tickets, or implementing code.
 ---
 
 # Explore Skill
@@ -13,50 +13,19 @@ Read and follow `../_shared/execution-contract.md` before starting.
 
 Read and follow `_shared/mcp-tool-routing.md` (glob for `**/skills/_shared/mcp-tool-routing.md`) before any external call. Saving is optional: discover and verify Notion/Anytype when the user wants a saved artifact, but lack of a connection must not block questioning, analysis, or an approved chat draft.
 
-## Step 2: Ask 10+ Questions
+## Step 2: Resolve the PRD-Blocking Unknowns
 
-**MANDATORY: Ask at least 10 questions before generating options.**
+Ask questions via AskUserQuestion until every unknown that would block a PRD is either answered or explicitly parked as unresolved. Depth is set by the information need, not a count: a well-specified idea may need 4 targeted questions; a vague one may need 15. Size each batch to what the user can answer comfortably.
 
-Generate 10 questions specific to the topic. Ask in batches of 3-4 using AskUserQuestion - wait for responses before asking the next batch:
-
-Example for "notification system":
-```
-1. What triggers a notification? (user action, system event, schedule)
-2. Which channels needed? (email, SMS, push, in-app)
-3. Can users configure their preferences?
-4. What's the expected volume? (10/day, 1000/hour)
-5. Are notifications time-sensitive?
-6. Should notifications be batched/digested?
-7. What happens if delivery fails?
-8. Are there compliance requirements? (GDPR opt-out)
-9. Who can send notifications? (system only, other users)
-10. What's the budget constraint for external services?
-```
-
-Questions should probe:
+Cover these categories, skipping any the user's request already settles:
 - Core functionality decisions
 - Scale and performance needs
 - User control and preferences
 - Error handling and edge cases
 - Constraints (budget, time, compliance)
+- Existing solutions / competitors and real user scenarios
 
-Then ask follow-ups:
-- **Competitors**: "Who are existing solutions?"
-- **User scenarios**: "Describe 3 real scenarios"
-- **Constraints**: "Budget, timeline, or technical limitations?"
-- **Confirm**: "Which are most important? What's missing?"
-
-**DO NOT proceed until you have answers to 10+ questions.**
-
-## Step 2.5: Question Quota Gate
-
-Before proceeding to Step 3, you MUST:
-1. List every question you asked and the user's answer (abbreviated, one line each)
-2. Output: **"Questions asked: [N]/10"**
-3. If N < 10 → return to Step 2 and generate more questions
-4. If user declined to answer some → still counts toward quota if asked
-
-NEVER proceed to Step 3 with fewer than 10 questions asked. This gate is non-negotiable.
+Before proceeding to Step 3, list each question asked with the user's answer (one line each), then list the unknowns that remain open. Open unknowns go to the PRD Handoff's unresolved decisions — never silently fill them with assumptions.
 
 ## Step 3: Analyze
 
@@ -143,7 +112,7 @@ Each option must have:
 
 ## Validation Rules
 
-- Context includes answers to 10+ questions
+- Context resolves every PRD-blocking unknown or lists it as an unresolved decision
 - Problem identifies root cause, not symptoms
 - Each option has concrete approach (not vague)
 - Effort and risk honestly assessed
@@ -157,10 +126,7 @@ Each option must have:
 
 ## Context Summary
 Key insights from conversation:
-- [Answer to Q1 insight]
-- [Answer to Q2 insight]
-- ...
-- [Answer to Q10 insight]
+- [One line per resolved unknown]
 
 Constraints: [budget, timeline, compliance from follow-up]
 Competitors: [existing solutions mentioned]

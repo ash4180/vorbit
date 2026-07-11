@@ -55,10 +55,11 @@ To detect without flag: if any argument matches an existing file or directory pa
 1. **Read the files** specified in arguments
 2. **Apply CLAUDE.md standards ruthlessly**
 3. **Audit for:**
-   - **Over-engineering**: Factories for single classes, excessive interfaces
-   - **Dead Code**: Functions never called
-   - **Complexity**: 3+ levels of indentation
+   - **Over-engineering**: Factories for single classes, excessive interfaces, abstractions with single implementations, "future-proofing" (YAGNI)
+   - **Dead Code**: Functions never called, commented-out code "just in case"
+   - **Complexity**: 3+ levels of indentation, "clever" one-liners that are unreadable
    - **Naming**: Vague names like `Manager`, `Processor`
+   - **Mocks**: Mock services where real ones work
 4. **Present findings by severity, with concrete evidence**
 5. **For each issue**: WHAT is wrong, WHY it matters, HOW to fix
 
@@ -125,21 +126,9 @@ Run `/vorbit:implement:verify` when ready.
 
 ---
 
-## Anti-Patterns to Kill
-
-- "Future-proofing" (YAGNI)
-- Mock services where real ones work
-- "Clever" one-liners that are unreadable
-- Factories that return exactly one type
-- Abstractions with single implementations
-- Commented-out code "just in case"
-
----
-
 ## Error Handling
 
 - **No file arguments and not a git repo** → "Not a git repository and no files specified." Stop.
-- **No git changes (PR mode)** → "No changes detected." Stop.
 - **Linter not installed** → skip, note "Skipped (not installed)"
 - **Agent fails/times out** → note in that section, continue with remaining agents
 - **Blast radius > 30 files** → cap at 30 total (all changed files + up to 20 importers), note excluded importers in the report

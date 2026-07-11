@@ -178,43 +178,17 @@ Figma controls layout/style; Webflow owns content.
 
 ## Common Scenarios
 
-### Scenario 1: Landing Page Template from Figma
-User: "Create a landing page template from this Figma design"
+Canonical walkthrough — landing page template from Figma ("Create a landing page template from this Figma design"):
 1. Fetch Figma design
 2. Identify: header (fixed), hero/features/CTA (slots), footer (fixed)
 3. Create template with 3 page slots
 4. Build header and footer as fixed elements
 5. Document slot purposes
 
-### Scenario 2: Direct Build Template
-User: "Build a landing page template with hero, features, and CTA sections"
-1. Clarify layout and structure requirements
-2. Plan: header (fixed), hero/features/CTA (slots), footer (fixed)
-3. Create template with page slots
-4. Apply clean structure and naming
-5. Document slot purposes
-
-### Scenario 3: Component Library from Figma
-User: "Turn these Figma sections into Webflow components"
-1. Fetch Figma design
-2. Identify self-contained sections
-3. Create each as standalone component
-4. Apply consistent class naming
-5. Test in page slots
-
-### Scenario 4: Direct Build Component
-User: "Create a hero component with headline, subtext, and CTA"
-1. Clarify content and layout requirements
-2. Plan structure and responsive behavior
-3. Build component with clean class naming
-4. Document usage
-
-### Scenario 5: Page from Template
-User: "Build a page using the landing template"
-1. Create page from existing template
-2. Add components to slots
-3. Customize content
-4. Preview and confirm
+Variants follow the same shape:
+- **Direct build** (template or component): replace step 1 with gathering requirements through conversation (Step 2 Mode B); the rest is identical.
+- **Components from Figma**: identify self-contained sections instead of slots, create each as a standalone component, test in page slots.
+- **Page from existing template**: create the page from the template, add components to slots, customize content, preview and confirm.
 
 ## Error Handling
 
@@ -249,16 +223,3 @@ This skill works standalone or chains with other vorbit commands:
 | Standalone (Figma) | `/vorbit:design:webflow [figma-url]` |
 | Standalone (Direct) | `/vorbit:design:webflow [description]` |
 | From PRD | PRD → `/vorbit:design:webflow` |
-
-## Rules
-
-1. **Webflow is the output** - Build in Webflow, Figma is optional reference
-2. **Ask before building** - Clarify output type, gather requirements
-3. **Block on ambiguity** - Never guess unclear requirements
-4. **Consistent naming** - Follow class naming conventions
-5. **Production safeguards** - Confirm before live changes
-6. **Templates enable scale** - Prefer templates for repeatable pages
-7. **Components enable reuse** - Extract reusable sections
-8. **CMS structure only** - Create structure, don't populate content
-9. **Document slots** - Every page slot needs a clear purpose
-10. **Respect limits** - Max 40 templates per site

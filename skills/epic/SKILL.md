@@ -128,7 +128,7 @@ Use a **pattern-first, paths-second** strategy:
    - Mark each as `Reuse`, `Adapt`, or `Do not use`
    - Include confidence and any search gaps (what might be missing)
 
-### 4.3 Discover Constants (NO MAGIC NUMBERS)
+### 4.3 Discover Constants
 ```bash
 # Find likely constant/config files
 rg --files | rg '(^|/)(constants|config)(\.|/|$)' | head -20
@@ -168,7 +168,7 @@ Examples of coupling:
 
 ## Step 5: Create Technical Plan (SDD)
 
-**RULE: If ANY requirement is unclear, use AskUserQuestion. Never plan past an implementation-affecting TBD.**
+**RULE: If ANY requirement is unclear, use AskUserQuestion. The TBD gate applies (Step 2).**
 
 Create SDD (Specification-Driven Development) document:
 - Technical Overview
@@ -211,7 +211,7 @@ The arrows from the PRD are traceability links in each parent's description, not
 For each User Story, create:
 - **Title**: Write a clear, human-readable implementation-parent title derived from the user story goal
 - **Description**: User story + related flow context + acceptance criteria + **test criteria (REQUIRED for TDD)**
-- **Sub-issues**: Create at least one executable sub-issue. Even a small story gets one child; the parent remains the coordination/spec node. Apply **Parallel** only when truly independent
+- **Sub-issues**: Decompose into executable sub-issues when the story needs more than one ordered unit of work. A story that is itself one small executable unit may skip children — the parent then carries its own Test Criteria and acts as the executable node (implement-loop falls back to the parent when a queue is empty). Apply **Parallel** per the criteria at the end of this document
 
 **Verification rule:** Every issue MUST include a `## Test Criteria` section. Behavior tests are written first when the repository has a runnable harness; otherwise specify an honest observable validation method.
 
@@ -254,9 +254,8 @@ For EACH sub-issue, include all these sections:
 ## Step 7.5: Traceability Gate (Required)
 
 Before creating Linear issues, validate this matrix:
+- The Step 2 traceability requirements (`US-### -> US-###.AC-## -> F#-S#`) still hold
 - `US-###` -> exactly one planned implementation parent
-- `US-###` -> its `US-###.AC-##`
-- `US-###.AC-##` -> flow step(s) (`F#-S#`) or explicit non-journey reason
 - In-scope `F#-S#` -> sub-issue(s) under that story's parent
 - Every planned sub-issue -> exactly one implementation parent
 - Every remaining TBD -> explicitly non-blocking
@@ -388,7 +387,7 @@ Phase 2 (depends on Phase 1)
 ⚠️ **Before marking done:** Verify ALL checked items above are satisfied.
 
 ## Reuse & Patterns
-> Existing code to reference - DO NOT recreate, NO magic numbers
+> Existing code to reference - DO NOT recreate
 
 **Similar features to follow:**
 | Reference | Location | What to copy |

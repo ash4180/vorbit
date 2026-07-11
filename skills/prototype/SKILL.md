@@ -11,7 +11,7 @@ Read and follow `../_shared/execution-contract.md` before starting.
 
 ## Core Principles
 
-- **Use AskUserQuestion for ANY uncertainty**: If anything is unclear, ASK. Don't guess.
+- **Ask when it changes the contract**: Use AskUserQuestion when a decision changes the mock boundary, the data contract, or user-visible scope. Make reasonable inline choices for cosmetic details and record them in the final summary.
 - **Analyze codebase first**: Find existing patterns before writing any code.
 - **Props-driven**: Components receive data as props. Never hardcode data inside components.
 - **One mock integration boundary**: Exactly one feature-level container/adapter imports mock data. Presentational components only receive typed props and never import mocks.
@@ -278,59 +278,4 @@ A prototype is NOT:
 - Throwaway demo code
 - Fully covered by implementation tests; only render/navigation smoke coverage is required here
 
-## Page/Feature Structure
-
-```
-src/
-└── pages/                    # or routes/, views/
-    └── [FeatureName]/
-        ├── index.tsx         # Main page component
-        ├── components/       # Feature-specific components
-        │   ├── Header.tsx
-        │   ├── List.tsx
-        │   └── Form.tsx
-        ├── mocks/            # Mock data FOR THIS FEATURE
-        │   └── data.json
-        ├── data-source.ts    # ONLY mock import boundary → swap to real API here
-        └── index.smoke.test.tsx
-```
-
-## Prototype Checklist
-
-**Before coding:**
-- [ ] Analyzed codebase patterns (pages, components, styling)
-- [ ] Asked user about layout, fields, actions, empty states
-- [ ] Did NOT invent features user didn't request
-
-**Structure:**
-- [ ] Framework detected from codebase
-- [ ] Page structure matches existing patterns
-- [ ] **Components receive data via props (not hardcoded)**
-- [ ] **Exactly ONE feature-level boundary imports mocks**
-- [ ] **Presentational components never import mocks**
-- [ ] Composes existing UI components (buttons, cards, inputs)
-
-**Mocks:**
-- [ ] Mock data under feature folder: `pages/Feature/mocks/`
-- [ ] Mock shows only fields UI actually uses
-- [ ] **Single mock boundary has the replacement TODO comment**
-- [ ] Components needing same data share the same mock file
-- [ ] **Mock registered in the resolved Vorbit project registry**
-
-**Final:**
-- [ ] Page is navigable/renderable
-- [ ] Route render smoke test passes
-- [ ] Navigation smoke test passes
-
-## Anti-Patterns (DON'T)
-
-- Starting to code before analyzing codebase
-- Guessing layout/fields/actions without asking
-- Adding search, filter, tabs, pagination "just in case"
-- Hardcoding data in components
-- Importing mocks in more than one module or in presentational components
-- Creating mock utilities or factories
-- Duplicating mock data across files
-- Skipping the replacement TODO at the mock boundary
-- Creating new UI components when existing ones work
-- Deviating from Figma design without asking
+The directory layout, mock rules, and verification gates for these properties live in Phases 4-5; the Phase 5 checklist is the single completion gate.

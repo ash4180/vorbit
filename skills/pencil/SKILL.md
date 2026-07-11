@@ -87,7 +87,7 @@ Read the detection tables at `references/detection.md` relative to this skill.
       ```
    3. Call `mcp__pencil__get_style_guide(tags)` with the user's chosen tags + platform tag (e.g., `mobile`, `webapp`)
       - The response includes a **named design system** with complete tokens: colors, typography, spacing, radii, icons
-   4. **Use AskUserQuestion** `[User]` — show the style guide preview (Path B confirmation 1 of 2):
+   4. **Use AskUserQuestion** `[User]` — show the style guide preview:
       ```
       Style: [name] — [description summary]
         Colors:     [count] ([list key names])
@@ -134,7 +134,7 @@ Read the detection tables at `references/detection.md` relative to this skill.
 
    Path B omits Framework, Styling, Components, Icons — those only matter when a codebase exists. The design system comes from Pencil's style guide, not code.
 
-For Path A this is confirmation 1 of 2. For Path B it is confirmation 2 of 2 because the style guide was already approved. The user can adjust screens, page layout pattern, or style.
+The user can adjust screens, page layout pattern, or style.
 
 **Output**: Confirmed stack configuration
 
@@ -187,9 +187,9 @@ Follow the "Component Inventory Scan" section in `detection.md` `[Skill ref]`:
    - Variant definitions and allowed values
    - Default values
 5. **Apply library-specific extraction** (Shadcn/cva, Radix compound, MUI wrapper, Custom)
-6. **Cap at 30 components.** Prioritize `ui/` and `common/`.
+6. **Default to the ~30 most-used components**, prioritizing `ui/` and `common/`; inventory more only when the design system genuinely needs them.
 
-**Combined sync preview — Path A confirmation 2 of 2:**
+**Combined sync preview (Path A):**
 
    **Path A (codebase detected):**
    ```
@@ -220,7 +220,7 @@ Follow the "Component Inventory Scan" section in `detection.md` `[Skill ref]`:
    Proceed?
    ```
 
-   **Path B (no codebase) — skip this combined sync preview.** There are no code tokens or components to inventory. The user already approved the style guide and the final platform/screen summary in the two Path B confirmations, so continue to Phase 4.
+   **Path B (no codebase) — skip this combined sync preview.** There are no code tokens or components to inventory; the style guide and platform/screen summary were already approved in Phase 1, so continue to Phase 4.
 
 **Use AskUserQuestion** with this preview (Path A only). User can adjust what gets synced.
 
@@ -239,6 +239,7 @@ Token source depends on the path:
    - Ask: "No .pen file is open. Skip Pencil sync and just write project rules?"
    - **IF skip:** Jump to Phase 6
    - **IF user opens a file:** Call `mcp__pencil__get_editor_state` again `[Pencil]`
+   - Never create a `.pen` file yourself — out of scope
 2. Call `mcp__pencil__get_variables` `[Pencil]` to read existing canvas variables
 3. Diff tokens against existing:
    - **New:** Add
@@ -307,10 +308,10 @@ Screen Shells are the foundation every mockup starts from. For device screens (m
 Do NOT use a fixed list of generic components (Button, Input, Card, etc.). Instead:
 
 1. **Rank by import frequency** — Grep for `import.*from` across component files. The most-imported components are the ones mockups will need most.
-2. **Pick the top 10-12** — Build these as reusable Pencil components.
-3. **Include navigation patterns** — If the project uses bottom tabs (`@react-navigation/bottom-tabs`) or a top navigation bar, build those as reusable components too. Every screen needs navigation.
+2. **Start with the top 10-12** — Build these as reusable Pencil components first.
+3. **Include navigation patterns** — If the project uses bottom tabs (`@react-navigation/bottom-tabs`) or a top navigation bar, build those as reusable components too. Every screen needs navigation. Read the actual tab navigator config (tabBarActiveTintColor, custom tabBar renderer) to determine the active-state highlight — many apps use a color-only change, not a filled background.
 
-Cap at 15 reusable components total (including Screen Shells) to keep batch_design calls manageable.
+Around 15 reusable components total (including Screen Shells) keeps batch_design calls manageable; build more in additional batches when mockup fidelity genuinely requires them.
 
 **For each component — read the source, don't guess:**
 
@@ -386,7 +387,7 @@ I(parent, {type: "frame", reusable: true, name: "Screen Shell - Desktop", width:
 
 **Usage in mockups — always build the Screen Bone first:**
 
-Instance the shell, then build a "bone" skeleton inside the `content` slot BEFORE placing any components. The bone defines the page's structural zones (header, scroll area). Floating elements (tab bars, FABs) go in a SEPARATE nav-overlay that stacks on top of the bone. See "Screen Bone Pattern" in the detection/platform reference for the full recipe and patterns.
+Instance the shell, then build a "bone" skeleton inside the `content` slot BEFORE placing any components. The bone defines the page's structural zones (header, scroll area). Floating elements (tab bars, FABs) go in a SEPARATE nav-overlay that stacks on top of the bone. See "Screen Bone Pattern" in the detection/platform reference for the full recipe and patterns. When building a demo screen, read the actual screen/page file's render method (e.g., `HomeScreen.tsx`) and follow its exact layout hierarchy — don't add header icons, titles, or sections that aren't in the source.
 
 **For screens with floating nav (Pattern A — most common):**
 ```
@@ -418,10 +419,12 @@ Before writing ANY `batch_design` call, review the checklist at the bottom of `r
 - Padding: `padding: [t,r,b,l]` — NOT `paddingTop`/`paddingLeft` (silently dropped)
 - Border: `stroke: {align: "inside", fill: "$--border", thickness: 1}` — NOT `stroke: "$--border", strokeWidth: 1`
 - Icons: `type: "icon_font"` with `iconFontFamily: "lucide", iconFontName: "home"` — NOT `type: "icon"`
+- Never `U()` descendants of `C()` nodes — copy assigns new child IDs
+- Always use real node IDs from `batch_get`/`batch_design` responses — never fabricate IDs
 - Safe areas: All interactive content within shell's content slot, with platform-appropriate margins (16px+ on mobile)
 - Always call `get_guidelines("design-system")` first — it has the authoritative Pencil schema with examples.
 
-**Batch strategy** — keep each `batch_design` call under 25 operations:
+**Batch strategy** — prefer batches of roughly 25 operations or fewer (a failed op in a huge batch is hard to isolate):
 - Batch 1: Library frame (vertical layout) + Screen Shells (2-3 shells, ~12 ops)
 - Batch 2: Section label + simple component variants (e.g., Button/Primary, Button/Secondary, Button/Outline)
 - Batch 3: Section label + badge/tag variants (e.g., SeverityBadge with different severity colors)
@@ -468,26 +471,3 @@ Read `references/project-rules-output.md` relative to this skill now. Fill its r
 4. Skip token sync (Phase 4)
 5. Rebuild/update component library on canvas (Phase 5)
 6. Update rules file
-
-## Anti-Patterns (DON'T)
-
-- Guessing the framework without checking package.json
-- Asking for confirmation more than twice (stack + sync preview)
-- Building components without reading `get_guidelines("design-system")` first
-- **Using generic recipes instead of reading the actual StyleSheet.create()** — the source code defines the exact padding, gaps, radii, and colors. Follow it, don't guess.
-- **Building a generic UI kit** (Button, Input, Card, Badge, Dialog) instead of the project's actual components. Rank by import frequency and build what the project uses.
-- **Building only the default variant** — always build 2-3 key variants (primary/secondary/outline for buttons, different severity colors for badges, active/inactive for tabs)
-- Using hardcoded colors/spacing instead of variable references in Pencil components
-- Creating deeply nested component structures (keep flat for easy overrides)
-- Building more than 15 Pencil components (diminishing returns, slow)
-- **Using `paddingTop`/`paddingLeft`/`strokeWidth` in batch_design** — these are silently dropped. Use `padding: [v, h]` and `stroke: {align, fill, thickness}` instead. Check the detection/platform reference "silently drop" table.
-- Using `U()` on descendants of `C()` nodes (IDs change on copy)
-- Fabricating Pencil node IDs — always use real IDs from batch_get responses
-- Modifying source code (tailwind.config, CSS files, components)
-- Creating a .pen file (out of scope)
-- Ignoring existing canvas variables/components when syncing (causes duplicates)
-- **Dumping all components in one horizontal row** — use vertical sections with labels for organized showcase
-- **Assuming navigation active state uses primary color fill** — read the actual tab navigator config (tabBarActiveTintColor, custom tabBar renderer) to determine highlight pattern. Many apps use color-only change, not a filled background.
-- **Building Screen Shells for only one platform** — if the project targets iOS + Android (React Native), build shells for BOTH. Skipping Android means no mockup can be tested at Android dimensions.
-- **Inventing screen layout without reading the screen file** — when building a demo screen, read the actual screen/page file's render method (e.g., `HomeScreen.tsx`) to understand the exact layout hierarchy. Don't add header icons, titles, or sections that aren't in the source. The screen file defines what components appear and in what order — follow it, don't embellish.
-- **Placing components directly into the Screen Shell content slot without a bone** — ALWAYS create a bone (structural skeleton with header/scroll/nav zones) inside the shell's content slot first. Without a bone, components are flat siblings that can't scroll, floating elements don't float, and layouts break across screen sizes. The bone mirrors how real code structures pages (SafeAreaView → ScrollView → content, with fixed-position overlays). See "Screen Bone Pattern" in the detection/platform reference.

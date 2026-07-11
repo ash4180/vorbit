@@ -104,27 +104,7 @@ Resolve these values through the current runtime. If this legacy Claude surface 
 
 ## Step 4: Present API Contract for Review
 
-**Show complete API contract document:**
-
-```markdown
-# API Contract - [Feature Name]
-
-Generated from frontend mock data for backend implementation.
-
-## Overview
-- Feature: [Feature name]
-- Generated: [Date]
-- Mock files cleaned: [Count]
-
-## Required Endpoints
-
-[Generated endpoint sections from Step 3]
-
-## Notes for Backend
-- Response shapes are based on frontend UI requirements
-- All fields shown are actively used by frontend components
-- Frontend expects these exact field names (case-sensitive)
-```
+**Show the complete API contract document** — use the API Contract Template below, filled with the endpoint sections generated in Step 3.
 
 **Ask:** "Does this inventory and API contract look correct? Ready to save it?"
 
@@ -275,6 +255,8 @@ Legacy fallback: `.vorbit/mock-registry.json`.
 
 ## Implementation Notes
 
+- Response shapes are based on frontend UI requirements
+- All fields shown are actively used by frontend components
 - All field names are case-sensitive
 - Frontend expects exact shapes documented above
 - Dates should be ISO 8601 format

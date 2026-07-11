@@ -12,7 +12,6 @@ Read and follow `../_shared/execution-contract.md` before starting.
 ## Core Principles
 
 - **Think like the implementer**: Break flows into pages, routes, components, states, and data boundaries before drawing.
-- **Use linked design system first**: Reuse Figma components, variables, text styles, and effect styles before creating custom primitives.
 - **Search code first**: Read routes, pages, components, token files, and imports before inventing layout or components.
 - **Confirm every phase**: Discovery, page inventory, design-system mapping, mockup plan, and each generated page/screen.
 - **Use Figma app logic**: Use Figma-specific MCP tools, linked-library behavior, metadata checks, and screenshot validation.
@@ -122,12 +121,11 @@ Use this path when the user asks for Figma mockups, screens, pages, or journey-i
    - Reused design-system assets
    - Required states
 2. **Use AskUserQuestion** to confirm before creating screens.
-3. Create screens with linked component instances and variables whenever available.
-4. Do not hardcode styling when a token or component exists.
-5. Name frames by page, route, section, and state.
-6. Use auto-layout and stable frame hierarchy so frontend implementation is obvious.
-7. Validate each generated page with metadata and screenshot checks when available.
-8. **Use AskUserQuestion** after each generated page/screen before continuing.
+3. Create screens with linked component instances and variables whenever available; do not hardcode styling when a token or component exists.
+4. Name frames by page, route, section, and state.
+5. Use auto-layout and stable frame hierarchy so frontend implementation is obvious.
+6. Validate each generated page with metadata and screenshot checks when available.
+7. **Use AskUserQuestion** after each generated page/screen before continuing.
 
 ## Handoff Rules
 
@@ -143,12 +141,5 @@ Final report must include:
 
 ## Anti-Patterns
 
-- Creating screens before confirming the page inventory
-- Drawing hardcoded rectangles when linked components or tokens exist
-- **Inventing primitives when the linked library is missing the asset** — always STOP and ASK the user. Silent invention fragments the design system over time.
-- **Treating "no linked library" as permission to create custom primitives** — ask the user how to proceed (link a library, request library updates, or explicitly approve custom work) before drawing anything
-- **Fetching from an empty Figma file in a loop** — if the file or frame is blank, switch to push mode (`generate_figma_design`) and seed it first
 - Inventing pages not supported by PRD, journey, or code
-- Making visual-only mockups with unclear route/component/state boundaries
 - Depending on another design tool's rules or node IDs
-- Skipping screenshot or metadata validation after generated screens

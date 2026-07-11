@@ -64,7 +64,7 @@ is deterministic, but it does not let agent guidance override shared policy.
 
 ## Recommended Workflow
 
-1. **Explore** — shape the problem with 10+ questions (`/vorbit:design:explore`)
+1. **Explore** — shape the problem until the PRD-blocking unknowns are resolved (`/vorbit:design:explore`)
 2. **PRD** — write concrete user stories with acceptance criteria (`/vorbit:design:prd`)
 3. **Journey** — visualize user flows in FigJam (`/vorbit:design:journey`)
 4. **Epic** — convert PRD stories into Linear issues with dependency tree (`/vorbit:implement:epic`)

@@ -20,9 +20,6 @@ For branches without design files, the skill still handles PR body generation an
 **Goal**: Verify the branch is ready for PR creation.
 
 1. **Get current branch and determine base:**
-   ```bash
-   git branch --show-current
-   ```
    - Base branch: `dev` if it exists, otherwise `main`
    - **Guard**: If on `main`, `dev`, or `demo` → "You're on a protected branch. Switch to a feature branch first." → **STOP**
 
@@ -32,7 +29,7 @@ For branches without design files, the skill still handles PR body generation an
    - No match → **Use AskUserQuestion**: ask for the Linear issue ID, or skip Linear integration
 
 3. **Check git and publication capabilities before any mutation:**
-   - Require a clean working tree. If not clean, stop; never auto-stash or discard work.
+   - Require a clean working tree. If not clean, stop; never discard work.
    - Verify `origin` and the selected base exist.
    - Verify `gh` is installed and authenticated (`gh auth status`). If not, stop before rebase, deletion, or commit.
    - If Linear integration is selected, verify its read/update/comment operations now. A missing optional Linear connection may be skipped only with user approval.
@@ -93,7 +90,7 @@ For branches without design files, the skill still handles PR body generation an
 
 **Goal**: Catch merge conflicts on your machine instead of discovering them in the GitHub PR review. Rebase onto the latest base when clean; walk the user through fixing them when not.
 
-**Skip this phase if `--skip-rebase` flag is set.**
+**Skip this phase only if the `--skip-rebase` flag is explicitly set — never as a fallback when conflicts appear.**
 
 1. **Require a clean working tree.** Rebase cannot run with uncommitted changes. If `git status --porcelain` shows any output, stop: "You have uncommitted changes. Commit or stash, then run again." Do NOT auto-stash — that hides the user's in-progress work.
 
@@ -116,55 +113,11 @@ For branches without design files, the skill still handles PR body generation an
    - **Exit 0 (clean rebase)** → skip to step 7.
    - **Non-zero exit (conflicts)** → continue to step 5.
 
-5. **Assisted conflict resolution.** The rebase halts at the first conflicting commit. Walk the user through each conflict — never auto-pick a side.
+5. **Assisted conflict resolution.** The rebase halts at the first conflicting commit. List the conflicted files (`git diff --name-only --diff-filter=U`), show them to the user, and ask how to proceed: resolve here with the user choosing the resolution for each conflict, or abort. Never auto-resolve or auto-pick a side ("ours"/"theirs"). Apply each resolution per the user's direction, verify no conflict markers remain (`git diff --check`), `git add` the resolved files, then `git rebase --continue`; if it halts again with more conflicts, repeat.
 
-   a. **List conflicted files:**
-      ```bash
-      git diff --name-only --diff-filter=U
-      ```
+6. **Abort path.** At any point during step 5, if the user says "abort", "stop", or "cancel", run `git rebase --abort` — the branch returns to its pre-rebase state. Stop the entire skill: "Rebase aborted. Branch unchanged. PR not created."
 
-   b. **For each conflicted file**, read it to find conflict blocks (markers `<<<<<<<`, `=======`, `>>>>>>>`). For each block, show the user using AskUserQuestion:
-      ```
-      File: {path}, lines {start}-{end}
-
-      From {base-branch}:
-        {their version}
-
-      Your branch:
-        {your version}
-
-      Pick a resolution:
-        1. Keep base version
-        2. Keep my version
-        3. Keep both (base first, then mine)
-        4. Let me edit this file manually
-        5. Show more context (5 lines above and below)
-      ```
-
-   c. **Apply the choice:**
-      - Options 1–3 → Edit the file in place: remove the markers and write the chosen content.
-      - Option 4 → Stop and tell the user: "Edit `{file}`, remove all `<<<<<<<` / `=======` / `>>>>>>>` markers, then say 'continue'." When they reply, run `git diff --check`. If markers remain, ask them to finish. If clean, proceed.
-      - Option 5 → Re-show the block with more surrounding lines, then re-ask.
-
-   d. **Stage the resolved file:**
-      ```bash
-      git add {file}
-      ```
-
-   e. **After all files in the current commit are resolved**, continue the rebase:
-      ```bash
-      git rebase --continue
-      ```
-      - **Exit 0** → all commits applied. Continue to step 7.
-      - **Halts again with more conflicts** → repeat from step 5a.
-
-6. **Abort path.** At any point during step 5, if the user says "abort", "stop", or "cancel":
-   ```bash
-   git rebase --abort
-   ```
-   Branch returns to its pre-rebase state. Stop the entire skill: "Rebase aborted. Branch unchanged. PR not created."
-
-7. **Record whether history changed.** Do not push yet; Phase 5 pushes only after the PR title/body are approved. If a previously pushed branch was rebased, Phase 5 must use `--force-with-lease`, never plain `--force`.
+7. **Record whether history changed.** Do not push yet; Phase 5 pushes only after the PR title/body are approved. If a previously pushed branch was rebased, Phase 5 must use `--force-with-lease`, never plain `--force`. Never auto-squash commits without user consent.
 
 8. **Report:**
    ```
@@ -203,9 +156,9 @@ For branches without design files, the skill still handles PR body generation an
    ```bash
    git rm -r designs/{issue-id}/
    ```
-   Only remove the issue-specific directory. If other issue directories exist under `designs/`, leave them — they belong to other features.
+   Only remove the issue-specific directory. If other issue directories exist under `designs/`, leave them — they belong to other features. Never remove `designs/library/` — that's the shared template directory (gitignored), not feature-specific.
 
-5. **Commit the stripping** — this is a mechanical commit, do NOT add `Co-Authored-By` or any AI attribution:
+5. **Commit the stripping** as a NEW commit — never amend an existing commit. This is a mechanical commit, do NOT add `Co-Authored-By` or any AI attribution:
    ```bash
    git commit -m "chore: strip design files before merge"
    ```
@@ -294,7 +247,7 @@ For branches without design files, the skill still handles PR body generation an
    ```bash
    git push -u origin {branch-name}
    ```
-   If Phase 2 rebased an already-published branch, use `git push --force-with-lease` instead. Never use plain `--force`.
+   If Phase 2 rebased an already-published branch, use `git push --force-with-lease` instead. Never use plain `--force` — it silently overwrites a teammate's work if they pushed to the branch since your last fetch. Never push directly to `main` or `dev`.
 
 2. **Create the PR** — use the approved body exactly as the user approved it. Do NOT append `🤖 Generated with Claude Code` or `Co-Authored-By` footers:
    ```bash
@@ -337,20 +290,3 @@ For branches without design files, the skill still handles PR body generation an
 - **`--skip-designs`**: Skip Phase 3 even if `designs/` exists. For PRs where design files should remain (e.g., the PR sets up the design file infrastructure itself).
 - **`--draft`**: Create as draft PR (`gh pr create --draft`). For early feedback before the feature is complete.
 - **`--base {branch}`**: Override base branch detection. Default: `dev` or `main`.
-
-## Anti-Patterns
-
-- Using plain `git push --force` instead of `--force-with-lease` after a rebase — plain force will silently overwrite a teammate's work if they pushed to the same branch since your last fetch
-- Auto-resolving conflicts by always picking one side (e.g., "ours" or "theirs") — file-by-file user choice is the only safe path; auto-picks routinely lose intent
-- Auto-stashing uncommitted changes to make the rebase possible — that hides in-progress work and risks losing it. Always require a clean tree first
-- Continuing the skill after a rebase abort — when the user aborts, stop. They likely need to think before pushing
-- Skipping the rebase phase silently when there are conflicts — only skip when `--skip-rebase` is explicitly passed, never as a "fall-through" fallback
-- Stripping design files without recording `HEAD` and verifying every path with `git cat-file` first
-- Claiming a commit hash is a permanent backup — recovery depends on commit retention
-- Posting the recovery reference only to the PR when Linear integration was approved
-- Removing `designs/library/` — that's the shared template directory (gitignored), not feature-specific
-- Stripping other features' design directories (e.g., `designs/on-500/` when working on `on-329`)
-- Creating the PR without showing the body to the user first
-- Amending existing commits to strip designs — always create a NEW commit for stripping
-- Auto-squashing commits without user consent
-- Pushing directly to `main` or `dev`

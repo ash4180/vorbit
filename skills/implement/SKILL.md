@@ -92,17 +92,7 @@ If issue involves UI components:
 
 ### Detection Strategy (framework-agnostic)
 
-1. **Search for common i18n patterns:**
-```bash
-# Check package.json for ANY i18n library
-rg -n "i18n|intl|locale|translation|l10n|gettext|fluent" package.json
-
-# Find locale/translation directories (check common locations)
-find . -maxdepth 3 -type d \( -name "locales" -o -name "locale" -o -name "i18n" -o -name "translations" -o -name "messages" -o -name "lang" -o -name "languages" \) 2>/dev/null
-
-# Check for translation files
-find . -maxdepth 4 -type f \( -name "*.po" -o -name "*.pot" -o -name "*.mo" -o -name "*.xliff" -o -name "*.arb" -o -name "en.json" -o -name "en-US.json" \) 2>/dev/null | head -10
-```
+1. **Search for common i18n patterns**: check `package.json` for any i18n library (`i18n`, `intl`, `locale`, `translation`, `l10n`, `gettext`, `fluent`); look for locale/translation directories (`locales/`, `i18n/`, `translations/`, `messages/`, `lang/`) and translation files (`*.po`, `*.pot`, `*.mo`, `*.xliff`, `*.arb`, `en.json`, `en-US.json`)
 
 2. **Check config files** for i18n setup:
    - `next.config.*` (Next.js)
@@ -112,10 +102,7 @@ find . -maxdepth 4 -type f \( -name "*.po" -o -name "*.pot" -o -name "*.mo" -o -
    - `.env*` files for locale settings
    - Any `i18n.*` config file
 
-3. **Search for translation function usage:**
-```bash
-rg -n -g '*.ts' -g '*.tsx' -g '*.js' -g '*.vue' -g '*.svelte' "useTranslations|useIntl|useT|i18n\.|formatMessage|gettext|_t\(|\$t\(|trans\(" src app components
-```
+3. **Search source for translation function usage** — see the framework table below for the functions to grep
 
 ### If i18n detected:
 
@@ -156,25 +143,11 @@ If the selected issue has open sub-issues, do not silently implement the whole t
 
 Keep the change within the selected issue. Do not add a frontend or backend counterpart unless its acceptance criteria require it.
 
-For each task:
+For each task, follow Red/Green/Refactor:
 
-### Red (Write Test First)
-- When the repository has a runnable harness, create a test that validates the changed behavior
-- Follow the project's test patterns
-- Run the focused test and confirm it fails for the expected reason
-- If no suitable harness exists, agree on a real verification surface; do not invent a cheater test
-
-### Green (Implement)
-- Write the minimum code to pass the test
-- Follow existing codebase patterns
-- Match style of example files found earlier
-- Use existing components/utilities
-- No over-engineering
-
-### Refactor
-- Clean up code
-- Check coverage on new code
-- Ensure no regressions
+- **Red**: When the repository has a runnable harness, write a failing test for the changed behavior first (follow the project's test patterns; confirm the focused test fails for the expected reason). If no suitable harness exists, agree on a real verification surface; do not invent a cheater test.
+- **Green**: Write the minimum code to pass, following existing codebase patterns and the example files found earlier; no over-engineering.
+- **Refactor**: Clean up, check coverage on new code, ensure no regressions. Remove dead code and unregistered placeholder TODOs (registered prototype mocks may remain until backend integration).
 
 ### If Creating Mock Data During Implementation
 **Register mock in the resolved project registry** (`<storage_root>/projects/<project_slug>/mock-registry.json`; fallback `.vorbit/mock-registry.json`):
@@ -209,19 +182,11 @@ The registry root is `{ "version": "1.1", "mocks": [...] }`. The snippets below 
 }
 ```
 - Append to existing mocks array
+- Every temporary application mock must be registered here before the task is done (test fixtures are excluded)
 - This enables cleanup before backend handover
 
 ### Task Complete Criteria
-**ONLY mark done when:**
-- [ ] Unit test exists and passes
-- [ ] Code matches team's style
-- [ ] No regressions in existing tests
-- [ ] No application mock data remains **OR every temporary application mock is registered in the resolved project registry** (test fixtures are excluded)
-- [ ] **All "Related Epic Acceptance Criteria" satisfied** (if present in issue)
-- [ ] **File changes match planned paths** (if "File Changes" section exists)
-- [ ] **Used utilities/constants from "Reuse & Patterns"** (no magic numbers, no recreated functions)
-- [ ] **No dead code or unregistered placeholder TODOs** (registered prototype mocks are allowed until backend integration)
-- [ ] **i18n complete** (if project has localization): All user-facing strings use translation system, keys added to ALL locale files
+Mark done only when every gate defined in Steps 3.5-6 above is satisfied.
 
 ## Step 7: On Task Completion
 
