@@ -256,7 +256,13 @@ def test_running_loop_survives_readonly_dir_without_blocking(test_project, run_h
 
 
 def test_exit_code_is_always_zero_or_two(test_project, run_hook):
-    """Mandated invariant: the stop hook exits 0 or 2 only — never any other code."""
+    """Mandated invariant: the stop hook exits 0 or 2 only — never any other code.
+
+    This hook's own contract is stricter than the house rule: it must ALWAYS
+    exit 0, because it blocks via a stdout JSON decision and stdout on a
+    non-zero exit is discarded. Asserting == 0 catches a fail-closed (exit 2)
+    regression that `in (0, 2)` would silently bless.
+    """
     project = test_project["path"]
     state_file = project / ".claude" / ".loop-state.json"
     state_file.parent.mkdir(parents=True, exist_ok=True)
@@ -277,6 +283,6 @@ def test_exit_code_is_always_zero_or_two(test_project, run_hook):
     for prepare in scenarios:
         prepare()
         exit_code, _, _ = run_hook(HOOK, stdin=_stop_payload(), cwd=project)
-        assert exit_code in (0, 2), exit_code
+        assert exit_code == 0, exit_code
         # Restore a quarantined file so the next scenario starts clean.
         state_file.with_suffix(".invalid").unlink(missing_ok=True)
