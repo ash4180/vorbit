@@ -21,7 +21,7 @@ Require:
 - a repository with a clean or understood worktree;
 - one queue confirmation before a multi-issue run.
 
-Use the fixed completion marker `<!-- VORBIT_LOOP_COMPLETE -->`. Do not accept arbitrary completion text: ordinary prose must never stop the hook accidentally.
+The stop hook keys off the state file's `status` field, never chat text: the loop ends only when `status` is `completed`, so ordinary prose can never stop it accidentally.
 
 ## State File
 
@@ -33,7 +33,6 @@ Store runtime state at `.claude/.loop-state.json`. It is local runtime state and
   "active": true,
   "status": "running",
   "command": "/vorbit:implement:implement VIB-100 --loop",
-  "completionSignal": "<!-- VORBIT_LOOP_COMPLETE -->",
   "maxIterations": 50,
   "iteration": 1,
   "parentIssueId": "VIB-100",
@@ -51,7 +50,7 @@ Store runtime state at `.claude/.loop-state.json`. It is local runtime state and
 }
 ```
 
-The `command` must include `--loop`; the stop hook re-injects it on every iteration.
+`status` is the single source of truth for the stop hook; `active` is a human-readable mirror that is true only while `status` is `running`. The `command` must include `--loop`; the stop hook re-injects it on every iteration and ignores state written with a different `version`.
 
 ## Initialization
 
@@ -70,7 +69,7 @@ Never discard or reset code during cancellation.
 
 If an active `running` state exists, resume it. Re-fetch the parent first; if its description changed since `sourceUpdatedAt`, set `active: false`, `status: "needs_input"`, and a precise `blockReason`, then preserve state and stop to reconcile the queue.
 
-If an inactive `needs_input`, `blocked`, or `failed` state exists, report its reason and resume point instead of replacing it. Resume only after the user supplies or confirms the missing resolution: reconcile the source/queue as needed, update the baseline, clear failure tracking, then set `active: true` and `status: "running"`. A completed state is left for the stop hook to validate and delete.
+If an inactive `needs_input`, `blocked`, or `failed` state exists, report its reason and resume point instead of replacing it. Resume only after the user supplies or confirms the missing resolution: reconcile the source/queue as needed, update the baseline, clear failure tracking, reset `iteration` to 1, then set `active: true` and `status: "running"`. Resetting `iteration` matters: a state blocked at `maxIterations` would otherwise re-block after a single cycle. A completed state is left for the stop hook to delete.
 
 For a new run:
 
@@ -138,13 +137,12 @@ After all sub-issues finish:
 2. If an AC is unmet and no remaining issue owns it, set `active: false`, `status: "needs_input"`, and `blockReason`, then preserve state and stop; do not invent unplanned scope.
 3. Keep the implementation parent In Progress and add a "ready for verification/PR" comment. A parent becomes In Review after PR creation and Done only after merge.
 4. Set state to `active: false`, `status: "completed"`.
-5. Emit the exact marker `<!-- VORBIT_LOOP_COMPLETE -->` once.
 
-The stop hook deletes a completed state only when both the stored status and exact marker agree.
+The stop hook deletes a completed state and lets the session end. Report completion in your final message for the user; the hook does not read that text.
 
 ## Terminal States
 
-- `completed` — queue and parent ACs verified; emit the marker.
+- `completed` — queue and parent ACs verified; the stop hook deletes the state.
 - `needs_input` — a requirement, queue, or source revision needs a user decision.
 - `blocked` — the same failure repeated three times or iteration limit reached.
 - `failed` — a non-recoverable tool or state error.

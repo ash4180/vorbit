@@ -1,41 +1,44 @@
 #!/usr/bin/env python3
-"""Continue an active Vorbit implementation loop.
+"""Continue an active Vorbit implementation loop after a session stop.
 
-Exit codes: 0 = allow stop, 2 = inject stdout and continue or block on invalid state.
-The hook never mutates source code and never deletes blocked state.
+This is a Claude Code Stop hook. It ALWAYS exits 0:
+
+- to let the session stop, it returns without printing anything;
+- to keep the loop going, it prints a JSON ``block`` decision on stdout,
+  which is the documented channel a Stop hook uses to reach the model
+  (stdout on a non-zero exit is discarded, so exit 2 would drop the command).
+
+The loop state file's ``status`` field is the single source of truth. The
+hook never touches source code. Unreadable or unsupported state is moved
+aside rather than left in place, so a stuck file cannot block every future
+session stop.
 """
 
 from __future__ import annotations
 
 import json
-import os
 import shlex
-import subprocess
 import sys
 from pathlib import Path
 from typing import Any
 
-
-COMPLETION_SIGNAL = "<!-- VORBIT_LOOP_COMPLETE -->"
-
-
-def _project_root() -> Path:
-    try:
-        result = subprocess.run(
-            ["git", "rev-parse", "--show-toplevel"],
-            capture_output=True,
-            text=True,
-            check=False,
-        )
-    except OSError:
-        return Path.cwd()
-
-    if result.returncode == 0 and result.stdout.strip():
-        return Path(result.stdout.strip())
-    return Path(os.getcwd())
+STATE_RELPATH = (".claude", ".loop-state.json")
+SUPPORTED_VERSION = 2
 
 
-def _read_state(path: Path) -> dict[str, Any] | None:
+def _find_state_file() -> Path | None:
+    """Walk up from cwd to the repo root, returning the loop-state path if present."""
+    current = Path.cwd().resolve()
+    for directory in (current, *current.parents):
+        candidate = directory.joinpath(*STATE_RELPATH)
+        if candidate.exists():
+            return candidate
+        if (directory / ".git").exists():
+            break
+    return None
+
+
+def _load_state(path: Path) -> dict[str, Any] | None:
     try:
         value = json.loads(path.read_text())
     except (OSError, json.JSONDecodeError):
@@ -49,88 +52,99 @@ def _write_state(path: Path, state: dict[str, Any]) -> None:
     temporary.replace(path)
 
 
+def _quarantine(path: Path, reason: str) -> None:
+    """Move an unusable state file aside so it cannot block future stops."""
+    location = path
+    try:
+        aside = path.with_suffix(".invalid")
+        path.replace(aside)
+        location = aside
+    except OSError:
+        pass
+    print(f"Vorbit loop: {reason} Moved aside to {location}.", file=sys.stderr)
+
+
+def _retire(path: Path, state: dict[str, Any], status: str, reason: str) -> None:
+    """Record a terminal status with a visible reason, then allow the stop."""
+    state["status"] = status
+    state["active"] = False
+    state["blockReason"] = reason
+    try:
+        _write_state(path, state)
+    except OSError:
+        pass
+    print(f"Vorbit loop {status}: {reason}", file=sys.stderr)
+
+
+def _continue(path: Path, state: dict[str, Any], command: str, iteration: int, maximum: int) -> None:
+    """Block the stop and tell Claude to run the next loop iteration."""
+    state["iteration"] = iteration + 1
+    _write_state(path, state)
+    reason = (
+        f"Vorbit loop iteration {iteration + 1}/{maximum} in progress. "
+        f"Continue the queue by running: {command}"
+    )
+    print(json.dumps({"decision": "block", "reason": reason}))
+
+
 def main() -> None:
-    # Always drain stdin before any early exit. Claude pipes its final output here.
-    claude_output = sys.stdin.read()
-    state_file = _project_root() / ".claude" / ".loop-state.json"
+    # Drain stdin first: Claude Code pipes a JSON control payload here, and the
+    # pipe can block if the hook exits without reading it.
+    sys.stdin.read()
 
-    if not state_file.exists():
+    state_file = _find_state_file()
+    if state_file is None:
         return
 
-    state = _read_state(state_file)
+    state = _load_state(state_file)
     if state is None:
-        print(
-            f"Vorbit loop state is unreadable; fix or remove it explicitly: {state_file}",
-            file=sys.stderr,
+        _quarantine(state_file, "state file is unreadable or not an object.")
+        return
+
+    if state.get("version") != SUPPORTED_VERSION:
+        _quarantine(
+            state_file,
+            f"state version {state.get('version')!r} is unsupported "
+            f"(expected {SUPPORTED_VERSION}); not resuming.",
         )
-        raise SystemExit(2)
-    completion_signal = state.get("completionSignal")
-    if state.get("status") == "completed":
-        if completion_signal != COMPLETION_SIGNAL:
-            state["active"] = False
-            state["status"] = "failed"
-            state["blockReason"] = "Loop state has an invalid completion signal"
-            _write_state(state_file, state)
-            return
-        if COMPLETION_SIGNAL in claude_output:
-            state_file.unlink(missing_ok=True)
         return
 
-    if not state.get("active"):
+    status = state.get("status")
+    if status == "completed":
+        state_file.unlink(missing_ok=True)
         return
-
-    if completion_signal != COMPLETION_SIGNAL:
-        state["active"] = False
-        state["status"] = "failed"
-        state["blockReason"] = "Loop state has an invalid completion signal"
-        _write_state(state_file, state)
-        return
-
-    current_iteration = state.get("iteration", 1)
-    max_iterations = state.get("maxIterations", 50)
-    if (
-        type(current_iteration) is not int
-        or type(max_iterations) is not int
-        or current_iteration < 1
-        or max_iterations < 1
-    ):
-        state["active"] = False
-        state["status"] = "failed"
-        state["blockReason"] = "Invalid iteration values in loop state"
-        _write_state(state_file, state)
-        return
-
-    if current_iteration >= max_iterations:
-        state["active"] = False
-        state["status"] = "blocked"
-        state["blockReason"] = f"Reached maxIterations ({max_iterations})"
-        _write_state(state_file, state)
-        print(f"Vorbit loop blocked after {max_iterations} iterations; state preserved at {state_file}.")
+    if status != "running":
+        # blocked / needs_input / failed / canceled / unknown: wait for the user.
         return
 
     command = state.get("command")
     try:
-        command_tokens = shlex.split(command) if isinstance(command, str) else []
+        tokens = shlex.split(command) if isinstance(command, str) else []
     except ValueError:
-        command_tokens = []
-    if not command_tokens or "--loop" not in command_tokens:
-        state["active"] = False
-        state["status"] = "failed"
-        state["blockReason"] = "Loop command is missing or does not include --loop"
-        _write_state(state_file, state)
+        tokens = []
+    if not tokens or "--loop" not in tokens:
+        _retire(state_file, state, "failed", "loop command is missing or does not include --loop.")
         return
 
-    state["iteration"] = current_iteration + 1
-    _write_state(state_file, state)
-    print(command)
-    raise SystemExit(2)
+    iteration = state.get("iteration", 1)
+    maximum = state.get("maxIterations", 50)
+    if type(iteration) is not int or type(maximum) is not int or iteration < 1 or maximum < 1:
+        _retire(state_file, state, "failed", "iteration values in loop state are invalid.")
+        return
+
+    if iteration >= maximum:
+        _retire(state_file, state, "blocked", f"reached maxIterations ({maximum}).")
+        return
+
+    _continue(state_file, state, command, iteration, maximum)
 
 
 if __name__ == "__main__":
+    # A Stop hook must never exit non-zero on an unexpected error, or Claude Code
+    # reports "Stop hook error" and blocks the session. Catch everything (including
+    # KeyboardInterrupt) and fall through to exit 0.
     try:
         main()
-    except SystemExit:
-        raise
-    except Exception as error:
-        print(f"Vorbit loop controller failed closed: {error}", file=sys.stderr)
-        sys.exit(2)
+    except BaseException as error:  # noqa: BLE001 - stop hooks fail open by contract
+        print(f"Vorbit loop controller failed open: {error}", file=sys.stderr)
+    sys.exit(0)
