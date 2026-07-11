@@ -125,7 +125,7 @@ class VorbitConfig:
 
 
 def project_slug_for(project_root: Path, override: str | None = None) -> str:
-    if override is not None:
+    if override is not None and override.strip():
         candidate = override.strip()
         if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]{0,127}", candidate):
             raise ValueError(

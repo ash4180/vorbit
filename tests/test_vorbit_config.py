@@ -40,7 +40,7 @@ def test_project_slug_is_stable_and_hashed(temp_project):
 
 @pytest.mark.parametrize(
     "override",
-    ["../outside", "/tmp/outside", "nested/project", "..", ".hidden", "", "a\\b"],
+    ["../outside", "/tmp/outside", "nested/project", "..", ".hidden", "a\\b"],
 )
 def test_project_slug_override_rejects_unsafe_path_components(temp_project, override):
     with pytest.raises(ValueError, match="safe path component"):
@@ -49,6 +49,13 @@ def test_project_slug_override_rejects_unsafe_path_components(temp_project, over
 
 def test_project_slug_override_accepts_one_safe_component(temp_project):
     assert project_slug_for(temp_project, override="Team_One.v2") == "Team_One.v2"
+
+
+@pytest.mark.parametrize("override", ["", "   "])
+def test_blank_slug_override_falls_back_to_derived_slug(temp_project, override):
+    # A blank override is "no override": derive the hashed slug rather than
+    # hard-failing, matching the pre-tightening behavior for empty config values.
+    assert project_slug_for(temp_project, override=override) == project_slug_for(temp_project)
 
 
 def test_resolve_config_does_not_create_the_storage_root(
