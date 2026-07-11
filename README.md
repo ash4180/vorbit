@@ -4,7 +4,7 @@ TDD-first product development workflows for Claude Code, Codex CLI, and Gemini C
 
 Vorbit packages four layers:
 - **Commands** (`commands/`) — slash command entry points, thin dispatchers
-- **Skills** (`skills/`, `codex/skills/`, `gemini/skills/`) — `skills/` is the single authored source; the Codex/Gemini workflow files are generated from it by `python3 -m vorbit_core.project_skills --write` (a deterministic per-agent substitution of tool idioms, storage paths, and command syntax). Only `implement-loop` stays hand-written per agent — its Claude implementation depends on a Stop hook other runtimes don't have. Edit canonical, regenerate, never edit generated files.
+- **Skills** (`skills/`, `codex/skills/`, `gemini/skills/`) — `skills/` is the single authored source; Codex/Gemini workflow files are generated from it (see "Editing Skills" below)
 - **Hooks** — formatting, validation, and push warnings
 - **Core** (`vorbit_core/`) — shared configuration, rule resolution, and safe agent-asset sync
 
@@ -78,7 +78,7 @@ The slash-command forms above are Claude Code entry points. In Codex or Gemini, 
 
 ## Core Features
 
-- **Automated Hooks**: Vorbit uses Python scripts to auto-format (Biome/Prettier), validate (tsc, go build, mypy), warn before push, and manage loop modes during execution.
+- **Automated Hooks**: Vorbit uses Python scripts to auto-format (Biome/Prettier), run advisory type checks (tsc, go build, mypy — errors are reported to the model, never block an edit), warn before push, and drive loop mode via a Stop hook keyed to a state file.
 - **Multi-Agent**: Claude Code, Codex CLI, and Gemini CLI share workflow contracts, stable requirement IDs, and deterministic rule precedence. Agent-specific projections adapt connector and runtime details.
 - **Prototypes & Design**: Quickly bootstrap prototype interfaces, user journeys, and apply standard UI patterns with the design commands.
 
@@ -86,13 +86,13 @@ The slash-command forms above are Claude Code entry points. In Codex or Gemini, 
 ```text
 vorbit/
 ├── vorbit_core/               # Config, rule resolution, and safe sync
-├── skills/                    # Claude Code skills
+├── skills/                    # Canonical skills (single authored source)
 ├── commands/                  # Claude Code slash commands
 ├── hooks/                     # Claude Code hooks
 ├── codex/
-│   └── skills/                # Codex CLI skills
+│   └── skills/                # Codex CLI skills (workflows GENERATED from skills/)
 ├── gemini/
-│   └── skills/                # Gemini CLI skills
+│   └── skills/                # Gemini CLI skills (workflows GENERATED from skills/)
 ├── scripts/
 │   ├── sync-codex-skills.sh   # Install Codex skills
 │   ├── sync-gemini-skills.sh  # Install Gemini skills
@@ -117,6 +117,21 @@ vorbit/
   - **Notion or Anytype** — optional storage for exploration drafts only; they are not canonical PRD providers
 
 Every mutating workflow preflights its required capability and current schema before external writes. Missing optional storage degrades to a chat/local artifact; missing required mutation capability returns a blocked status before destructive work.
+
+## Editing Skills
+
+`skills/<name>/SKILL.md` is the single source of truth. After editing a canonical
+skill, regenerate the Codex/Gemini projections — never edit the generated files
+under `<agent>/skills/vorbit-shared/workflows/` or the mirrored asset directories:
+
+```bash
+python3 -m vorbit_core.project_skills --write   # regenerate
+python3 -m vorbit_core.project_skills --check   # exit 1 if anything is stale
+```
+
+`pytest` fails (`test_projected_outputs_are_fresh`) when a canonical edit lands
+without regeneration. The only hand-written agent workflow is `implement-loop.md`
+— its Claude implementation depends on a Stop hook other runtimes don't have.
 
 ## Testing
 
