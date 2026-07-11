@@ -58,24 +58,31 @@ def test_no_validator_silent_skip(tmp_path, run_hook):
 
 
 @pytest.mark.skipif(shutil.which("tsc") is None, reason="tsc not installed")
-def test_validation_failure_blocks(tmp_path, run_hook):
+def test_validation_failure_is_advisory_not_blocking(tmp_path, run_hook):
+    """Checker errors surface as additionalContext JSON; the hook never blocks."""
     (tmp_path / "tsconfig.json").write_text('{"compilerOptions": {"strict": true}}')
     test_file = tmp_path / "test.ts"
     test_file.write_text('const x: number = "string";')  # intentional type error
 
     env = {"TOOL_INPUT": json.dumps({"file_path": str(test_file)})}
-    exit_code, _, _ = run_hook(SCRIPTS["post_edit_validate"], env_overrides=env)
+    exit_code, stdout, _ = run_hook(SCRIPTS["post_edit_validate"], env_overrides=env)
 
-    assert exit_code != 0
+    assert exit_code == 0
+    payload = json.loads(stdout)
+    context = payload["hookSpecificOutput"]["additionalContext"]
+    assert payload["hookSpecificOutput"]["hookEventName"] == "PostToolUse"
+    assert "tsc --noEmit" in context
+    assert "non-blocking" in context
 
 
 @pytest.mark.skipif(shutil.which("tsc") is None, reason="tsc not installed")
-def test_validation_success_passes(tmp_path, run_hook):
+def test_validation_success_is_silent(tmp_path, run_hook):
     (tmp_path / "tsconfig.json").write_text('{"compilerOptions": {"strict": true}}')
     test_file = tmp_path / "test.ts"
     test_file.write_text("const x: number = 42;")
 
     env = {"TOOL_INPUT": json.dumps({"file_path": str(test_file)})}
-    exit_code, _, _ = run_hook(SCRIPTS["post_edit_validate"], env_overrides=env)
+    exit_code, stdout, _ = run_hook(SCRIPTS["post_edit_validate"], env_overrides=env)
 
     assert exit_code == 0
+    assert stdout.strip() == ""
