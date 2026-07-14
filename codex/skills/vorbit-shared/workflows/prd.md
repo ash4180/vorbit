@@ -59,14 +59,14 @@ Use the template below. Match VIB-2978's prose style — no big tables.
 - Feature name (3-8 words, no jargon) — this becomes the Linear ticket **title**
 - Description: one short paragraph under the H1
 - Problem: 1-2 short paragraphs, no tech detail
-- User Stories: `US-001`, `US-002`, ... with story-scoped AC IDs such as `US-001.AC-01`
-- User Flows: at least one happy flow with explicit step IDs such as `F1-S1`
+- User Stories: `US-001`, `US-002`, ... each with plain acceptance-criteria checkboxes, no AC IDs
+- User Flows: at least one happy flow, steps numbered `1.`, `2.`, `3.`
 - Constraints
 - Success Criteria with confirmed, sourced numbers; use `TBD-###` when a target is unknown
 
 Do not fill required sections by invention. Put unresolved assumptions in `## Open Questions` with their provenance and impact classification. A structurally complete review draft may contain permitted TBDs.
 
-Before showing the draft, run the coverage gate: every AC ID is unique, every flow step ID is unique, and every AC appears in at least one flow step's `Covers` list.
+Before showing the draft, run the coverage gate: every acceptance criterion is satisfied by at least one flow step. This is a check, not a section — verify it, state the result in chat, and keep the mapping out of the ticket body.
 
 If the user requested a draft or review only, stop after showing it; do not ask to create or call Linear. Report `needs_input` when an implementation-affecting TBD remains, otherwise `completed`. For creation requests, ask after the draft: **"Does this look good? Ready to create the Linear ticket?"**
 
@@ -91,8 +91,8 @@ As a [user], I want [goal], so [benefit].
 
 **Acceptance Criteria:**
 
-- [ ] US-001.AC-01 [Specific testable criterion]
-- [ ] US-001.AC-02 [Another specific criterion]
+- [ ] [Specific testable criterion]
+- [ ] [Another specific criterion]
 
 ### US-002: [Title]
 
@@ -100,27 +100,27 @@ As a [user], I want [goal], so [benefit].
 
 **Acceptance Criteria:**
 
-- [ ] US-002.AC-01 ...
-- [ ] US-002.AC-02 ...
+- [ ] ...
+- [ ] ...
 
 ## User Flows
 
-### F1: [Name] (Happy flow)
+### Flow 1: [Name] (Happy flow)
 
-- `F1-S1` — **Entry:** [surface and starting state]. [User action and visible result]. Covers: `US-001.AC-01`
-- `F1-S2` — [surface]. [User action and visible result]. Covers: `US-001.AC-01`, `US-001.AC-02`
-- `F1-S3` — **Exit:** [observable end state]. Covers: `US-001.AC-02`
+1. **Entry:** [which screen, and its starting state]. [User action and what they see]
+2. [which screen or field]. [User action and what they see]
+3. **Exit:** [observable end state]
 
-### F2: [Name] (Happy flow, second main path)
+### Flow 2: [Name] (Happy flow, second main path)
 
-- `F2-S1` — **Entry:** [surface and starting state]. [Action and visible result]. Covers: `US-002.AC-01`
-- `F2-S2` — **Exit:** [observable end state]. Covers: `US-002.AC-01`
+1. **Entry:** [which screen, and its starting state]. [User action and what they see]
+2. **Exit:** [observable end state]
 
-### F3: [Name] (alternate / error / recovery)
+### Flow 3: [Name] (alternate / error / recovery)
 
-- `F3-S1` — **Entry:** [branch point or starting state]. Covers: `US-001.AC-02`
-- `F3-S2` — [Failure is shown; values remain available]. Covers: `US-001.AC-02`
-- `F3-S3` — [User retries]. Next: `F1-S2`. Covers: `US-001.AC-02`
+1. **Entry:** [branch point or starting state]
+2. [Failure is shown; values remain available]
+3. [User retries] → back to Flow 1, step 2
 
 ## Constraints
 
@@ -140,21 +140,20 @@ As a [user], I want [goal], so [benefit].
 ### Flow rules
 
 - Every PRD needs at least one happy flow
-- Number flows `F1`, `F2`, ... and steps `F1-S1`, `F1-S2`, ...; IDs never repeat
-- Each step names the user action, the surface touched, and the visible result
-- Mark the first step `Entry` and an observable terminal step `Exit`; use `Next: F#-S#` for real retries or loops
+- Name each flow (`Flow 1`, `Flow 2`, ...) and number its steps `1.`, `2.`, `3.`
+- Each step names three things: what the user did, which screen or field it happened on, and what they saw as a result
+- Mark the first step `Entry` and an observable terminal step `Exit`; for a real retry or loop, write it in plain English (`→ back to Flow 1, step 2`)
 - Add a separate flow for any materially different path (second happy path, alternate, error)
-- Every `US-###.AC-##` must appear in at least one step's `Covers` list; do not claim coverage at the flow-title level
+- Flow steps carry no IDs and no AC tags. Position in the list is the only handle a reader needs
 - Every user story must be covered by at least one flow step
 - Keep a single flow readable; split a complex journey into multiple flows without deleting branches, retries, loops, or requirements
 
 ### Identifier and coverage rules
 
 - User story IDs are document-unique: `US-001`, `US-002`, ...
-- Acceptance criteria are globally unique because they include their owning story: `US-001.AC-01`, `US-002.AC-01`, ...
-- Never use bare `AC-1`, `AC-2`, or a document-wide counter detached from a story
-- Flow step IDs are document-unique: `F1-S1`, `F1-S2`, `F2-S1`, ...
-- Coverage gate: `all AC IDs - AC IDs named by flow steps = empty set`. Resolve any gap before confirmation
+- Acceptance criteria carry no IDs. They are plain checkboxes under their story; the story heading already identifies them
+- Flow steps carry no IDs. They are a numbered list under their flow heading
+- Coverage gate: every acceptance criterion is satisfied by at least one flow step. Resolve any gap before confirmation. Run it as a check and report the result in chat; never write the mapping into the ticket
 
 ## Step 4: Confirm Draft
 
@@ -195,7 +194,7 @@ When asked to review whether sub-issues fulfill a parent PRD ticket:
 
 1. Read the PRD spec ticket (`get_issue`) and its `## Implementation Parents` index. The spec ticket is not an implementation parent. For a legacy ticket without the index, ask for the implementation-parent URLs; never treat the spec's direct children as the new topology by assumption.
 2. Fetch every indexed implementation parent, then use `list_issues` with each implementation parent's `parentId` to fetch only its children.
-3. Verify one indexed parent per `US-###`, and map every exact `US-###.AC-##` to child issue(s) under that story's parent.
+3. Verify one indexed parent per `US-###`, and map every acceptance criterion to child issue(s) under that story's parent.
 4. Flag missing/duplicate parents, cross-parent children, and work that **cannot be bundled** into an existing child as gaps; bundle-able housekeeping is not a gap.
 5. Report: topology check, coverage matrix (story → parent → children), gaps, verdict (covered / has gaps).
 
@@ -210,8 +209,8 @@ When asked to review whether sub-issues fulfill a parent PRD ticket:
 | Title (H1) | Yes | 3-8 words, no jargon. Becomes Linear ticket title. |
 | Description | Yes | 1-2 short sentences, no tech detail |
 | Problem | Yes | 1-2 short paragraphs, user pain not tech gap |
-| User Stories | Yes | `As a [user], I want ..., so ...` plus `US-###.AC-##` items |
-| User Flows | Yes | At least one happy flow with explicit `F#-S#` steps and Entry/Exit anchors |
+| User Stories | Yes | `As a [user], I want ..., so ...` plus plain acceptance-criteria checkboxes. No AC IDs |
+| User Flows | Yes | At least one happy flow, steps as a numbered list with Entry/Exit anchors. No step IDs, no AC tags, no coverage ledger |
 | Constraints | Yes | Limits the implementation must respect |
 | Success Criteria | Yes | Confirmed numeric targets, or classified `TBD-###` placeholders in a review draft |
 
@@ -220,9 +219,9 @@ When asked to review whether sub-issues fulfill a parent PRD ticket:
 - **Title**: 3-8 words, no jargon
 - **Description**: short, plain English, no tech detail
 - **Problem**: describes user pain, not the technical fix
-- **User Stories**: `As a [user], I want [goal], so [benefit]`. Each story has at least one story-scoped `US-###.AC-##`
-- **User Flows**: at least one. Every step has a unique `F#-S#`; use Entry/Exit anchors and preserve real loops
-- **AC coverage**: every exact AC ID appears in at least one flow step's `Covers` list
+- **User Stories**: `As a [user], I want [goal], so [benefit]`. Each story has at least one acceptance criterion, written as a plain checkbox with no ID
+- **User Flows**: at least one. Steps are a numbered list; use Entry/Exit anchors and preserve real loops in plain English. Steps read as prose — no step IDs, no AC tags
+- **AC coverage**: every acceptance criterion is satisfied by at least one flow step. Verified before the draft is shown; reported in chat, never persisted as a section
 - **Success Criteria**: contain sourced numbers (percentages, times, counts), or classified `TBD-###` placeholders until the user supplies them
 - **TBD**: allowed in Constraints, Success Criteria numbers, and flow details that depend on later design decisions only — never in Problem, Users, or User Stories. Every `TBD-###` has a matching question attempt and impact classification
 
@@ -233,6 +232,7 @@ When asked to review whether sub-issues fulfill a parent PRD ticket:
 | "We need JWT auth" | "Users cannot access personalized features without accounts" | Problem describes user pain, not the technical fix |
 | "Users should be happy with login" | `TBD-001` — target completion rate and time threshold — Impact: non-blocking | Unknown targets stay explicit until the user supplies real numbers |
 | "OAuth2 JWT Token Auth Implementation" | "User Login and Signup" | Title avoids jargon |
-| Flow without IDs (`Entry → Submit → Home`) | `F1-S1` Entry, `F1-S2` Submit, `F1-S3` Exit, each with `Covers` IDs | Stable IDs make requirements traceable into implementation |
+| Flow as one arrow chain (`Entry → Submit → Home`) | A numbered list: `1.` Entry, `2.` Submit, `3.` Exit | One step per line, each naming what the user did, which screen, and what they saw |
+| Prefixing criteria or flow steps with IDs | `- [ ] Clicking Create shows an error` | The story heading and the list position already identify them. IDs only earn their keep when something *outside* the document points at them |
 
 > Codex note: the current Linear creation operation is `create_issue` — after inspecting its schema, call `create_issue` with title, full PRD description, team, and project. Never use `save_issue` as a guessed alias.

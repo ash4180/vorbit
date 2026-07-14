@@ -101,7 +101,7 @@ For the current `queue[currentIndex]` item, or the parent when the queue is empt
 2. Move it to the team's exact In Progress state and add one start comment.
 3. Apply the normal implement workflow without re-entering loop initialization:
    - search for existing code and tests first;
-   - map `US-*.AC-*` and `F*-S*` requirements;
+   - map the issue's acceptance criteria and flow steps;
    - write or update an honest focused test when a harness exists;
    - implement only the current issue;
    - run focused and relevant regression checks.
@@ -120,7 +120,7 @@ Only when every current-item AC passes and relevant tests pass:
 
 If work remains, keep the same queue index. Report the unmet AC or failing check.
 
-Create a failure fingerprint from the failing command/error plus unmet AC IDs. If the same fingerprint occurs three consecutive cycles:
+Create a failure fingerprint from the failing command/error plus the unmet acceptance criteria. If the same fingerprint occurs three consecutive cycles:
 
 1. set `active: false`, `status: "blocked"`, and `blockReason`;
 2. preserve the state file for inspection;

@@ -47,7 +47,7 @@ Preflight required connectors: confirm each needed connector is configured in Co
    - **Feature name:** use scoped `list_issues` title search, ask if multiple match, then `get_issue`
    - **Explicit pasted PRD or user-specified local file:** use it as a legacy fallback and record provenance
    - **Inaccessible non-Linear URL:** ask the user to paste/export it; do not guess
-3. Extract exact `US-###`, `US-###.AC-##`, `F#-S#`, constraints, and unresolved `TBD-###` items. Keep the Linear ticket URL in the handoff.
+3. Extract each `US-###` with its acceptance criteria verbatim, its flow steps, constraints, and unresolved `TBD-###` items. Keep the Linear ticket URL in the handoff.
 4. **IF Figma URL provided:**
    - Use design context from Phase 0
    - Extract layout, components, and styling specs

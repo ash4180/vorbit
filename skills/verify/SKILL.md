@@ -19,7 +19,7 @@ Read and follow `_shared/mcp-tool-routing.md` only when the user supplied an ext
 2. **IF description**: Use explicit criteria; otherwise propose a checklist and label it as proposed
 3. **IF no args**: Ask what to validate
 
-Map every globally unique `US-*.AC-*` to an observable check before running tests.
+Map every acceptance criterion to an observable check before running tests. Enumerate them in document order and check each one — none may be skipped.
 
 ## Step 3: Run Tests
 

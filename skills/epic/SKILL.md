@@ -33,27 +33,27 @@ Resolve source context in this order:
 
 **IF Linear ticket URL or ID provided:**
 1. Use `get_issue` to fetch the PRD spec ticket
-2. Extract user stories (`US-###`), story-scoped acceptance criteria (`US-###.AC-##`), flow steps (`F#-S#`), constraints, success criteria, and `TBD-###` items
+2. Extract user stories (`US-###`), each story's acceptance criteria verbatim, its flow steps, constraints, success criteria, and `TBD-###` items
 
 **IF feature name provided (no ticket ID):**
 1. Use `list_issues` scoped to the team with a title-based filter to locate the PRD ticket
 2. If multiple candidates, ask the user which one via `AskUserQuestion`
 3. Fetch with `get_issue` and extract as above
 
-If a fetched Linear PRD uses legacy bare ACs or unnumbered flow steps, draft an ID-only normalization, show the exact mapping, and get approval to update the spec before planning. Do not change requirement meaning while adding stable IDs.
+If a fetched Linear PRD has stories without acceptance criteria, or flows whose steps are an unreadable blob, draft a normalization, show the exact mapping, and get approval to update the spec before planning. Do not change requirement meaning while normalizing.
 
 **IF explicit pasted PRD content or a user-specified local file is provided:**
 1. Read it as a legacy fallback and record its provenance
-2. Normalize missing IDs to `US-###`, `US-###.AC-##`, and `F#-S#` without changing meaning
+2. Normalize it to `US-###` stories, each with plain acceptance-criteria checkboxes and numbered flow steps, without changing meaning
 3. Mark the plan as `canonicalization required`: after user approval, create/import the Linear PRD spec ticket before any implementation parent
 
 **IF no Linear PRD and no explicit legacy artifact exists:** stop and direct the user to `/vorbit:design:prd`. Do not invent a PRD from casual conversation inside epic planning.
 
 **Traceability requirements before planning:**
-- Every user story has at least one unique, story-scoped `US-###.AC-##`
-- Every flow step has a stable `F#-S#`
-- Every AC is reflected in at least one flow step's coverage list, or has an explicit non-journey reason
-- If any user story has no AC, any AC has no flow coverage/reason, or any flow step is unnumbered, resolve it before Step 4
+- Every user story has at least one acceptance criterion
+- Every acceptance criterion is satisfied by at least one flow step, or has an explicit non-journey reason
+- Reference a criterion by quoting its text, and a step as `Flow N, step M`. Do not mint IDs the PRD does not have
+- If any user story has no criteria, or any criterion has no flow coverage and no reason, resolve it before Step 4
 
 ### Implementation-Affecting TBD Gate (Blocking)
 
@@ -64,7 +64,7 @@ Inspect every inline `TBD`, `TBD-###`, "unknown", and unresolved question. A TBD
 - A genuinely non-blocking TBD may remain only when it cannot change implementation scope or ordering. Carry it into Risks & Unknowns with its explicit classification.
 
 **PRD-first sequencing rule (required):**
-- Lock requirement baseline first: `US-### -> US-###.AC-## -> F#-S#`
+- Lock requirement baseline first: each `US-###` -> its acceptance criteria -> the flow steps that satisfy them
 - Do NOT start codebase analysis until the requirement baseline is complete
 - Codebase analysis is used to implement PRD requirements, not redefine them
 - If existing code conflicts with PRD intent, raise the conflict and resolve with user before creating issues
@@ -99,7 +99,7 @@ After Step 2 requirement baseline is locked, analyze the codebase thoroughly:
 
 ### 4.1 Find Similar Features
 ```bash
-# Build search terms from PRD (US titles, AC nouns, flow surfaces)
+# Build search terms from PRD (story titles, nouns in the criteria, screens named in the flows)
 rg -n "<term1>|<term2>|<term3>" .
 ```
 - Note file structure patterns
@@ -110,7 +110,7 @@ rg -n "<term1>|<term2>|<term3>" .
 Use a **pattern-first, paths-second** strategy:
 
 1. **Find by usage/symbol first (required):**
-   - Search imports/usages from PRD flow surfaces and AC terms
+   - Search imports/usages from the screens named in the PRD flows and the nouns in its criteria
    - Search exported helpers/components/hooks/services, then trace existing call sites
    - Prefer exact symbols already used in similar flows
 
@@ -172,7 +172,7 @@ Examples of coupling:
 
 Create SDD (Specification-Driven Development) document:
 - Technical Overview
-- Flow Impact Matrix (`F#-S#` -> system/module/API/UI touchpoints)
+- Flow Impact Matrix (`Flow N, step M` -> system/module/API/UI touchpoints)
 - PRD Compliance Check (confirm all planned changes satisfy the exact `US -> AC -> Flow` baseline)
 - Data Model Changes
 - API Changes
@@ -217,8 +217,8 @@ For each User Story, create:
 
 **Epic planning inputs per story (required):**
 - User story ID (`US-###`)
-- Relevant exact AC IDs (`US-###.AC-##`)
-- Flow step IDs and surfaces from PRD (for example `F1-S3`, `API /orders`)
+- The story's acceptance criteria, quoted verbatim from the PRD
+- The flow steps from the PRD, with the screen or API each one touches (for example `Flow 1, step 3` — `API /orders`)
 
 **Ticket derivation rule:**
 - Use flow steps to identify concrete technical work:
@@ -235,7 +235,7 @@ For EACH sub-issue, include all these sections:
 |---------|----------|---------|
 | **Why This Is Needed** | ✅ | What it does + why it matters |
 | **Related Parent AC** | ✅ | Copy exact PRD ACs from the implementation parent |
-| **Related Flow Steps** | ✅ | Copy relevant flow step IDs + touched surfaces |
+| **Related Flow Steps** | ✅ | Copy the relevant steps as `Flow N, step M` + the screens or APIs they touch |
 | **Reuse & Patterns** | ✅ | Existing code, utilities, constants |
 | **File Changes** | ✅ | Exact file paths with action (CREATE/MODIFY) |
 | **Mock Data** | If UI work | Expected mocks and cleanup note |
@@ -244,19 +244,19 @@ For EACH sub-issue, include all these sections:
 
 ### Mapping Parent AC to Sub-issues
 
-1. List all parent Acceptance Criteria (`US-###.AC-##`)
-2. List all related flow steps for the story (`F#-S#`)
-3. For each sub-issue, identify which parent ACs and flow steps it satisfies
-4. Copy those specific ACs into "Related Parent Acceptance Criteria" and flow steps into "Related Flow Steps"
+1. List all parent Acceptance Criteria, quoted verbatim from the PRD
+2. List all related flow steps for the story, as `Flow N, step M`
+3. For each sub-issue, identify which parent criteria and flow steps it satisfies
+4. Copy those criteria **verbatim** into "Related Parent Acceptance Criteria" and the steps into "Related Flow Steps". Quoting the text is what binds a sub-issue to its requirement — do not paraphrase
 5. **Rule:** Every parent AC must be covered by at least one sub-issue
 6. **Rule:** Every in-scope flow step with implementation impact must be covered by at least one sub-issue
 
 ## Step 7.5: Traceability Gate (Required)
 
 Before creating Linear issues, validate this matrix:
-- The Step 2 traceability requirements (`US-### -> US-###.AC-## -> F#-S#`) still hold
+- The Step 2 traceability requirements (each `US-###` -> its acceptance criteria -> the flow steps that satisfy them) still hold
 - `US-###` -> exactly one planned implementation parent
-- In-scope `F#-S#` -> sub-issue(s) under that story's parent
+- Every in-scope flow step -> sub-issue(s) under that story's parent
 - Every planned sub-issue -> exactly one implementation parent
 - Every remaining TBD -> explicitly non-blocking
 
@@ -332,14 +332,14 @@ Next: choose one implementation parent and start its Phase 1 using `/vorbit:impl
 US-001: As a [user], I want [goal]...
 
 ## Acceptance Criteria
-- [ ] US-001.AC-01 Criterion 1
-- [ ] US-001.AC-02 Criterion 2
+- [ ] [Criterion, copied verbatim from the PRD]
+- [ ] [Another criterion, copied verbatim from the PRD]
 
 ## Related PRD Flow Context
 | Flow Step | Surface | Why it matters |
 |-----------|---------|----------------|
-| F1-S2 | UI: `CheckoutForm` | User submits payment details |
-| F1-S3 | API: `POST /payments` | Payment processing and order creation |
+| Flow 1, step 2 | UI: `CheckoutForm` | User submits payment details |
+| Flow 1, step 3 | API: `POST /payments` | Payment processing and order creation |
 
 ## Test Criteria (TDD - write tests FIRST)
 
@@ -376,13 +376,13 @@ Phase 2 (depends on Phase 1)
 
 ## Related Parent Acceptance Criteria
 > This sub-issue must satisfy these goals from the implementation parent:
-- [ ] US-001.AC-01 [Parent AC that this sub-issue addresses]
-- [ ] US-001.AC-02 [Parent AC that this sub-issue addresses]
+- [ ] [Parent criterion this sub-issue addresses — copied verbatim, not paraphrased]
+- [ ] [Another parent criterion this sub-issue addresses]
 
 ## Related Flow Steps
 > Implementation context from PRD flow:
-- [ ] F1-S2 [UI/component step covered]
-- [ ] F1-S3 [API/service step covered]
+- [ ] Flow 1, step 2 — [UI/component step covered]
+- [ ] Flow 1, step 3 — [API/service step covered]
 
 ⚠️ **Before marking done:** Verify ALL checked items above are satisfied.
 
@@ -427,8 +427,8 @@ Run `/vorbit:design:ui-patterns` before implementing UI components.
 > Mocks must be registered in the runtime-neutral Vorbit project registry; copy the exact resolved registry path from the prototype/implementation context into this issue. Never hardcode an agent-specific directory.
 
 ## Acceptance Criteria (Sub-issue specific)
-- [ ] US-001.T01.AC-01 Criterion 1
-- [ ] US-001.T01.AC-02 Criterion 2
+- [ ] [Criterion this sub-issue alone must satisfy]
+- [ ] [Another sub-issue-specific criterion]
 
 ## Test Criteria (TDD - write tests FIRST)
 
@@ -442,7 +442,7 @@ Run `/vorbit:design:ui-patterns` before implementing UI components.
 - [ ] E2E: [false positive / negative case] — inputs that must NOT trigger
 ```
 
-`T01` is the sub-issue's stable sequence within `US-001`; the next child uses `T02`. This keeps child-level AC IDs globally unique and tied to their user story.
+Sub-issue criteria are plain checkboxes. The sub-issue is already a Linear ticket with its own ID and its own parent — that is the handle. Do not mint per-criterion IDs.
 
 **Priority Mapping**:
 - P1 (Urgent): Core / Blocker

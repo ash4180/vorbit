@@ -26,11 +26,11 @@ Linear is the canonical PRD provider. Resolve context in this order:
 Extract and preserve:
 
 - User stories (`US-###`)
-- Story-scoped ACs (`US-###.AC-##`)
-- Flow steps (`F#-S#`), including Entry/Exit markers, branches, retries, and loops
+- Story-scoped acceptance criteria (the checkbox items under each `US-###` heading) — quote them verbatim; they have no IDs
+- Flow steps (the numbered list under each `### Flow N:` heading), including Entry/Exit markers, branches, retries, and loops — address them as `Flow N, step M`
 - Constraints and implementation-affecting `TBD-###` items
 
-For a legacy PRD without stable IDs, assign draft `US-###`, `US-###.AC-##`, and `F#-S#` IDs without changing meaning. Show the normalization to the user before updating any source.
+For a legacy PRD without stable IDs, assign draft `US-###` IDs and number its flows and steps without changing meaning. Show the normalization to the user before updating any source.
 
 ## Step 3: Confirm Flow Details
 
@@ -52,28 +52,29 @@ Show the complete flow and coverage ledger for review:
 ```
 User Flow: [Feature Name]
 
-F1-S1. [Entry] User lands on... (covers US-001.AC-01)
+Flow 1: [Flow name from the PRD]
+1. [Entry] User lands on...
    ↓
-F1-S2. [Action] User clicks... (covers US-001.AC-01)
+2. [Action] User clicks...
    ↓
-F1-S3. [Decision] Is valid? (covers US-001.AC-02)
-   → Yes: F1-S4
-   → No: F1-S5
-F1-S4. [Action] System processes... → F1-S6
-F1-S5. [Recovery] Show error and preserve values → Retry: F1-S2 (covers US-001.AC-02)
-F1-S6. [Exit] User sees confirmation
+3. [Decision] Is valid?
+   → Yes: step 4
+   → No: step 5
+4. [Action] System processes... → step 6
+5. [Recovery] Show error and preserve values → Retry: step 2
+6. [Exit] User sees confirmation
 
 Coverage:
-- US-001.AC-01 → F1-S1, F1-S2
-- US-001.AC-02 → F1-S3, F1-S5
+- "User can submit the form from the entry screen" → Flow 1, step 1; Flow 1, step 2
+- "Invalid input shows an error and preserves entered values" → Flow 1, step 3; Flow 1, step 5
 ```
 
 **After showing draft, ask:** "Does this flow look correct? Ready to create in FigJam?"
 
 Before asking, verify:
 
-- Every source `F#-S#` appears in the outline exactly once as a defined step
-- Every source AC maps to at least one step
+- Every source flow step appears in the outline exactly once as a defined step
+- Every source acceptance criterion maps to at least one step
 - Every branch reaches an exit or an explicit loop/continuation
 - No retry, alternate path, or requirement was removed to simplify the picture
 
@@ -81,7 +82,7 @@ Before asking, verify:
 
 **Only proceed after user confirms the draft.**
 
-Use `generate_diagram` with the parameters and syntax required by the prerequisite loaded in Step 1. Include the stable step ID in every requirement-bearing node label, for example `F1-S2 · User submits form`.
+Use `generate_diagram` with the parameters and syntax required by the prerequisite loaded in Step 1. Label every node with the user-facing action from its flow step, for example `Submit order`, and keep node order matching the PRD flow so each node is addressable as `Flow N, step M` in the coverage ledger.
 
 ### Split Complex Flows Without Dropping Behavior
 
@@ -89,19 +90,19 @@ Use the current prerequisite's density guidance. When the complete journey is to
 
 1. Split at cohesive sub-flow boundaries, not by deleting alternate/error paths.
 2. Generate a small overview plus every required detail diagram.
-3. Add explicit continuation nodes such as `Continue: F2-S1` and `Return: F1-S2` so cross-diagram loops remain traceable.
+3. Add explicit continuation nodes such as `Continue: Flow 2, step 1` and `Return: Flow 1, step 2` so cross-diagram loops remain traceable.
 4. Preserve real retry/re-entry loops. A loop is not an error in the model; simplify its routing only if the prerequisite says the rendered graph is unreadable.
 5. Reuse the first returned FigJam `fileKey` for related diagrams so the set stays in one file.
-6. Keep a coverage ledger: `AC -> F#-S# -> diagram name/node`. Generation is incomplete until every AC and flow step is represented.
+6. Keep a coverage ledger: acceptance criterion (quoted, abbreviated if long) -> `Flow N, step M` -> diagram name/node. Generation is incomplete until every acceptance criterion and flow step is represented.
 
 Illustrative flowchart only; the loaded prerequisite wins if syntax guidance changes:
 
 ```mermaid
 flowchart LR
-    entry(["F1-S1 · Entry: Open checkout"]) --> submit["F1-S2 · Submit order"]
-    submit --> valid{"F1-S3 · Details valid?"}
-    valid -->|"Yes"| success(["F1-S4 · Exit: Order confirmed"])
-    valid -->|"No"| error["F1-S5 · Show errors and keep values"]
+    entry(["Entry: Open checkout"]) --> submit["Submit order"]
+    submit --> valid{"Details valid?"}
+    valid -->|"Yes"| success(["Exit: Order confirmed"])
+    valid -->|"No"| error["Show errors and keep values"]
     error -->|"Retry"| submit
 ```
 
@@ -123,8 +124,8 @@ After each `generate_diagram` call, expose the returned URL as a markdown link. 
 - FigJam flow created: Yes (all URLs)
 - PRD source: Linear canonical ticket or named legacy fallback
 - PRD updated: Yes/No (with URL when canonical)
-- Coverage: X/X ACs and Y/Y flow steps
-- Split summary: diagram name -> covered `F#-S#` range
+- Coverage: X/X acceptance criteria and Y/Y flow steps
+- Split summary: diagram name -> covered flow steps (e.g. `Flow 1, steps 1-6`)
 - Next: `$vorbit-prototype` or `$vorbit-epic`
 
 ---
@@ -146,19 +147,19 @@ Load `figma-generate-diagram`, then use its current `generate_diagram` tool:
 | Exit points | Yes | At least one success state |
 | Decisions | When present in requirements | Every real branch is represented and all paths are labeled; never invent a branch to satisfy the template |
 | Error states | No | Must terminate or have an explicit recovery/loop path |
-| Requirement coverage | Yes | Every AC and `F#-S#` appears in the coverage ledger |
+| Requirement coverage | Yes | Every acceptance criterion and flow step appears in the coverage ledger |
 
 ## Node Types
 
 | Type | Syntax | Use For |
 |------|--------|---------|
-| Start | `A(["F1-S1 · Entry: ..."])` | Entry point |
-| Action | `B["F1-S2 · User does X"]` | User takes action |
-| Condition | `C["F1-S3 · Filter setting"]` | Settings/filter nodes |
-| Decision | `D{"F1-S4 · Question?"}` | Branch point |
-| Success | `E(["F1-S5 · Exit: Success"])` | Happy path end |
-| Error | `F["F1-S6 · Error shown"]` | Failure state |
-| Sub-flow | `G["Continue: F2-S1"]` | Reference another diagram without losing traceability |
+| Start | `A(["Entry: ..."])` | Entry point |
+| Action | `B["User does X"]` | User takes action |
+| Condition | `C["Filter setting"]` | Settings/filter nodes |
+| Decision | `D{"Question?"}` | Branch point |
+| Success | `E(["Exit: Success"])` | Happy path end |
+| Error | `F["Error shown"]` | Failure state |
+| Sub-flow | `G["Continue: Flow 2, step 1"]` | Reference another diagram without losing traceability |
 
 ## Validation Rules
 
@@ -167,7 +168,7 @@ Load `figma-generate-diagram`, then use its current `generate_diagram` tool:
 - All decision nodes have labeled paths (`-->|"Yes"|`, `-->|"No"|`)
 - Real retries and re-entry loops remain explicit
 - Complex flows are split according to current prerequisite guidance, with overview/detail continuity
-- Every source `F#-S#` and `US-###.AC-##` appears in the coverage ledger
+- Every source flow step and acceptance criterion appears in the coverage ledger
 - Labels describe user actions, not technical operations
 - Mermaid passes the prerequisite's pre-call validation
 
@@ -184,15 +185,15 @@ Load `figma-generate-diagram`, then use its current `generate_diagram` tool:
 Name: [Feature] User Flow
 Mermaid:
 flowchart LR
-    entry(["F1-S1 · Entry: User opens feature"]) --> action["F1-S2 · First action"]
-    action --> condition{"F1-S3 · Condition?"}
-    condition -->|"Yes"| success(["F1-S4 · Exit: Goal achieved"])
-    condition -->|"No"| error["F1-S5 · Show invalid input"]
+    entry(["Entry: User opens feature"]) --> action["First action"]
+    action --> condition{"Condition?"}
+    condition -->|"Yes"| success(["Exit: Goal achieved"])
+    condition -->|"No"| error["Show invalid input"]
     error -->|"Retry"| action
 
 Coverage:
-- US-001.AC-01 -> F1-S1, F1-S2 -> [Feature] User Flow
-- US-001.AC-02 -> F1-S3, F1-S5 -> [Feature] User Flow
+- "[Acceptance criterion text, abbreviated if long]" -> Flow 1, step 1; Flow 1, step 2 -> [Feature] User Flow
+- "[Acceptance criterion text, abbreviated if long]" -> Flow 1, step 3; Flow 1, step 5 -> [Feature] User Flow
 
 ## FigJam URL
 [Generated URL from tool]
@@ -204,6 +205,6 @@ Coverage:
 |-------|-------|-----|
 | Delete retry/alternate branches to reduce density | Split into overview + complete detail flows | Readability cannot erase requirements |
 | `POST /api/users` | `["User submits form"]` | Labels describe user actions |
-| Omit `F#-S#` from labels | Prefix requirement-bearing nodes with their stable IDs | Diagram stays traceable to the PRD |
+| Ship a diagram with no coverage ledger | Map every acceptance criterion to the `Flow N, step M` nodes that satisfy it | Diagram stays traceable to the PRD |
 | Regenerate each split into a new file | Reuse the returned `fileKey` | Related diagrams stay together |
 | Copy old Mermaid limits here | Load `figma-generate-diagram` before every call | Current prerequisite stays authoritative |

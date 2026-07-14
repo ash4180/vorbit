@@ -29,7 +29,7 @@ Receive from calling skill:
 - **Context** (what's already known)
 - **Next available flow number** when adding flow steps to an existing PRD
 
-Do not mint final AC IDs without an owning user story. If the caller has not assigned `US-###`, return provisional AC candidates and require the caller to assign and confirm the story ID before adding them to a PRD.
+Do not finalize acceptance criteria without an owning user story. If the caller has not assigned `US-###`, return provisional criteria candidates and require the caller to assign and confirm the story ID before adding them to a PRD.
 
 ---
 
@@ -83,14 +83,18 @@ For every answer that creates a requirement:
 1. Record the question and the user's answer verbatim as `E-01`, `E-02`, ... Evidence may be fragmentary, subjective, or use the user's own terminology; do not clean it up.
 2. Draft one observable, testable AC from that evidence. Preserve exact UI copy and domain terms, but normalize shorthand into an explicit condition/action/result.
 3. Show any normalization that adds specificity to the user and ask for confirmation. Never turn an inference into a confirmed requirement.
-4. After confirmation, assign the next story-scoped ID: `US-001.AC-01`, `US-001.AC-02`, ... Restart the AC suffix for each story because the `US-###` prefix makes the full ID globally unique.
-5. Link each normalized AC to its evidence ID(s). If one answer produces multiple behaviors, split them into multiple ACs and cite the same evidence.
+4. After confirmation, record the criterion as a plain checkbox item under its owning `US-###` story heading. Acceptance criteria carry no IDs of their own — the story heading is what scopes them.
+5. Link each normalized criterion to its evidence ID(s). If one answer produces multiple behaviors, split them into multiple criteria and cite the same evidence.
 
 Raw evidence is immutable. User corrections create a new evidence entry and supersede the earlier one; do not rewrite what the user originally said.
 
 ### Step 6: Build Flow Coverage
 
-Using the next available document-wide flow number, create explicit steps (`F1-S1`, `F1-S2`, ...). Each step names the surface, user action, visible result, and exact `US-###.AC-##` IDs it covers. Preserve branches and loops with explicit `Next: F#-S#` references. Do not return final UX content until every confirmed AC is covered by at least one step.
+Using the next available document-wide flow number, write the flow as a numbered list of steps under a `Flow N: [Name]` heading. Each step names what the user did, which screen or field it happened on, and what they saw as a result. Anchor the first step with **Entry:** and the last with **Exit:**. Steps carry no IDs and no coverage tags.
+
+Preserve branches, retries, and loops in plain English inside the step text, referencing targets as "Flow N, step M" (e.g. "User retries → back to Flow 1, step 2").
+
+Then run a completeness check before returning: walk every confirmed acceptance criterion and verify at least one flow step satisfies it. Do not return final UX content until every confirmed criterion is covered by at least one step — if one is uncovered, add the missing step or ask the user for the missing behavior. Never drop the criterion.
 
 ---
 
@@ -111,40 +115,49 @@ Return structured UX content to calling skill:
   - Verbatim answer: "[exact user answer]"
 
 ### User Flow
-- `F1-S1` — **Entry:** [surface/start]. [Action and visible result]. Covers: `US-001.AC-01`
-- `F1-S2` — [surface]. [Action and visible result]. Covers: `US-001.AC-01`, `US-001.AC-02`
-- `F1-S3` — **Exit:** [observable end state]. Covers: `US-001.AC-02`
+
+#### Flow 1: [Name] (Happy flow)
+1. **Entry:** [which screen, and its starting state]. [User action and what they see]
+2. [which screen or field]. [User action and what they see]
+3. **Exit:** [observable end state]
+
+#### Flow 2: [Name] (Error/retry)
+1. **Entry:** [which screen, and its starting state]. [User action and what they see]
+2. [which screen or field]. [Failure the user sees and the recovery offered]
+3. User retries → back to Flow 1, step 2
 
 ### Acceptance Criteria
 
+#### US-001: [Story Title]
+
 **Happy Path:**
-- [ ] `US-001.AC-01` [Confirmed observable behavior]. Evidence: `E-01`
-- [ ] `US-001.AC-02` [Confirmed observable behavior]. Evidence: `E-02`
+- [ ] [Confirmed observable behavior]. Evidence: `E-01`
+- [ ] [Confirmed observable behavior]. Evidence: `E-02`
 
 **Validation:**
-- [ ] `US-001.AC-03` When [field] is [invalid], show "[user's exact error message]". Evidence: `E-03`
+- [ ] When [field] is [invalid], show "[user's exact error message]". Evidence: `E-03`
 
 **Errors:**
-- [ ] `US-001.AC-04` When the request fails, [confirmed visible result and recovery]. Evidence: `E-04`
-- [ ] `US-001.AC-05` When offline, [confirmed visible result and recovery]. Evidence: `E-05`
+- [ ] When the request fails, [confirmed visible result and recovery]. Evidence: `E-04`
+- [ ] When offline, [confirmed visible result and recovery]. Evidence: `E-05`
 
 **States:**
-- [ ] `US-001.AC-06` While loading, [confirmed visible state]. Evidence: `E-06`
-- [ ] `US-001.AC-07` When no data exists, [confirmed visible state]. Evidence: `E-07`
+- [ ] While loading, [confirmed visible state]. Evidence: `E-06`
+- [ ] When no data exists, [confirmed visible state]. Evidence: `E-07`
 
 **Permissions:**
-- [ ] `US-001.AC-08` When unauthorized, [confirmed visible result]. Evidence: `E-08`
+- [ ] When unauthorized, [confirmed visible result]. Evidence: `E-08`
 
 **Accessibility:**
-- [ ] `US-001.AC-09` [Confirmed keyboard behavior]. Evidence: `E-09`
-- [ ] `US-001.AC-10` [Confirmed mobile behavior]. Evidence: `E-10`
+- [ ] [Confirmed keyboard behavior]. Evidence: `E-09`
+- [ ] [Confirmed mobile behavior]. Evidence: `E-10`
 
 **Edge Cases:**
-- [ ] `US-001.AC-11` [Confirmed concurrent/time behavior]. Evidence: `E-11`
-- [ ] `US-001.AC-12` [Confirmed catalog-derived behavior]. Evidence: `E-12`
+- [ ] [Confirmed concurrent/time behavior]. Evidence: `E-11`
+- [ ] [Confirmed catalog-derived behavior]. Evidence: `E-12`
 ```
 
-The numeric examples are illustrative. Continue sequentially within the owning story, never reuse a full AC ID, and never emit bare IDs such as `AC-1`.
+The numbering above is illustrative. Evidence IDs continue sequentially across the clarification; flow steps restart at 1 within each flow. Acceptance criteria are plain checkboxes grouped under their owning `US-###` story — never give them IDs of any kind.
 
 ---
 
@@ -154,13 +167,13 @@ For complex flows, hand the confirmed evidence, normalized ACs, and all branches
 
 ---
 
-## Evidence Is Verbatim; ACs Are Testable
+## Evidence Is Verbatim; Acceptance Criteria Are Testable
 
-| Evidence (preserved exactly) | Confirmed normalized AC |
+| Evidence (preserved exactly) | Confirmed normalized criterion |
 |----------|-------------|
-| `E-01`: "Show 'Email required'" | `US-001.AC-01`: When email is empty on submit, show "Email required" next to the field. |
-| `E-02`: "Spinner with text" | Ask which text; after confirmation, record the loading AC. |
-| `E-03`: "Retry button, keep data" | `US-001.AC-03`: When the request fails, keep entered data and show a Retry button. |
+| `E-01`: "Show 'Email required'" | When email is empty on submit, show "Email required" next to the field. |
+| `E-02`: "Spinner with text" | Ask which text; after confirmation, record the loading criterion. |
+| `E-03`: "Retry button, keep data" | When the request fails, keep entered data and show a Retry button. |
 
 Do not silently interpret. Exact copy and terms stay exact; added conditions, timing, placement, or outcomes require confirmation. This separates audit evidence from an executable contract.
 

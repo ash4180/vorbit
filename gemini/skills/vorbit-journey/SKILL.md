@@ -1,6 +1,6 @@
 ---
 name: vorbit-journey
-description: Use when the user asks for a user journey or product flow visualization in FigJam. It gathers requirements, drafts the flow for approval, preserves requirement IDs and real loops, splits dense flows into linked Mermaid diagrams, and may link them to the source PRD. Requires a connected FigJam or Figma surface for final creation; do not use for architecture diagrams, Figma screen design, or code implementation.
+description: Use when the user asks for a user journey or product flow visualization in FigJam. It gathers requirements, drafts the flow for approval, preserves every requirement and real loop, splits dense flows into linked Mermaid diagrams, and may link them to the source PRD. Requires a connected FigJam or Figma surface for final creation; do not use for architecture diagrams, Figma screen design, or code implementation.
 ---
 
 # Vorbit Journey

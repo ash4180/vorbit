@@ -38,7 +38,7 @@ For Linear issues:
 - Read issue description for requirements
 - Check parent issue for SDD and style findings
 - Fetch the linked Linear PRD/specification ticket when available
-- Map the issue to its `US-*`, globally unique `US-*.AC-*`, and `F*-S*` identifiers
+- Map the issue to its user story (`US-*`), its acceptance criteria, and its flow steps
 - Confirm no implementation-affecting `TBD` remains
 - Only after those gates pass, update the selected implementation issue to the team's exact In Progress state before editing code
 
