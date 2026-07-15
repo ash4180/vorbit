@@ -1,6 +1,6 @@
 ---
 name: vorbit-react-best-practices
-description: Apply when writing, reviewing, or refactoring React or Next.js code where performance patterns such as waterfall removal, bundle reduction, server rendering, data fetching, or re-render control are relevant. This is supporting guidance, not a standalone authorization to edit files. Do not trigger for non-React code, visual design work, or generic frontend questions with no React or Next.js implementation.
+description: Apply when writing, reviewing, or refactoring React or Next.js code where performance patterns such as waterfall removal, bundle reduction, server rendering, data fetching, or re-render control are relevant. For UI-facing React work load ui-patterns alongside it. This is supporting guidance, not a standalone authorization to edit files. Do not trigger for non-React code, visual design work, or generic frontend questions with no React or Next.js implementation.
 ---
 
 # Vorbit React Best Practices

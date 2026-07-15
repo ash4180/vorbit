@@ -24,21 +24,6 @@ Three distinct output types, each serving different purposes:
 | **Template** | Reusable scaffold with page slots | Landing pages, feature pages, repeated patterns |
 | **Component** | Draggable element for slots | Reusable sections (hero, features, CTA) |
 
-### Pages
-Direct implementation of a Figma design as a Webflow page. Use for unique pages that won't be replicated.
-
-### Templates
-Reusable page scaffolds with fixed elements (header, footer) and **page slots** where marketers can drop components. Best for:
-- Landing pages
-- Feature pages
-- Use case pages
-- Target persona pages
-
-Templates enable the Designer → Marketer workflow: designers create templates, marketers assemble pages.
-
-### Components
-Standalone, draggable sections that fit into page slots. Build as reusable elements that marketers can add to template slots.
-
 ## Workflow
 
 ### Step 0: Pencil Check
@@ -94,12 +79,7 @@ Gather requirements through conversation:
 
 ### Step 4: Block and Ask
 
-When structure or mapping is unclear:
-- **STOP** and ask the user
-- Explain the options
-- Wait for decision
-
-Never guess on ambiguous requirements.
+When structure or mapping is unclear, stop and ask per the Error Handling table below — never guess on ambiguous requirements.
 
 ### Step 5: Build in Webflow
 
@@ -111,12 +91,6 @@ Use Webflow MCP tools (see `references/mcp-tools.md` for detailed tool reference
 | `element_tool` | Select, modify, and configure existing elements |
 | `style_tool` | Create and apply CSS classes |
 | `component_tool` | Register components and create instances |
-
-**Workflow:**
-1. Use `element_builder` to create structure (max 3 levels per call)
-2. Use `style_tool` to create and configure styles
-3. Use `element_tool` to apply styles and set content
-4. Use `component_tool` to register reusable components
 
 **For Templates:**
 - Add Page Slot elements where content varies
@@ -209,13 +183,3 @@ For detailed mapping and patterns, consult:
 
 Working examples in `examples/`:
 - **`examples/landing-page.md`** - Complete landing page template workflow
-
-## Integration with Vorbit
-
-This skill works standalone or chains with other vorbit commands:
-
-| Flow | Description |
-|------|-------------|
-| Standalone (Figma) | `$vorbit-webflow [figma-url]` |
-| Standalone (Direct) | `$vorbit-webflow [description]` |
-| From PRD | PRD → `$vorbit-webflow` |

@@ -1,6 +1,6 @@
 ---
 name: vorbit-pencil
-description: Use when the user explicitly asks to configure Pencil for a project, sync codebase design tokens or components to Pencil, refresh a Pencil library, or start a Pencil design system from a style guide. It requires an active Pencil canvas, writes variables and reusable components, and updates project Pencil rules. Do not use for generic frontend coding, Figma work, or image-only mockups.
+description: Use when the user explicitly asks to configure Pencil for a project, sync codebase design tokens or components to Pencil, refresh a Pencil library, start a Pencil design system from a style guide, or prepare the canvas before drawing Pencil mockups. It requires an active Pencil canvas, writes variables and reusable components, and updates project Pencil rules. Do not use for generic frontend coding, Figma work, or image-only mockups.
 ---
 
 # Vorbit Pencil

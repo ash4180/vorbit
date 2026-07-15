@@ -39,12 +39,7 @@ For a legacy PRD without stable IDs, assign draft `US-###` IDs and number its fl
 
 **RULE: If ANY requirement is unclear, use AskUserQuestion.**
 
-Ask about:
-1. **Entry point** - "Where does the user start?"
-2. **Primary goal** - "What is the user trying to accomplish?"
-3. **Key decisions** - "What choices will the user make?"
-4. **Error scenarios** - "What can go wrong? How to handle?"
-5. **Exit points** - "Where can the user complete or leave?"
+Ask about: entry point, primary goal, key decisions, error scenarios, exit points.
 
 Do not ask again when the PRD already answers the question. If an answer changes a canonical requirement, flag the conflict and get explicit confirmation before changing the flow or PRD.
 
@@ -152,29 +147,6 @@ Load `figma-generate-diagram`, then use its current `generate_diagram` tool:
 | Error states | No | Must terminate or have an explicit recovery/loop path |
 | Requirement coverage | Yes | Every acceptance criterion and flow step appears in the coverage ledger |
 
-## Node Types
-
-| Type | Syntax | Use For |
-|------|--------|---------|
-| Start | `A(["Entry: ..."])` | Entry point |
-| Action | `B["User does X"]` | User takes action |
-| Condition | `C["Filter setting"]` | Settings/filter nodes |
-| Decision | `D{"Question?"}` | Branch point |
-| Success | `E(["Exit: Success"])` | Happy path end |
-| Error | `F["Error shown"]` | Failure state |
-| Sub-flow | `G["Continue: Flow 2, step 1"]` | Reference another diagram without losing traceability |
-
-## Validation Rules
-
-- Every diagram has an explicit entry/continuation point
-- At least one exit point with success state
-- All decision nodes have labeled paths (`-->|"Yes"|`, `-->|"No"|`)
-- Real retries and re-entry loops remain explicit
-- Complex flows are split according to current prerequisite guidance, with overview/detail continuity
-- Every source flow step and acceptance criterion appears in the coverage ledger
-- Labels describe user actions, not technical operations
-- Mermaid passes the prerequisite's pre-call validation
-
 ## Template
 
 ```markdown
@@ -186,13 +158,7 @@ Load `figma-generate-diagram`, then use its current `generate_diagram` tool:
 ## Flow Diagram
 
 Name: [Feature] User Flow
-Mermaid:
-flowchart LR
-    entry(["Entry: User opens feature"]) --> action["First action"]
-    action --> condition{"Condition?"}
-    condition -->|"Yes"| success(["Exit: Goal achieved"])
-    condition -->|"No"| error["Show invalid input"]
-    error -->|"Retry"| action
+Mermaid: [flowchart source — syntax per the loaded prerequisite; see the Step 5 example]
 
 Coverage:
 - "[Acceptance criterion text, abbreviated if long]" -> Flow 1, step 1; Flow 1, step 2 -> [Feature] User Flow

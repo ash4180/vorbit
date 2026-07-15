@@ -22,7 +22,7 @@ Detailed pipeline specs live in `references/` within this skill's directory. The
 
 ## Setup
 
-1. Read `./GEMINI.md` and other repository instruction files for project standards
+1. Honor the project's standing instructions files if the runtime has not already loaded them
 2. Read `<rules-root>/projects/<project-slug>/review-rules.md` (resolve the root via `vorbit-resolve-rules`) if it exists — learnable rules from previous reviews
 3. Determine mode from input (see Mode Detection)
 
@@ -40,9 +40,6 @@ To detect without flag: if any argument matches an existing file or directory pa
 
 ## Review Voice
 
-- Be direct, specific, and professional.
-- State what is broken, why it matters, and the smallest correct fix.
-- Do not perform a persona, insult the author, or pad findings with attitude.
 - Do not report stylistic preferences as defects unless repository policy requires them.
 
 ---
@@ -105,20 +102,12 @@ End with: **"Say 'fix it' to apply changes, or tell me what you disagree with."*
 
 ## Phase 2: FIX (Both modes, after user approval)
 
-**Only proceed when user says "fix it" / "approved" / "go ahead":**
-
-1. Use Edit tool to fix code directly (NO COMMENTS)
-2. Delete the garbage
-3. Simplify the logic
-4. Rename variables for clarity
-5. Report what was fixed
+Only proceed when the user says "fix it" / "approved" / "go ahead".
+Apply the approved fixes directly, re-run the relevant checks, and report what was fixed.
 
 **Summary Format:**
 ```
-Done. Fixed X files:
-- Deleted Y lines of garbage
-- Fixed Z issues
-- Renamed W functions
+Done. Fixed X issues across Y files.
 
 Run `$vorbit-verify` when ready.
 ```

@@ -59,7 +59,7 @@ Use the template below. Match VIB-2978's prose style — no big tables.
 - Feature name (3-8 words, no jargon) — this becomes the Linear ticket **title**
 - Description: one short paragraph under the H1
 - Problem: 1-2 short paragraphs, no tech detail
-- User Stories: `US-001`, `US-002`, ... each with plain acceptance-criteria checkboxes, no AC IDs
+- User Stories: `US-001`, `US-002`, ... each with acceptance-criteria checkboxes
 - User Flows: at least one happy flow, steps numbered `1.`, `2.`, `3.`
 - Constraints
 - Success Criteria with confirmed, sourced numbers; use `TBD-###` when a target is unknown
@@ -144,7 +144,6 @@ As a [user], I want [goal], so [benefit].
 - Each step names three things: what the user did, which screen or field it happened on, and what they saw as a result
 - Mark the first step `Entry` and an observable terminal step `Exit`; for a real retry or loop, write it in plain English (`→ back to Flow 1, step 2`)
 - Add a separate flow for any materially different path (second happy path, alternate, error)
-- Flow steps carry no IDs and no AC tags. Position in the list is the only handle a reader needs
 - Every user story must be covered by at least one flow step
 - Keep a single flow readable; split a complex journey into multiple flows without deleting branches, retries, loops, or requirements
 
@@ -202,27 +201,19 @@ When asked to review whether sub-issues fulfill a parent PRD ticket:
 
 # Schema & Validation
 
-## Required Sections
+All sections below are required.
 
-| Section | Required | Rules |
-|---------|----------|-------|
-| Title (H1) | Yes | 3-8 words, no jargon. Becomes Linear ticket title. |
-| Description | Yes | 1-2 short sentences, no tech detail |
-| Problem | Yes | 1-2 short paragraphs, user pain not tech gap |
-| User Stories | Yes | `As a [user], I want ..., so ...` plus plain acceptance-criteria checkboxes. No AC IDs |
-| User Flows | Yes | At least one happy flow, steps as a numbered list with Entry/Exit anchors. No step IDs, no AC tags, no coverage ledger |
-| Constraints | Yes | Limits the implementation must respect |
-| Success Criteria | Yes | Confirmed numeric targets, or classified `TBD-###` placeholders in a review draft |
+| Section | Rules |
+|---------|-------|
+| Title (H1) | 3-8 words, no jargon. Becomes the Linear ticket title |
+| Description | 1-2 short sentences, plain English, no tech detail |
+| Problem | 1-2 short paragraphs of user pain, not the technical fix |
+| User Stories | `As a [user], I want [goal], so [benefit]`; at least one plain-checkbox criterion per story |
+| User Flows | At least one happy flow; numbered prose steps with Entry/Exit anchors; loops in plain English; no coverage ledger |
+| Constraints | Limits the implementation must respect |
+| Success Criteria | Sourced numbers (percentages, times, counts), or classified `TBD-###` placeholders |
 
-## Validation Rules
-
-- **Title**: 3-8 words, no jargon
-- **Description**: short, plain English, no tech detail
-- **Problem**: describes user pain, not the technical fix
-- **User Stories**: `As a [user], I want [goal], so [benefit]`. Each story has at least one acceptance criterion, written as a plain checkbox with no ID
-- **User Flows**: at least one. Steps are a numbered list; use Entry/Exit anchors and preserve real loops in plain English. Steps read as prose — no step IDs, no AC tags
 - **AC coverage**: every acceptance criterion is satisfied by at least one flow step. Verified before the draft is shown; reported in chat, never persisted as a section
-- **Success Criteria**: contain sourced numbers (percentages, times, counts), or classified `TBD-###` placeholders until the user supplies them
 - **TBD**: allowed in Constraints, Success Criteria numbers, and flow details that depend on later design decisions only — never in Problem, Users, or User Stories. Every `TBD-###` has a matching question attempt and impact classification
 
 ## Common Mistakes

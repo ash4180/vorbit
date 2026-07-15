@@ -1,6 +1,6 @@
 ---
 name: react-best-practices
-description: Apply when writing, reviewing, or refactoring React or Next.js code where performance patterns such as waterfall removal, bundle reduction, server rendering, data fetching, or re-render control are relevant. This is supporting guidance, not a standalone authorization to edit files. Do not trigger for non-React code, visual design work, or generic frontend questions with no React or Next.js implementation.
+description: Apply when writing, reviewing, or refactoring React or Next.js code where performance patterns such as waterfall removal, bundle reduction, server rendering, data fetching, or re-render control are relevant. For UI-facing React work load ui-patterns alongside it. This is supporting guidance, not a standalone authorization to edit files. Do not trigger for non-React code, visual design work, or generic frontend questions with no React or Next.js implementation.
 ---
 
 # React Best Practices
@@ -12,13 +12,6 @@ Read and follow `../_shared/execution-contract.md` before applying this policy.
 Performance heuristics for React and Next.js applications. Treat every rule as conditional on the repository's React/Next version, runtime, existing dependencies, and measured or clearly evidenced bottleneck.
 
 ## When to Apply
-
-Reference these guidelines when:
-- Writing new React components or Next.js pages
-- Implementing data fetching (client or server-side)
-- Reviewing code for performance issues
-- Refactoring existing React/Next.js code
-- Optimizing bundle size or load times
 
 Before applying a rule:
 
@@ -98,20 +91,4 @@ Full documentation with code examples is available in:
 - `references/react-performance-guidelines.md` - Complete guide with all patterns
 - `references/rules/` - Individual rule files organized by category
 
-To look up a specific pattern, search the rules directory:
-```
-rg -l "suspense" references/rules/
-rg -l "barrel" references/rules/
-rg -l "swr" references/rules/
-```
-
-## Rule Categories in `references/rules/`
-
-- `async-*` - Waterfall elimination patterns
-- `bundle-*` - Bundle size optimization
-- `server-*` - Server-side performance
-- `client-*` - Client-side data fetching
-- `rerender-*` - Re-render optimization
-- `rendering-*` - DOM rendering performance
-- `js-*` - JavaScript micro-optimizations
-- `advanced-*` - Advanced patterns
+To look up a specific pattern, search `references/rules/` for the relevant category.

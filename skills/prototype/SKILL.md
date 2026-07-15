@@ -1,6 +1,6 @@
 ---
 name: prototype
-description: Use when the user asks to build a working frontend prototype or UI mockup in the codebase using mock data that can later be swapped for real APIs. It inspects existing patterns, changes project files, registers mocks, and verifies the result. Do not use for Figma or Pencil-only design work, throwaway images, backend implementation, or production features that must connect to live APIs now.
+description: Use when the user asks for a working frontend prototype, or for a UI mockup with no design surface named — the deliverable is runnable code in the repo using mock data that can later be swapped for real APIs. It inspects existing patterns, changes project files, registers mocks, and verifies the result. Do not use for design-tool artifacts (Figma or Pencil skills), throwaway images, backend implementation, or production features that must connect to live APIs now.
 ---
 
 # Prototype Skill
@@ -69,11 +69,7 @@ Read and follow `_shared/mcp-tool-routing.md` (glob for `**/skills/_shared/mcp-t
 **DO THIS BEFORE WRITING ANY CODE.**
 
 **Actions**:
-1. Check `package.json` for framework:
-   - `react` → React/TSX
-   - `vue` → Vue SFC
-   - `svelte` → Svelte
-   - None → Vanilla HTML/CSS
+1. Identify the framework from `package.json`; match the project's existing framework and conventions.
 
 2. Scan codebase for patterns:
    - Where pages/routes live (src/pages/, src/routes/, app/)
@@ -150,48 +146,9 @@ Read and follow `_shared/mcp-tool-routing.md` (glob for `**/skills/_shared/mcp-t
    - Pass all data and callbacks from that boundary into child components via typed props
    - If the feature has multiple mock payloads, import them all at the same boundary; do not create per-component boundaries
 
-4. **MANDATORY**: Resolve the runtime-neutral Vorbit registry before writing:
-
-   - Use the active runtime contract/resolver for the current project and read its `storage_root` and `project_slug`; do not reconstruct the slug.
-   - Registry path: `<storage_root>/projects/<project_slug>/mock-registry.json`.
-   - If the current runtime has no resolver, use the project-local fallback `.vorbit/mock-registry.json` and report the fallback explicitly (this registry fallback is intentional and does not override the rule-loading contract's missing-resolver stop).
-   - Never hardcode `.claude/`, `.codex/`, or `.gemini/` storage.
-
-   Register mocks in the resolved registry:
-
-   The registry root is `{ "version": "1.1", "mocks": [...] }`. The snippets below are individual entries appended to `mocks`.
-
-   The following are alternatives. Register the one boundary actually used; do not create both forms for the same feature.
-
-   **For mock files:**
-   ```json
-   {
-     "feature": "[Feature name]",
-     "type": "file",
-     "path": "src/pages/Feature/mocks/data.json",
-     "endpoint": "proposed:GET /api/[resource]",
-     "createdBy": "prototype",
-     "createdAt": "[ISO timestamp]",
-     "components": ["src/pages/Feature/data-source.ts"]
-   }
-   ```
-
-   **For mock state (useState, stores, context):**
-   ```json
-   {
-     "feature": "[Feature name]",
-     "type": "state",
-     "path": "src/pages/Feature/index.tsx",
-     "location": "useState:users (line 15)",
-     "endpoint": "proposed:GET /api/[resource]",
-     "stateType": "useState",
-     "createdBy": "prototype",
-     "createdAt": "[ISO timestamp]",
-     "components": ["src/pages/Feature/index.tsx"]
-   }
-   ```
-   - Create registry file if doesn't exist
-   - Append to existing mocks array if file exists
+4. **MANDATORY**: Register every mock boundary in the Vorbit mock registry:
+   - Read `../_shared/mock-registry.md` for the schema, field semantics, registration rules, and storage-root resolution (its legacy `.vorbit/` fallback is intentional and does not override the rule-loading contract's missing-resolver stop).
+   - Prototype-specific: set `createdBy: "prototype"`; register the one boundary actually used (`type: "file"` or `type: "state"`), never both forms for the same feature.
 
 5. **MANDATORY**: The single mock boundary MUST have the replacement TODO next to its imports:
    ```tsx
@@ -237,22 +194,12 @@ Read and follow `_shared/mcp-tool-routing.md` (glob for `**/skills/_shared/mcp-t
 
 3. **Present summary to user**:
    ```
-   Created:
-   - src/pages/Feature/index.tsx
-   - src/pages/Feature/components/...
-   - src/pages/Feature/mocks/...
-
+   Created: src/pages/Feature/ (index.tsx, components/, mocks/)
    Mock data registered in [resolved Vorbit project registry path]:
    - data-source.ts (single boundary) → mocks/data.json → GET /api/...
-
-   Verified:
-   - [smoke-test command] — route render + navigation passed
-
-   Used existing components:
-   - Layout, Card, Button, Input
-
+   Verified: [smoke-test command] — route render + navigation passed
+   Used existing components: Layout, Card, Button, Input
    Next steps:
-   - Review with team
    - /vorbit:implement:epic to create issues
    - /vorbit:implement:cleanup-mocks [feature] before backend handover
    ```
@@ -267,15 +214,6 @@ Read and follow `_shared/mcp-tool-routing.md` (glob for `**/skills/_shared/mcp-t
 
 ## What is a Prototype?
 
-A prototype is:
-- A **complete page or feature** users can interact with
-- **Composition** of multiple components with clean props
-- **Mock data** that defines the API contract
-- **Reusable structure** - becomes production code
+A prototype is a **complete page or feature** users can interact with — not a single reusable component, and not throwaway demo code. Only render/navigation smoke coverage is required here; full implementation tests come later.
 
-A prototype is NOT:
-- A single reusable component (that's a component, not a prototype)
-- Throwaway demo code
-- Fully covered by implementation tests; only render/navigation smoke coverage is required here
-
-The directory layout, mock rules, and verification gates for these properties live in Phases 4-5; the Phase 5 checklist is the single completion gate.
+The directory layout, mock rules, and verification gates live in Phases 4-5; the Phase 5 checklist is the single completion gate.

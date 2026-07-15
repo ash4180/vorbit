@@ -4,17 +4,7 @@ Apply this contract before every Vorbit workflow.
 
 ## Instruction Precedence
 
-Use this authority order:
-
-1. system/developer instructions;
-2. the user's explicit request and approvals;
-3. repository instructions such as `AGENTS.md` or `CLAUDE.md`;
-4. project-scoped durable Vorbit policy;
-5. universal durable Vorbit policy;
-6. agent-specific guidance;
-7. workflow defaults.
-
-More specific guidance may refine lower levels but cannot override a higher-authority rule. File read order does not grant authority. Surface same-level contradictions instead of silently choosing the last file read.
+Below the standard system > user > repository-instructions order, Vorbit layers rank: project-scoped durable policy > universal durable policy > agent-specific guidance > workflow defaults. More specific guidance may refine lower levels but cannot override a higher-authority rule. File read order does not grant authority. Surface same-level contradictions instead of silently choosing the last file read.
 
 ## Capability and Mutation Gate
 
@@ -29,7 +19,7 @@ Do not guess unavailable tool names. A missing required capability ends as `bloc
 
 ## Source Baseline
 
-For requirements-driven work, record the source artifact ID/URL and update timestamp or revision. Carry globally unique user-story, acceptance-criterion, and flow-step IDs forward. If the source changes mid-work, stop and reconcile before continuing.
+For requirements-driven work, record the source artifact ID/URL and update timestamp or revision. Carry globally unique user-story IDs (`US-*`) forward; reference acceptance criteria by quoting their text verbatim and flow steps as `Flow N, step M`. If the source changes mid-work, stop and reconcile before continuing.
 
 ## Policy Composition
 

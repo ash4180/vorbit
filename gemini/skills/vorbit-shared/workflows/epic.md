@@ -10,16 +10,6 @@ Read and follow `../references/execution-contract.md` before starting.
 
 > **Linear connector**: Resolve the connected Linear capability per your connector preflight before the first call. Bare verb names below (`get_user`, `list_teams`, `list_issues`, etc.) refer to that connector's operations — inspect its current schema; never substitute a verb remembered from another runtime.
 
-**Key Features:**
-- Sub-issues include plain-language "Why" section
-- Each sub-issue references its implementation parent's acceptance criteria
-- Each sub-issue references related PRD flow steps
-- File paths are specified with exact locations
-- Existing code patterns and constants are identified for reuse
-- UI components reference the ui-patterns skill
-- Visual dependency tree shows implementation order by phase
-- One implementation parent per user story, with its own sub-issues and persisted order
-
 ## Step 1: Verify Linear Connection
 
 PRDs live as Linear tickets (see `$vorbit-prd`). Confirm Linear auth before fetching the source ticket: call `get_user` with `query: "me"`. On failure, tell the user to reconnect the Linear connector in Gemini CLI and stop.
@@ -97,10 +87,7 @@ Ask user if unclear: "Which team/project?"
 After Step 2 requirement baseline is locked, analyze the codebase thoroughly:
 
 ### 4.1 Find Similar Features
-```bash
-# Build search terms from PRD (story titles, nouns in the criteria, screens named in the flows)
-rg -n "<term1>|<term2>|<term3>" .
-```
+Search the codebase using terms from the PRD (story titles, nouns in the criteria, screens named in the flows).
 - Note file structure patterns
 - Identify naming conventions
 - Find test patterns
@@ -128,10 +115,7 @@ Use a **pattern-first, paths-second** strategy:
    - Include confidence and any search gaps (what might be missing)
 
 ### 4.3 Discover Constants
-```bash
-# Find likely constant/config files
-rg --files | rg '(^|/)(constants|config)(\.|/|$)' | head -20
-```
+Locate the project's constants/config files.
 - List relevant constants for this feature
 - Identify where new constants should go
 - Reuse constants for shared domain values and policy limits; do not create constants for obvious one-off literals
@@ -228,18 +212,7 @@ For each User Story, create:
 
 ### Sub-issue Creation Checklist
 
-For EACH sub-issue, include all these sections:
-
-| Section | Required | Purpose |
-|---------|----------|---------|
-| **Why This Is Needed** | ✅ | What it does + why it matters |
-| **Related Parent AC** | ✅ | Copy exact PRD ACs from the implementation parent |
-| **Related Flow Steps** | ✅ | Copy the relevant steps as `Flow N, step M` + the screens or APIs they touch |
-| **Reuse & Patterns** | ✅ | Existing code, utilities, constants |
-| **File Changes** | ✅ | Exact file paths with action (CREATE/MODIFY) |
-| **Mock Data** | If UI work | Expected mocks and cleanup note |
-| **Acceptance Criteria** | ✅ | Sub-issue specific criteria |
-| **Test Criteria** | ✅ | TDD requirements |
+Every sub-issue must contain every section shown in the Sub-issue Description Template below (Mock Data only for UI work). No section may be omitted or left as a placeholder.
 
 ### Mapping Parent AC to Sub-issues
 
@@ -314,12 +287,7 @@ Next: choose one implementation parent and start its Phase 1 using `$vorbit-impl
 
 ## Implementation Parent Title Format
 
-**Transform the User Story Goal into a clear, human-readable epic title.**
-
-| User Story | Epic Title |
-| :--- | :--- |
-| "As a user, I want to **login**..." | User Login |
-| "As an admin, I want to **manage users**..." | Admin User Management |
+Transform the user story goal into a clear, human-readable epic title (e.g. "As a user, I want to **login**..." → "User Login").
 
 ## Issue Structure
 
@@ -361,7 +329,7 @@ Phase 2 (depends on Phase 1)
 - [ISSUE-ID]: [Issue title]
 ```
 
-*The `## Implementation Order` section is appended per parent in Step 8.5, after that parent's sub-issues exist and their IDs are known.*
+*The `## Implementation Order` section is appended per parent in Step 8 item 6, after that parent's sub-issues exist and their IDs are known.*
 
 ### Sub-issue (Child)
 
@@ -447,18 +415,6 @@ Sub-issue criteria are plain checkboxes. The sub-issue is already a Linear ticke
 - P1 (Urgent): Core / Blocker
 - P2 (High): Important
 - P3 (Normal): Standard
-
----
-
-## TDD Requirement
-
-**CRITICAL: Every issue defines honest verification; behavior changes use TDD when the repository has a runnable harness.**
-
-Every issue (epic and sub-issue) MUST include `## Test Criteria` section:
-- Behavior tests are written first when a runnable harness exists
-- When no honest automated surface exists, the issue must define a real approved validation command or observable check
-- Implementation is only "done" when all tests pass
-- No issue is complete without its specified verification evidence
 
 ---
 

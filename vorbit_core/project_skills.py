@@ -126,6 +126,10 @@ def _rules(agent: dict[str, str]) -> list[tuple[re.Pattern[str], object]]:
             "../references/execution-contract.md",
         ),
         lit(
+            "../_shared/mock-registry.md",
+            "../references/mock-registry.md",
+        ),
+        lit(
             'save using the "Save Content" section in `_shared/mcp-tool-routing.md` and pass',
             "save via the connected platform's current content-creation tools "
             "(inspect schemas first) and pass",
@@ -273,14 +277,17 @@ def _workflow_path(agent_key: str, canonical_name: str) -> Path:
     )
 
 
-def _contract_target(agent_key: str) -> Path:
+MIRRORED_SHARED: tuple[str, ...] = ("execution-contract.md", "mock-registry.md")
+
+
+def _shared_target(agent_key: str, filename: str) -> Path:
     return (
         REPO_ROOT
         / agent_key
         / "skills"
         / "vorbit-shared"
         / "references"
-        / "execution-contract.md"
+        / filename
     )
 
 
@@ -310,12 +317,13 @@ def _dirs_equal(a: Path, b: Path) -> bool:
 
 
 def write_all() -> None:
-    contract_source = CANONICAL_SKILLS / "_shared" / "execution-contract.md"
     for agent_key in AGENTS:
         for canonical_name in PROJECTED_SKILLS:
             path = _workflow_path(agent_key, canonical_name)
             path.write_text(project_workflow(canonical_name, agent_key))
-        _contract_target(agent_key).write_text(contract_source.read_text())
+        for filename in MIRRORED_SHARED:
+            source = CANONICAL_SKILLS / "_shared" / filename
+            _shared_target(agent_key, filename).write_text(source.read_text())
         for source, target in _iter_asset_pairs(agent_key):
             if target.exists():
                 shutil.rmtree(target)
@@ -324,16 +332,17 @@ def write_all() -> None:
 
 def check_all() -> list[str]:
     stale: list[str] = []
-    contract_source = CANONICAL_SKILLS / "_shared" / "execution-contract.md"
     for agent_key in AGENTS:
         for canonical_name in PROJECTED_SKILLS:
             path = _workflow_path(agent_key, canonical_name)
             expected = project_workflow(canonical_name, agent_key)
             if not path.is_file() or path.read_text() != expected:
                 stale.append(str(path.relative_to(REPO_ROOT)))
-        target = _contract_target(agent_key)
-        if not target.is_file() or target.read_text() != contract_source.read_text():
-            stale.append(str(target.relative_to(REPO_ROOT)))
+        for filename in MIRRORED_SHARED:
+            source = CANONICAL_SKILLS / "_shared" / filename
+            target = _shared_target(agent_key, filename)
+            if not target.is_file() or target.read_text() != source.read_text():
+                stale.append(str(target.relative_to(REPO_ROOT)))
         for source, asset_target in _iter_asset_pairs(agent_key):
             if not _dirs_equal(source, asset_target):
                 stale.append(str(asset_target.relative_to(REPO_ROOT)))

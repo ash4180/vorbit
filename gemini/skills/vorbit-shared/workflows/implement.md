@@ -46,11 +46,14 @@ For Linear issues:
 
 **CRITICAL: If issue contains these sections, use them:**
 
-### Check "Related Epic Acceptance Criteria"
+### Check "Related Parent Acceptance Criteria"
 If present:
-1. Read the parent epic's ACs listed in the issue
+1. Read the implementation parent's acceptance criteria listed in the issue
 2. These are your PRIMARY success criteria
-3. **Rule:** Task is NOT done until ALL listed epic ACs are satisfied
+3. **Rule:** Task is NOT done until ALL listed parent criteria are satisfied
+
+### Check "Test Criteria"
+If present, this is the test contract: write these tests first (TDD) and treat the task as incomplete until each listed check passes or has an honest recorded blocker.
 
 ### Check "Reuse & Patterns"
 If present:
@@ -74,61 +77,16 @@ If issue involves UI components:
 
 ## Step 4: Learn Codebase Style
 
-**CRITICAL: Before writing ANY code:**
+Before writing code, study similar features and call sites: import style, naming conventions, file structure, test patterns. **Consistency > Novelty** — match the team's existing style.
 
-1. **Find similar code** - Use `rg` to find similar features and call sites
-2. **Study patterns** - Import style, naming conventions, file structure
-3. **Test patterns** - How does project structure tests?
-4. **Note 2-3 example files** - Use as style reference
+## Step 4.5: i18n/Localization Rules
 
-**Rule**: Consistency > Novelty. This ensures code matches team's style.
+Detect whether the project uses any localization system (libraries, locale files, translation-function usage). If it does:
 
-## Step 4.5: Detect i18n/Localization Requirements
-
-**Check if project uses ANY localization system:**
-
-### Detection Strategy (framework-agnostic)
-
-1. **Search for common i18n patterns**: check `package.json` for any i18n library (`i18n`, `intl`, `locale`, `translation`, `l10n`, `gettext`, `fluent`); look for locale/translation directories (`locales/`, `i18n/`, `translations/`, `messages/`, `lang/`) and translation files (`*.po`, `*.pot`, `*.mo`, `*.xliff`, `*.arb`, `en.json`, `en-US.json`)
-
-2. **Check config files** for i18n setup:
-   - `next.config.*` (Next.js)
-   - `nuxt.config.*` (Nuxt)
-   - `angular.json` (Angular)
-   - `vue.config.*` or `vite.config.*` (Vue)
-   - `.env*` files for locale settings
-   - Any `i18n.*` config file
-
-3. **Search source for translation function usage** — see the framework table below for the functions to grep
-
-### If i18n detected:
-
-**Document the setup (note these for later):**
-- **Translation file location**: Where are locale files stored?
-- **Supported locales**: What languages exist? (e.g., `en`, `zh`, `es`)
-- **Translation function**: How to use it? (varies by framework)
-- **Key naming convention**: What pattern does project use?
-
-### i18n Rules (universal):
-- **NO hardcoded user-facing strings** - All UI text must use the project's translation system
-- **ALL locales updated** - New keys must be added to EVERY locale file
-- **Match existing patterns** - Follow the project's key naming convention
-- **Handle plurals/interpolation** - Use the framework's syntax for dynamic content
-
-### Common Frameworks Reference
-
-| Framework | Common Library | Translation Function |
-|-----------|---------------|---------------------|
-| React/Next.js | `next-intl`, `react-intl`, `i18next` | `t()`, `useTranslations()`, `formatMessage()` |
-| Vue/Nuxt | `vue-i18n`, `@nuxtjs/i18n` | `$t()`, `t()` |
-| Angular | `@angular/localize`, `ngx-translate` | `$localize`, `translate.instant()` |
-| Svelte | `svelte-i18n` | `$_()`, `$t()` |
-| Flutter | `flutter_localizations`, `intl` | `AppLocalizations.of(context)` |
-| Python | `gettext`, `babel` | `_()`, `gettext()` |
-| Go | `go-i18n` | `localizer.Localize()` |
-| Ruby/Rails | `i18n` gem | `t()`, `I18n.t()` |
-
-**Rule**: If the project has ANY localization setup, missing translations = broken UX. This is a blocker.
+- **NO hardcoded user-facing strings** — all UI text goes through the project's translation system
+- **ALL locales updated** — new keys must be added to EVERY locale file
+- **Match existing patterns** — follow the project's key naming convention and plural/interpolation syntax
+- **Rule**: If the project has ANY localization setup, missing translations = broken UX. This is a blocker.
 
 ## Step 5: Handle Parent Issues
 
@@ -147,40 +105,7 @@ For each task, follow Red/Green/Refactor:
 - **Refactor**: Clean up, check coverage on new code, ensure no regressions. Remove dead code and unregistered placeholder TODOs (registered prototype mocks may remain until backend integration).
 
 ### If Creating Mock Data During Implementation
-**Register mock in the resolved project registry** (`<storage_root>/projects/<project_slug>/mock-registry.json`; fallback `.vorbit/mock-registry.json`):
-
-The registry root is `{ "version": "1.1", "mocks": [...] }`. The snippets below are individual entries appended to `mocks`.
-
-**For mock files:**
-```json
-{
-  "feature": "[Feature name]",
-  "type": "file",
-  "path": "src/path/to/mock.json",
-  "endpoint": "proposed:GET /api/[resource]",
-  "createdBy": "implement",
-  "createdAt": "[ISO timestamp]",
-  "components": ["src/path/to/component.tsx"]
-}
-```
-
-**For mock state (useState, stores, context):**
-```json
-{
-  "feature": "[Feature name]",
-  "type": "state",
-  "path": "src/path/to/component.tsx",
-  "location": "useState:items (line 23)",
-  "endpoint": "proposed:GET /api/[resource]",
-  "stateType": "useState | zustand | redux | context",
-  "createdBy": "implement",
-  "createdAt": "[ISO timestamp]",
-  "components": ["src/path/to/component.tsx"]
-}
-```
-- Append to existing mocks array
-- Every temporary application mock must be registered here before the task is done (test fixtures are excluded)
-- This enables cleanup before backend handover
+Register every temporary application mock in the project registry before the task is done (test fixtures are excluded) — this enables cleanup before backend handover. Read `../references/mock-registry.md` for the path resolution, schema, and field semantics; entries created here use `"createdBy": "implement"`.
 
 ### Task Complete Criteria
 Mark done only when every gate defined in Steps 3.5-6 above is satisfied.

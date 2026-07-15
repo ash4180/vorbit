@@ -8,11 +8,11 @@ Read and follow `../references/execution-contract.md` before starting.
 
 ## Step 1: Resolve Requirements
 
-Preflight required connectors: confirm each needed connector is configured in Codex and inspect its current operation/parameter schemas; never guess tool names only when the user supplied an external artifact. Linear is the canonical PRD source; pasted acceptance criteria and local descriptions remain valid read-only inputs.
+If the user supplied an external artifact, preflight required connectors: confirm each needed connector is configured in Codex and inspect its current operation/parameter schemas; never guess tool names. Linear is the canonical PRD source; pasted acceptance criteria and local descriptions remain valid read-only inputs.
 
 ## Step 2: Determine Context
 
-1. **IF Linear issue ID**: Fetch issue and its acceptance criteria
+1. **IF Linear issue ID**: Fetch issue and its acceptance criteria. If the issue carries a `## Test Criteria` section, it is the authoritative test contract — validate each entry alongside the acceptance criteria
 2. **IF description**: Use explicit criteria; otherwise propose a checklist and label it as proposed
 3. **IF no args**: Ask what to validate
 
@@ -20,13 +20,7 @@ Map every acceptance criterion to an observable check before running tests. Enum
 
 ## Step 3: Run Tests
 
-Detect and run project test suite:
-- Node: `npm test` or `yarn test`
-- Python: `pytest`
-- Go: `go test ./...`
-- Rust: `cargo test`
-
-Record every command, exit status, and material output.
+Detect and run the project's test suite. Record every command, exit status, and material output.
 
 ## Step 4: Validate Acceptance Criteria
 
@@ -72,18 +66,9 @@ If validating a Linear issue:
 
 # Verification Schema
 
-## Verification Checklist
+A test failure is evidence for a FAIL result; continue independent safe checks and do not fix code in verification mode.
 
-### 1. Automated Tests
-- Run the project's test suite (Node, Python, Go, etc.)
-- A test failure is evidence for a FAIL result; continue independent safe checks and do not fix code in verification mode
-
-### 2. Acceptance Criteria (AC)
-- Retrieve AC from the Issue, PRD, or Request
-- Check each criterion explicitly
-- Output: `[PASS] Criterion 1` or `[FAIL] Criterion 2`
-
-### 3. Code Hygiene
+## Code Hygiene
 Scan for "Leftovers":
 - [ ] `console.log` / debug prints
 - [ ] Commented-out blocks of code

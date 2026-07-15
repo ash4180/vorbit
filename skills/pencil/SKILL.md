@@ -1,6 +1,6 @@
 ---
 name: pencil
-description: Use when the user explicitly asks to configure Pencil for a project, sync codebase design tokens or components to Pencil, refresh a Pencil library, or start a Pencil design system from a style guide. It requires an active Pencil canvas, writes variables and reusable components, and updates project Pencil rules. Do not use for generic frontend coding, Figma work, or image-only mockups.
+description: Use when the user explicitly asks to configure Pencil for a project, sync codebase design tokens or components to Pencil, refresh a Pencil library, start a Pencil design system from a style guide, or prepare the canvas before drawing Pencil mockups. It requires an active Pencil canvas, writes variables and reusable components, and updates project Pencil rules. Do not use for generic frontend coding, Figma work, or image-only mockups.
 ---
 
 # Pencil Skill
@@ -103,36 +103,9 @@ Read the detection tables at `references/detection.md` relative to this skill.
 
 6. Present findings and **use AskUserQuestion** to confirm:
 
-   **Path A (codebase detected) — show full stack:**
-   ```
-   Stack detected:
-     Framework:     React Native
-     Styling:       RN StyleSheet + Theme Object
-     Components:    Custom (14 found)
-     Icons:         Lucide
-     Platform:      iOS + Android
-     Screens:       iPhone (390×844), Android (412×915), Android compact (360×780)
-     Page layout:   Pattern A — Header + Scroll + Bottom Nav
+   **Path A (codebase detected)** — the preview must show: Framework, Styling, Component library (count found), Icons, Platform, Screens (names + dimensions), Page layout pattern. End by asking: correct, or adjust anything?
 
-   Is this correct? Adjust anything?
-   ```
-
-   **Path B (no codebase) — show platform + selected design system:**
-   ```
-   Platform:      iOS + Android
-   Screens:       iPhone 16 Pro (393×852), Pixel 8 (412×924)
-   Page layout:   Pattern A — Header + Scroll + Bottom Nav
-   Design system: [style guide name] ([key aesthetic summary])
-
-   This will:
-     1. Sync design system tokens as Pencil variables
-     2. Create Screen Shells for both devices
-     3. Build bone demo with the layout above
-
-   Is this correct? Adjust screens, layout, or style?
-   ```
-
-   Path B omits Framework, Styling, Components, Icons — those only matter when a codebase exists. The design system comes from Pencil's style guide, not code.
+   **Path B (no codebase)** — the preview must show: Platform, Screens (names + dimensions), Page layout pattern, Design system (style guide name + key aesthetic summary), plus the three actions that follow (sync tokens as variables, create Screen Shells, build bone demo). End by asking: correct, or adjust screens/layout/style? Omit Framework/Styling/Components/Icons — those only matter when a codebase exists; the design system comes from Pencil's style guide, not code.
 
 The user can adjust screens, page layout pattern, or style.
 
@@ -189,36 +162,12 @@ Follow the "Component Inventory Scan" section in `detection.md` `[Skill ref]`:
 5. **Apply library-specific extraction** (Shadcn/cva, Radix compound, MUI wrapper, Custom)
 6. **Default to the ~30 most-used components**, prioritizing `ui/` and `common/`; inventory more only when the design system genuinely needs them.
 
-**Combined sync preview (Path A):**
-
-   **Path A (codebase detected):**
-   ```
-   Ready to sync to Pencil canvas:
-
-   Platform: iOS + Android
-     Screens: iPhone 16 Pro (393×852), iPhone SE (375×667), Pixel 8 (412×924)
-
-   Tokens (23):
-     Colors:     12 (primary, secondary, background, foreground, ...)
-     Spacing:    8 (0, 1, 2, 3, 4, 6, 8, 12)
-     Typography: 3 families, 7 sizes
-     Borders:    4 radii
-     Shadows:    3 levels
-
-   Components (14):
-     Button       6 variants, 4 sizes
-     Card         5 sub-components
-     Dialog       compound (7 parts)
-     Input        3 required props
-     ...
-
-   This will:
-     1. Sync tokens as Pencil variables
-     2. Build reusable components on canvas (top 10)
-     3. Write project rules with screen presets to .claude/rules/pencil.md
-
-   Proceed?
-   ```
+**Combined sync preview (Path A)** — the preview must show:
+- Platform + screens (names, dimensions)
+- Token counts per category (colors, spacing, typography, borders, shadows) with key names
+- Component list: one line each with name + variant/prop summary
+- The three actions that follow: sync tokens as Pencil variables, build reusable components on canvas (top 10), write project rules with screen presets to `.claude/rules/pencil.md`
+- End by asking: Proceed?
 
    **Path B (no codebase) — skip this combined sync preview.** There are no code tokens or components to inventory; the style guide and platform/screen summary were already approved in Phase 1, so continue to Phase 4.
 
@@ -363,26 +312,12 @@ Screen Shell [device-name] (reusable, vertical, clip: true)
 - For Web: no safe areas needed — just use the viewport dimensions.
 - For iPad: top: 24pt (non-M4) or 59pt (M4 with Dynamic Island), bottom: 20pt (Face ID models).
 
-**Build example** (iOS, iPhone standard 390×844, Dynamic Island):
+**Build example** (iOS, iPhone standard 390×844, Dynamic Island — adapt bar heights per the safe area values above; Web shells have no status/nav bars):
 ```
 I(parent, {type: "frame", reusable: true, name: "Screen Shell - iPhone", width: 390, height: 844, layout: "vertical", fill: "$background", clip: true})
   I(shell, {type: "frame", name: "status-bar", width: "fill_container", height: 59, fill: "$background"})
   I(shell, {type: "frame", name: "content", width: "fill_container", height: "fill_container", layout: "vertical", placeholder: true})
   I(shell, {type: "frame", name: "home-indicator", width: "fill_container", height: 34, fill: "$background"})
-```
-
-**Build example** (Android, flagship 412×915, gesture nav):
-```
-I(parent, {type: "frame", reusable: true, name: "Screen Shell - Android", width: 412, height: 915, layout: "vertical", fill: "$background", clip: true})
-  I(shell, {type: "frame", name: "status-bar", width: "fill_container", height: 24, fill: "$background"})
-  I(shell, {type: "frame", name: "content", width: "fill_container", height: "fill_container", layout: "vertical", placeholder: true})
-  I(shell, {type: "frame", name: "nav-bar", width: "fill_container", height: 16, fill: "$background"})
-```
-
-**Build example** (Web, desktop 1440×900):
-```
-I(parent, {type: "frame", reusable: true, name: "Screen Shell - Desktop", width: 1440, height: 900, layout: "vertical", fill: "$background", clip: true})
-  I(shell, {type: "frame", name: "content", width: "fill_container", height: "fill_container", layout: "vertical", placeholder: true})
 ```
 
 **Usage in mockups — always build the Screen Bone first:**
@@ -412,8 +347,7 @@ Key: the content slot uses `layout: "none"` (stacking mode) so bone and nav-over
 **For screens without floating elements (Pattern B-simple, C, D):**
 No stacking needed — leave the content slot as `layout: "vertical"` (or `"horizontal"` for sidebar layouts) and build the bone directly.
 
-**CRITICAL — Review layout model and syntax before building:**
-Before writing ANY `batch_design` call, review the checklist at the bottom of `references/layout-model.md`. Key rules:
+**CRITICAL — key rules before any `batch_design` call** (`references/layout-model.md` holds the full detail behind each):
 - Text/icon nodes ignore `width`/`height` — wrap in a frame when you need sizing control (see "When to Wrap")
 - `fill_container` only works inside flex parents — not inside `layout: "none"` (see "Flexbox" section)
 - Padding: `padding: [t,r,b,l]` — NOT `paddingTop`/`paddingLeft` (silently dropped)
@@ -424,13 +358,7 @@ Before writing ANY `batch_design` call, review the checklist at the bottom of `r
 - Safe areas: All interactive content within shell's content slot, with platform-appropriate margins (16px+ on mobile)
 - Always call `get_guidelines("design-system")` first — it has the authoritative Pencil schema with examples.
 
-**Batch strategy** — prefer batches of roughly 25 operations or fewer (a failed op in a huge batch is hard to isolate):
-- Batch 1: Library frame (vertical layout) + Screen Shells (2-3 shells, ~12 ops)
-- Batch 2: Section label + simple component variants (e.g., Button/Primary, Button/Secondary, Button/Outline)
-- Batch 3: Section label + badge/tag variants (e.g., SeverityBadge with different severity colors)
-- Batch 4: Section label + compound components (the project's main cards/rows)
-- Batch 5: Navigation components (tab bar, header, search bar)
-- After each batch: continue to next (no screenshot needed mid-build)
+**Batch strategy** — prefer batches of roughly 25 operations or fewer (a failed op in a huge batch is hard to isolate). Split the build into as many batches as needed; continue directly from one batch to the next (no screenshot needed mid-build).
 
 **After all batches:** Take a screenshot of the full component library frame to verify it looks correct. Each section should be visually labeled and organized.
 

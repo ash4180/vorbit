@@ -46,7 +46,7 @@ Do not guess unavailable tool names. A missing required capability ends as `bloc
 ## Source, Policies, and Result
 
 - For requirements-driven work, carry the source artifact ID/URL and update timestamp or revision. If it changes mid-work, stop and reconcile.
-- Carry globally unique `US-*`, `US-*.AC-*`, and `F*-S*` identifiers through planning, implementation, and verification.
+- Carry globally unique `US-*` story identifiers through planning, implementation, and verification; quote acceptance criteria verbatim and address flow steps as `Flow N, step M`.
 - Treat `vorbit-ux`, `vorbit-ui-patterns`, and `vorbit-react-best-practices` as conditional supporting policies. Repository conventions win over framework examples.
 - Verify observable behavior with project-native checks. Report commands run, passes, failures, and unverified areas.
 - End with one status: `completed`, `needs_input`, `needs_backend`, `blocked`, `blocked_missing_capability`, `blocked_missing_runtime`, `blocked_rule_conflict`, `failed`, or `canceled`.

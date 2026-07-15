@@ -20,30 +20,12 @@ Use the linked Linear PRD/specification ticket when available. Otherwise use `do
 
 ## Step 2: Load Mock Registry
 
-**Check for mock registry file:**
-```
-<storage_root>/projects/<project_slug>/mock-registry.json
-```
+Read `../references/mock-registry.md` for the registry schema, field semantics, and storage-root resolution, then load the registry from the resolved path.
 
-Resolve these values through the current runtime. If this legacy Claude surface has no resolver, use `.vorbit/mock-registry.json` and report the fallback.
-
-**Registry format:**
-```json
-{
-  "version": "1.1",
-  "mocks": [
-    {
-      "feature": "user-profile",
-      "type": "file",
-      "path": "src/pages/UserProfile/mocks/user.json",
-      "endpoint": "proposed:GET /api/users/:id",
-      "createdBy": "prototype",
-      "createdAt": "2024-01-15T10:00:00Z",
-      "components": ["src/pages/UserProfile/data-source.ts"]
-    }
-  ]
-}
-```
+Cleanup-specific reading notes:
+- Iterate `mocks[]` grouped by `feature`; `type` determines removal mechanics — `path` for `file` entries, `path` plus `location`/`stateType` for `state` entries.
+- An `endpoint` still carrying the `proposed:` prefix is an unconfirmed inference — resolve it in the contract before treating it as fact.
+- An entry is removable only after Step 6 passes: real integration green and every path in `components` verified free of mock imports.
 
 **IF registry exists:**
 - Load and display registered mocks grouped by feature
@@ -137,63 +119,6 @@ Report:
 
 ---
 
-# Mock Registry Schema
-
-## Registry File Location
-```
-<storage_root>/projects/<project_slug>/mock-registry.json
-```
-
-Legacy fallback: `.vorbit/mock-registry.json`.
-
-## Registry Format
-```json
-{
-  "version": "1.1",
-  "mocks": [
-    {
-      "feature": "string - feature/epic name",
-      "type": "file | state",
-      "path": "string - relative path to file",
-      "location": "string - for state: line number or function name",
-      "endpoint": "string - confirmed endpoint, or proposed:<method path> until approved",
-      "stateType": "useState | zustand | redux | context (only for type: state)",
-      "createdBy": "string - 'prototype' | 'implement'",
-      "createdAt": "string - ISO 8601 timestamp",
-      "components": ["string - paths to components using this mock"]
-    }
-  ]
-}
-```
-
-## Registration Rules
-
-**When to register (in prototype/implement skills):**
-
-### Mock Files
-- Any file created in a `mocks/` folder
-- Any JSON file with mock data shape
-- Any file with `// TODO: Replace with real API` comment
-
-### Mock State
-- `useState` with hardcoded array/object data (not primitives)
-- Zustand/Redux store initial state with mock data
-- Context providers with mock values
-- Any state marked with `// TODO: Replace with real API`
-
-**What to capture:**
-- Feature name (from page/component folder)
-- Type: `file` or `state`
-- File path
-- Location (for state: line number, hook name, or store name)
-- Confirmed endpoint, or an inferred route labeled with the `proposed:` prefix
-- State type (for state: useState, zustand, redux, context)
-- Which skill created it
-- Timestamp
-- Components that use it
-
----
-
 # API Contract Template
 
 ```markdown
@@ -252,12 +177,8 @@ Legacy fallback: `.vorbit/mock-registry.json`.
 
 ## Implementation Notes
 
-- Response shapes are based on frontend UI requirements
-- All fields shown are actively used by frontend components
-- All field names are case-sensitive
-- Frontend expects exact shapes documented above
-- Dates should be ISO 8601 format
-- ID types and nullability must match the approved contract exactly
+- All fields shown are actively used by frontend components — the documented shapes are exact
+- Dates are ISO 8601; ID types and nullability must match the approved contract exactly
 
 ## Questions for Backend
 [Any unclear requirements or decisions needed]

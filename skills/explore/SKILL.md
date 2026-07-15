@@ -37,36 +37,7 @@ After gathering context:
 
 ## Step 4: Draft in Chat
 
-**Show the complete exploration document in chat for review:**
-
-```markdown
-# [Topic] - Exploration
-
-## Problem Statement
-[One sentence identifying root cause]
-
-## Context
-[Summary of insights from questions]
-
-## Options
-
-### Option 1: [Name]
-- **Description**: ...
-- **Pros**: ...
-- **Cons**: ...
-- **Effort**: Low/Medium/High
-- **Risk**: Low/Medium/High
-
-### Option 2: [Name]
-...
-
-## Recommendation
-[Which option and why, addressing constraints]
-
-## PRD Handoff
-- Confirmed decisions: [facts the user explicitly chose]
-- Unresolved decisions: [questions to clarify in PRD; not requirements yet]
-```
+**Show the complete exploration document in chat for review**, using the Template in the schema section below.
 
 **After showing draft, ask:** "Does this look good? Ready to save?"
 
@@ -90,34 +61,16 @@ An exploration document is a decision input, not a PRD source of truth. Do not l
 
 # Explore Schema & Validation
 
-## Required Sections
-
-| Section | Required | Rules |
-|---------|----------|-------|
-| Context Summary | Yes | Key insights from ALL question answers |
-| Problem Statement | Yes | One sentence, root cause focus |
-| Options | Yes | 2-3 approaches with pros/cons |
-| Recommendation | Yes | Which option and why |
-| PRD Handoff | Yes | Separate confirmed decisions from unresolved questions |
-
-## Options Format
-
-Each option must have:
-- **Name**: Short descriptive name
-- **How**: One sentence approach
-- **Pros**: 2-3 benefits
-- **Cons**: 2-3 drawbacks
-- **Effort**: Low / Medium / High
-- **Risk**: Low / Medium / High
-
 ## Validation Rules
 
+- All Template sections present: Context Summary, Problem Statement, Options, Recommendation, PRD Handoff
 - Context resolves every PRD-blocking unknown or lists it as an unresolved decision
 - Problem identifies root cause, not symptoms
-- Each option has concrete approach (not vague)
+- 2-3 options, each with a concrete approach (not vague) and 2-3 pros/cons
 - Effort and risk honestly assessed
 - No option obviously superior (otherwise why explore?)
 - Recommendation addresses constraints from context
+- PRD Handoff separates confirmed decisions from unresolved questions
 
 ## Template
 

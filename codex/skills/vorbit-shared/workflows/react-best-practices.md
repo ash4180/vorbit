@@ -12,13 +12,6 @@ Performance heuristics for React and Next.js applications. Treat every rule as c
 
 ## When to Apply
 
-Reference these guidelines when:
-- Writing new React components or Next.js pages
-- Implementing data fetching (client or server-side)
-- Reviewing code for performance issues
-- Refactoring existing React/Next.js code
-- Optimizing bundle size or load times
-
 Before applying a rule:
 
 1. inspect the framework/runtime version and existing data/cache libraries;
@@ -97,20 +90,4 @@ Full documentation with code examples is available in:
 - `references/react-performance-guidelines.md` - Complete guide with all patterns
 - `references/rules/` - Individual rule files organized by category
 
-To look up a specific pattern, search the rules directory:
-```
-rg -l "suspense" references/rules/
-rg -l "barrel" references/rules/
-rg -l "swr" references/rules/
-```
-
-## Rule Categories in `references/rules/`
-
-- `async-*` - Waterfall elimination patterns
-- `bundle-*` - Bundle size optimization
-- `server-*` - Server-side performance
-- `client-*` - Client-side data fetching
-- `rerender-*` - Re-render optimization
-- `rendering-*` - DOM rendering performance
-- `js-*` - JavaScript micro-optimizations
-- `advanced-*` - Advanced patterns
+To look up a specific pattern, search `references/rules/` for the relevant category.

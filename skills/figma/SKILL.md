@@ -1,6 +1,6 @@
 ---
 name: figma
-description: Use when the requested deliverable is a Figma design-system sync, component or variable update, mockup, or front-end-ready screen derived from code, a PRD, or a journey. It requires a working Figma connection, checks linked libraries first, confirms plans before writing, and modifies the target Figma file. Do not trigger merely because a Figma link is reference input to implementation, prototyping, or Webflow work.
+description: Use when the requested deliverable is a Figma design-system sync, component or variable update, a mockup explicitly targeted at Figma, or a front-end-ready Figma screen derived from code, a PRD, or a journey. It requires a working Figma connection, checks linked libraries first, confirms plans before writing, and modifies the target Figma file. Do not trigger merely because a Figma link is reference input, or for a mockup request that names no design surface — that routes to prototype.
 ---
 
 # Figma Skill
@@ -18,12 +18,7 @@ Read and follow `../_shared/execution-contract.md` before starting.
 
 ## Phase 0: Verify Figma Connection
 
-Read and follow `_shared/mcp-tool-routing.md` (glob for `**/skills/_shared/mcp-tool-routing.md`).
-
-1. Run `ToolSearch` for `"figma"` to check if Figma MCP tools are available.
-2. **IF no Figma tools found:** "No Figma connection found. Run `/mcp` to connect, then retry." → **STOP**
-3. Verify connection with a lightweight Figma read operation such as file/page metadata.
-4. **IF verification fails:** "Figma connection expired. Run `/mcp` to reconnect, then retry." → **STOP**
+Read and follow `_shared/mcp-tool-routing.md` (glob for `**/skills/_shared/mcp-tool-routing.md`). Resolve the Figma connector before any write; if discovery or verification fails, tell the user to run `/mcp` and stop.
 
 ## Phase 1: Discovery
 
@@ -68,8 +63,7 @@ Before drawing, produce a page inventory:
 | Data needed | API/model data shown on the page |
 | States | Default, loading, empty, error, disabled, permission denied, success |
 
-Use shadcn-friendly implementation boundaries where applicable:
-Button, Input, Form, Card, Dialog, Sheet, Tabs, Table, Dropdown, Badge, Toast, Accordion, Checkbox, RadioGroup, Select, Switch, Tooltip.
+Use standard shadcn components as implementation boundaries where applicable.
 
 Present the inventory and **use AskUserQuestion** to confirm before mapping design-system assets.
 

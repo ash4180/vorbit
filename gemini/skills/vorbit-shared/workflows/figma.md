@@ -15,12 +15,7 @@ Read and follow `../references/execution-contract.md` before starting.
 
 ## Phase 0: Verify Figma Connection
 
-Preflight required connectors: confirm each needed connector is configured in Gemini CLI and inspect its current operation/parameter schemas; never guess tool names.
-
-1. Check your configured connectors for `"figma"` to check if Figma MCP tools are available.
-2. **IF no Figma tools found:** "No Figma connection found. Configure the connector in Gemini CLI, then retry." → **STOP**
-3. Verify connection with a lightweight Figma read operation such as file/page metadata.
-4. **IF verification fails:** "Figma connection expired. Reconnect the connector in Gemini CLI, then retry." → **STOP**
+Preflight required connectors: confirm each needed connector is configured in Gemini CLI and inspect its current operation/parameter schemas; never guess tool names. Resolve the Figma connector before any write; if discovery or verification fails, tell the user to run your connector settings and stop.
 
 ## Phase 1: Discovery
 
@@ -65,8 +60,7 @@ Before drawing, produce a page inventory:
 | Data needed | API/model data shown on the page |
 | States | Default, loading, empty, error, disabled, permission denied, success |
 
-Use shadcn-friendly implementation boundaries where applicable:
-Button, Input, Form, Card, Dialog, Sheet, Tabs, Table, Dropdown, Badge, Toast, Accordion, Checkbox, RadioGroup, Select, Switch, Tooltip.
+Use standard shadcn components as implementation boundaries where applicable.
 
 Present the inventory and **use plain-text chat questions** to confirm before mapping design-system assets.
 

@@ -268,13 +268,20 @@ def test_loop_workflows_define_inactive_human_input_state():
 
 
 def test_mock_registry_guidance_labels_unapproved_endpoints():
+    # The registry contract lives in ONE canonical shared doc; the three
+    # registry-using skills must point at it instead of inlining copies.
+    shared_doc = CANONICAL_SKILLS / "_shared" / "mock-registry.md"
+    content = shared_doc.read_text()
+    assert "proposed:" in content, shared_doc
+    assert '"version": "1.1"' in content, shared_doc
+    assert '"version": "1.0"' not in content, shared_doc
+
     registry_skills = [
         CANONICAL_SKILLS / "implement" / "SKILL.md",
         CANONICAL_SKILLS / "prototype" / "SKILL.md",
         CANONICAL_SKILLS / "implement-cleanup-mocks" / "SKILL.md",
     ]
     for skill in registry_skills:
-        content = skill.read_text()
-        assert "proposed:" in content, skill
-        assert '"version": "1.1"' in content, skill
-        assert '"version": "1.0"' not in content, skill
+        skill_text = skill.read_text()
+        assert "_shared/mock-registry.md" in skill_text, skill
+        assert '"version": "1.0"' not in skill_text, skill

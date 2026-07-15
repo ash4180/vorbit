@@ -38,30 +38,20 @@ Do not finalize acceptance criteria without an owning user story. If the caller 
 
 ### Step 1: Load Question Matrix
 
-**>>> READ `references/question-matrix.md` NOW <<<**
+Read `references/question-matrix.md` first.
 
 This file contains 14 question categories. Use ALL relevant categories.
 
 ### Step 2: Question by Category
 
 Use `AskUserQuestion` with 2-4 questions per batch. Go through each category:
-
-| Category | Questions From | Output |
-|----------|----------------|--------|
-| 1. Entry & Happy Path | Matrix sections 1-2 | UX Expectation + Happy Path ACs |
-| 2. Validation | Matrix section 3 | Validation ACs |
-| 3. System Errors | Matrix section 4 | Error ACs |
-| 4. Permissions | Matrix section 5 | Permission ACs |
-| 5. Loading & Empty | Matrix sections 6-7 | State ACs |
-| 6. Concurrent & Time | Matrix sections 8-9 | Edge Case ACs |
-| 7. Device & Accessibility | Matrix sections 10-11 | Accessibility ACs |
-| 8. Recovery & Notifications | Matrix sections 12-13 | Recovery ACs |
+the categories and their questions are defined in the matrix file loaded in Step 1.
 
 **Skip categories not relevant to the task.**
 
 ### Step 3: Cross-Check Edge Cases
 
-**>>> READ `references/edge-case-catalog.md` NOW <<<**
+Read `references/edge-case-catalog.md` first.
 
 After user answers:
 1. Compare answers against catalog entries
@@ -70,7 +60,7 @@ After user answers:
 
 ### Step 4: Resolve Uncertainty
 
-**>>> READ `references/ux-philosophy.md` WHEN USER IS UNSURE <<<**
+Read `references/ux-philosophy.md` when the user is unsure.
 
 If user says "I don't know" or "whatever you think":
 1. Read philosophy file for decision frameworks
@@ -169,12 +159,6 @@ For complex flows, hand the confirmed evidence, normalized ACs, and all branches
 ---
 
 ## Evidence Is Verbatim; Acceptance Criteria Are Testable
-
-| Evidence (preserved exactly) | Confirmed normalized criterion |
-|----------|-------------|
-| `E-01`: "Show 'Email required'" | When email is empty on submit, show "Email required" next to the field. |
-| `E-02`: "Spinner with text" | Ask which text; after confirmation, record the loading criterion. |
-| `E-03`: "Retry button, keep data" | When the request fails, keep entered data and show a Retry button. |
 
 Do not silently interpret. Exact copy and terms stay exact; added conditions, timing, placement, or outcomes require confirmation. This separates audit evidence from an executable contract.
 
