@@ -36,7 +36,12 @@ If a fetched Linear PRD has stories without acceptance criteria, or flows whose 
 2. Normalize it to `US-###` stories, each with plain acceptance-criteria checkboxes and numbered flow steps, without changing meaning
 3. Mark the plan as `canonicalization required`: after user approval, create/import the Linear PRD spec ticket before any implementation parent
 
-**IF no Linear PRD and no explicit legacy artifact exists:** stop and direct the user to `$vorbit-prd`. Do not invent a PRD from casual conversation inside epic planning.
+**IF no product PRD but the user explicitly provides a technical work description** (pasted spec, a named file, or explicit scope in the command arguments — e.g. a migration, upgrade, or refactor with no user-facing stories):
+1. Write that description verbatim into the implementation parent's ticket body as the requirement baseline, under a `Technical epic — no product PRD` label
+2. The baseline must contain explicit acceptance-criteria checkboxes; if the description lacks them, draft them from its stated outcomes and confirm with the user before creating issues. Sub-issues quote these verbatim as usual
+3. Do not invent `US-###` stories or user flows for it. Create one implementation parent for the technical scope (or one per explicitly named workstream); the TBD gate, verbatim criterion quoting, and Implementation Order apply unchanged, with the parent ticket itself as the baseline `$vorbit-verify` and implement-loop bind to
+
+**IF no Linear PRD, no explicit legacy artifact, and no explicit technical description:** stop and direct the user to `$vorbit-prd`. Do not invent requirements from casual conversation inside epic planning.
 
 **Traceability requirements before planning:**
 - Every user story has at least one acceptance criterion

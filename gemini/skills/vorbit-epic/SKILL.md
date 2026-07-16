@@ -1,6 +1,6 @@
 ---
 name: vorbit-epic
-description: Use when the user asks to turn an approved PRD spec ticket into one Linear implementation parent per user story plus traceable ordered sub-issues. It analyzes the codebase, presents the full topology for approval, then creates and links Linear issues. Requires Linear and PRD-level requirements; do not use for generic sprint scheduling, writing the PRD, implementing code, or brainstorming.
+description: Use when the user asks to turn an approved PRD spec ticket into one Linear implementation parent per user story plus traceable ordered sub-issues, or to decompose an explicitly supplied technical scope (migration, upgrade, refactor) into a technical epic. It analyzes the codebase, presents the full topology for approval, then creates and links Linear issues. Requires Linear plus a PRD or explicit technical description; do not use for generic sprint scheduling, writing the PRD, implementing code, or brainstorming.
 ---
 
 # Vorbit Epic
