@@ -1,6 +1,6 @@
 ---
 name: implement
-description: Use when the user explicitly asks to build a production feature, fix a bug, or implement a Linear issue in an existing codebase. It searches for reusable code, changes project files with TDD, runs the real test suite, and may update the linked Linear issue. Route explicit --loop requests to implement-loop. Do not use for review-only, verification-only, or mock-data prototype requests, nor for planning — define requirements with prd, decompose with epic.
+description: Use when the user explicitly asks to build a production feature, fix a bug, or implement a Linear issue — given as an ID, URL, or pasted ticket branch name — in an existing codebase. It searches for reusable code, changes project files with TDD, runs the real test suite, and may update the linked Linear issue. Route explicit --loop requests to implement-loop. Do not use for review-only, verification-only, or mock-data prototype requests, nor for planning — define requirements with prd, decompose with epic.
 ---
 
 # Implementation Skill
@@ -28,12 +28,31 @@ Read and follow `_shared/mcp-tool-routing.md` (glob for `**/skills/_shared/mcp-t
 
 1. **IF args = Linear issue ID** (e.g., `ABC-123`): Fetch issue details from Linear
 2. **IF args = Linear URL**: Extract issue ID from URL, fetch details
-3. **IF no args, check conversation**: Look for Linear issue URLs from recent `/vorbit:implement:epic` output
+3. **IF args = a git branch name containing a ticket ID** (e.g. `feature/vib-3814-signup-ux-...`, as copied from Linear's branch button): extract the ticket ID (`vib-3814` → `VIB-3814`), fetch the issue, and treat the pasted name as the target branch for Step 2.7
+4. **IF no args, check conversation**: Look for Linear issue URLs from recent `/vorbit:implement:epic` output
    - If found: "I see you just created [issue title]. Work on this one?" (Yes/No)
-4. **IF nothing found**: Ask what to implement. Do not select assigned work without the user's request
-5. **IF description only**: Work directly on what user describes (no Linear tracking)
+5. **IF nothing found**: Ask what to implement. Do not select assigned work without the user's request
+6. **IF description only**: Work directly on what user describes (no Linear tracking)
 
 For a Linear issue, record the issue ID and description update timestamp used as the requirement baseline. If it changes during implementation, stop and reconcile the new requirements.
+
+## Step 2.7: Branch Setup
+
+Runs only when the input was a branch name, or `--worktree` was passed. With `--worktree` but no branch name, derive one from the ticket: the Linear-provided branch name if the connector exposes it, else `feature/<ticket-id-lowercase>-<kebab-title>`.
+
+1. Already on the target branch → skip to Step 3.
+2. Working tree dirty → stop and ask (commit, stash, or abort). Never stash or discard silently; switching branches loses uncommitted work.
+3. Resolve the base branch:
+   - A durable project rule naming the integration branch wins.
+   - Else detect the remote default: `git symbolic-ref refs/remotes/origin/HEAD`.
+   - If the repo also has a `dev`/`develop` branch, or detection fails, ask the user once — and offer to save the answer as a durable project rule so it is never asked again for this repo.
+4. `git fetch`, then create from the remote-tracking base — never from a possibly stale local copy:
+   - **Worktree** (`--worktree`, or chosen when asked): `git worktree add ../<repo>-<ticket-id> -b <branch> origin/<base>`, then do all subsequent work inside that worktree.
+   - **In place**: `git checkout -b <branch> origin/<base>`.
+   - Branch already exists locally or on the remote → check it out (or add the worktree for it) instead of creating a duplicate, and say so.
+5. Ask worktree vs in-place only when neither a flag nor a durable rule decides it; batch that question with the base-branch question when both are open.
+
+Branch setup completes before Step 3 moves the issue to In Progress, so an aborted setup never leaves a lying ticket status.
 
 ## Step 3: Before Starting
 
