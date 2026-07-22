@@ -254,6 +254,29 @@ def test_prd_workflows_forbid_invented_requirements():
         assert "Do not require an existing Linear ticket to draft" in projected.read_text()
 
 
+def test_prd_user_stories_own_one_colocated_flow():
+    prd_contracts = [
+        CANONICAL_SKILLS / "prd" / "SKILL.md",
+        CODEX_SKILLS / "vorbit-shared" / "workflows" / "prd.md",
+        GEMINI_SKILLS / "vorbit-shared" / "workflows" / "prd.md",
+    ]
+
+    for contract in prd_contracts:
+        content = contract.read_text()
+        template = content.split("### Template\n\n```markdown\n", 1)[1].split(
+            "\n```", 1
+        )[0]
+        stories = template.split("### US-")[1:]
+
+        assert stories, contract
+        assert "\n## User Flows\n" not in template, contract
+        for story in stories:
+            assert story.count("**User Flow:**") == 1, contract
+            assert story.index("**User Flow:**") < story.index(
+                "**Acceptance Criteria:**"
+            ), contract
+
+
 def test_loop_workflows_define_inactive_human_input_state():
     loop_contracts = [
         CANONICAL_SKILLS / "implement-loop" / "SKILL.md",

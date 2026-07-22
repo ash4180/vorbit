@@ -62,14 +62,13 @@ Use the template below. Match VIB-2978's prose style — no big tables.
 - Feature name (3-8 words, no jargon) — this becomes the Linear ticket **title**
 - Description: one short paragraph under the H1
 - Problem: 1-2 short paragraphs, no tech detail
-- User Stories: `US-001`, `US-002`, ... each with acceptance-criteria checkboxes
-- User Flows: at least one happy flow, steps numbered `1.`, `2.`, `3.`
+- User Stories: `US-001`, `US-002`, ... each representing one end-to-end user outcome with exactly one colocated user flow followed by acceptance-criteria checkboxes
 - Constraints
 - Success Criteria with confirmed, sourced numbers; use `TBD-###` when a target is unknown
 
 Do not fill required sections by invention. Put unresolved assumptions in `## Open Questions` with their provenance and impact classification. A structurally complete review draft may contain permitted TBDs.
 
-Before showing the draft, run the coverage gate: every acceptance criterion is satisfied by at least one flow step. This is a check, not a section — verify it, state the result in chat, and keep the mapping out of the ticket body.
+Before showing the draft, run the coverage gate: every acceptance criterion is satisfied by at least one step in its own story's flow. This is a check, not a section — verify it, state the result in chat, and keep the mapping out of the ticket body.
 
 If the user requested a draft or review only, stop after showing it; do not ask to create or call Linear. Report `needs_input` when an implementation-affecting TBD remains, otherwise `completed`. For creation requests, ask after the draft: **"Does this look good? Ready to create the Linear ticket?"**
 
@@ -92,6 +91,12 @@ If the user requested a draft or review only, stop after showing it; do not ask 
 
 As a [user], I want [goal], so [benefit].
 
+**User Flow:**
+
+1. **Entry:** [which screen, and its starting state]. [User action and what they see]
+2. [which screen or field]. [User action and what they see]
+3. **Exit:** [observable end state]
+
 **Acceptance Criteria:**
 
 - [ ] [Specific testable criterion]
@@ -101,29 +106,16 @@ As a [user], I want [goal], so [benefit].
 
 As a [user], I want [goal], so [benefit].
 
-**Acceptance Criteria:**
-
-- [ ] ...
-- [ ] ...
-
-## User Flows
-
-### Flow 1: [Name] (Happy flow)
+**User Flow:**
 
 1. **Entry:** [which screen, and its starting state]. [User action and what they see]
 2. [which screen or field]. [User action and what they see]
 3. **Exit:** [observable end state]
 
-### Flow 2: [Name] (Happy flow, second main path)
+**Acceptance Criteria:**
 
-1. **Entry:** [which screen, and its starting state]. [User action and what they see]
-2. **Exit:** [observable end state]
-
-### Flow 3: [Name] (alternate / error / recovery)
-
-1. **Entry:** [branch point or starting state]
-2. [Failure is shown; values remain available]
-3. [User retries] → back to Flow 1, step 2
+- [ ] ...
+- [ ] ...
 
 ## Constraints
 
@@ -142,20 +134,20 @@ As a [user], I want [goal], so [benefit].
 
 ### Flow rules
 
-- Every PRD needs at least one happy flow
-- Name each flow (`Flow 1`, `Flow 2`, ...) and number its steps `1.`, `2.`, `3.`
+- Every user story represents one end-to-end user outcome and contains exactly one `**User Flow:**`
+- Place the user flow after the story statement and before its acceptance criteria
+- Number the flow steps `1.`, `2.`, `3.`
 - Each step names three things: what the user did, which screen or field it happened on, and what they saw as a result
-- Mark the first step `Entry` and an observable terminal step `Exit`; for a real retry or loop, write it in plain English (`→ back to Flow 1, step 2`)
-- Add a separate flow for any materially different path (second happy path, alternate, error)
-- Every user story must be covered by at least one flow step
-- Keep a single flow readable; split a complex journey into multiple flows without deleting branches, retries, loops, or requirements
+- Mark the first step `Entry` and an observable terminal step `Exit`; write a retry or loop in plain English when it is part of the same outcome
+- Split materially different flows or outcomes into separate user stories instead of adding another flow to one story
+- Keep the single flow readable without deleting branches, retries, loops, or requirements that belong to its outcome
 
 ### Identifier and coverage rules
 
 - User story IDs are document-unique: `US-001`, `US-002`, ...
 - Acceptance criteria carry no IDs. They are plain checkboxes under their story; the story heading already identifies them
-- Flow steps carry no IDs. They are a numbered list under their flow heading
-- Coverage gate: every acceptance criterion is satisfied by at least one flow step. Resolve any gap before confirmation. Run it as a check and report the result in chat; never write the mapping into the ticket
+- Flow steps carry no IDs. Reference them outside the document as `US-001, flow step 2`
+- Coverage gate: every acceptance criterion is satisfied by at least one step in its own story's flow. Resolve any gap before confirmation. Run it as a check and report the result in chat; never write the mapping into the ticket
 
 ## Step 4: Confirm Draft
 
@@ -182,7 +174,7 @@ Only proceed after the user confirms the draft and any implementation-affecting 
 
 - Linear ticket **URL**
 - Team and project used
-- Quick summary: X user stories, Y flows, Z success criteria
+- Quick summary: X user stories, X colocated flows, Z success criteria
 - Source note: Linear is now canonical; include legacy import provenance when applicable
 - Suggested next step:
   - `/vorbit:implement:epic <ticket-id>` to break the ticket into engineering sub-issues
@@ -211,12 +203,11 @@ All sections below are required.
 | Title (H1) | 3-8 words, no jargon. Becomes the Linear ticket title |
 | Description | 1-2 short sentences, plain English, no tech detail |
 | Problem | 1-2 short paragraphs of user pain, not the technical fix |
-| User Stories | `As a [user], I want [goal], so [benefit]`; at least one plain-checkbox criterion per story |
-| User Flows | At least one happy flow; numbered prose steps with Entry/Exit anchors; loops in plain English; no coverage ledger |
+| User Stories | `As a [user], I want [goal], so [benefit]`; one end-to-end outcome, exactly one colocated flow before at least one plain-checkbox criterion |
 | Constraints | Limits the implementation must respect |
 | Success Criteria | Sourced numbers (percentages, times, counts), or classified `TBD-###` placeholders |
 
-- **AC coverage**: every acceptance criterion is satisfied by at least one flow step. Verified before the draft is shown; reported in chat, never persisted as a section
+- **AC coverage**: every acceptance criterion is satisfied by at least one step in its own story's flow. Verified before the draft is shown; reported in chat, never persisted as a section
 - **TBD**: allowed in Constraints, Success Criteria numbers, and flow details that depend on later design decisions only — never in Problem, Users, or User Stories. Every `TBD-###` has a matching question attempt and impact classification
 
 ## Common Mistakes
@@ -227,4 +218,6 @@ All sections below are required.
 | "Users should be happy with login" | `TBD-001` — target completion rate and time threshold — Impact: non-blocking | Unknown targets stay explicit until the user supplies real numbers |
 | "OAuth2 JWT Token Auth Implementation" | "User Login and Signup" | Title avoids jargon |
 | Flow as one arrow chain (`Entry → Submit → Home`) | A numbered list: `1.` Entry, `2.` Submit, `3.` Exit | One step per line, each naming what the user did, which screen, and what they saw |
+| A standalone `## User Flows` section | One `**User Flow:**` inside each user story | The outcome, flow, and acceptance criteria stay together |
+| Multiple flows inside one user story | Split materially different flows into separate user stories | One story owns one end-to-end user outcome |
 | Prefixing criteria or flow steps with IDs | `- [ ] Clicking Create shows an error` | The story heading and the list position already identify them. IDs only earn their keep when something *outside* the document points at them |
