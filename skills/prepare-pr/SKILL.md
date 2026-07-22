@@ -5,7 +5,7 @@ description: Use only when the user explicitly asks to finalize the current feat
 
 # Prepare PR Skill
 
-Finalize a feature branch for merge: run pre-flight checks, strip design files per the management standard, generate a PR body from Linear context and commit history, create the pull request, and post design file recovery references to the Linear ticket.
+Finalize a feature branch for merge: run pre-flight checks, strip design files per the management standard, generate a PR body from Linear context and commit history, create the pull request, and return design file recovery references in the session.
 
 Read and follow `../_shared/execution-contract.md` before starting.
 
@@ -32,7 +32,7 @@ For branches without design files, the skill still handles PR body generation an
    - Require a clean working tree. If not clean, stop; never discard work.
    - Verify `origin` and the selected base exist.
    - Verify `gh` is installed and authenticated (`gh auth status`). If not, stop before rebase, deletion, or commit.
-   - If Linear integration is selected, verify its read/update/comment operations now. A missing optional Linear connection may be skipped only with user approval.
+   - If Linear integration is selected, verify its read/update operations now. A missing optional Linear connection may be skipped only with user approval.
    - Note whether the branch has an upstream; Phase 5 performs the push.
 
 4. **Detect design files:**
@@ -239,9 +239,9 @@ For branches without design files, the skill still handles PR body generation an
 
 **Output**: Approved PR title and body
 
-## Phase 5: Create PR and Post References
+## Phase 5: Create PR and Report
 
-**Goal**: Push, create the PR, and post references.
+**Goal**: Push, create the PR, and report the result.
 
 1. **Push branch** (if not already pushed or has new commits):
    ```bash
@@ -257,20 +257,7 @@ For branches without design files, the skill still handles PR body generation an
    )"
    ```
 
-3. **Post design recovery reference to Linear** only if design files were stripped and Linear integration was selected, resolved to an issue, and approved. Otherwise keep the recovery block in the PR and report that the Linear comment was skipped.
-   - Call the Linear connector's comment-creation operation (`save_comment` in the vorbit Claude plugin) on the issue:
-     ```
-     📐 Design files archived
-
-     Design files were stripped before merge per management standard.
-
-     Commit: {full-hash}
-     Recovery:
-       git checkout {full-hash} -- {path-to-each-pen-file}
-
-     PR: {pr-url}
-     ```
-   This comment records how to recover the files while the referenced commit remains retained. It is not a backup; if permanent retention is required, archive the design in the team's approved design storage before stripping.
+3. **Return the design recovery reference in the current session** when design files were stripped. Keep the same recovery block in the PR body. A commit hash is not a permanent backup; if permanent retention is required, archive the design in the team's approved design storage before stripping.
 
 4. **Update Linear issue status** only when Linear integration was selected, resolved, and approved:
    - Call the Linear connector's issue-update operation (`save_issue` in the vorbit Claude plugin) with `state: "In Review"`
@@ -281,7 +268,8 @@ For branches without design files, the skill still handles PR body generation an
 
      Branch:        {branch} → {base}
      Design files:  {count} stripped, recovery hash recorded
-     Linear:        {issue-id} → "In Review", design reference posted | skipped with reason
+     Linear:        {issue-id} → "In Review" | skipped with reason
+     Recovery:      returned in the current session | not applicable
    ```
 
 ## Flags

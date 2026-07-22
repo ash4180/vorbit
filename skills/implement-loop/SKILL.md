@@ -1,6 +1,6 @@
 ---
 name: implement-loop
-description: Use only when the user explicitly invokes loop mode, supplies --loop or --cancel, or asks to autonomously work through an ordered Linear epic or sub-issue queue. After one queue confirmation it changes code, runs tests, and updates Linear statuses and comments until completion. Loop execution requires a Linear issue; do not use for a one-off implementation, issue planning, or unattended work without explicit loop intent.
+description: Use only when the user explicitly invokes loop mode, supplies --loop or --cancel, or asks to autonomously work through an ordered Linear epic or sub-issue queue. After one queue confirmation it changes code, runs tests, updates Linear statuses, and reports progress in the session until completion. Loop execution requires a Linear issue; do not use for a one-off implementation, issue planning, or unattended work without explicit loop intent.
 ---
 
 # Implement Loop Skill
@@ -9,7 +9,7 @@ Run an approved Linear implementation queue as a bounded, resumable state machin
 
 Read and follow `../_shared/execution-contract.md` before starting.
 
-Use the connected Linear tools only after verifying their current schemas. The Vorbit Claude plugin normally exposes `get_issue`, `list_issues`, `save_issue`, `save_comment`, and `list_issue_statuses`.
+Use the connected Linear tools only after verifying their current schemas. The Vorbit Claude plugin normally exposes `get_issue`, `list_issues`, `save_issue`, and `list_issue_statuses`.
 
 ## Inputs and Preconditions
 
@@ -60,7 +60,7 @@ For `--cancel`:
 
 1. Read the state before deleting it.
 2. Report the current issue, completed items, and worktree state.
-3. If a Linear issue was started, add a cancellation comment; do not claim the code was reverted.
+3. Report cancellation in the current session; do not claim the code was reverted.
 4. Delete the state file and stop.
 
 Never discard or reset code during cancellation.
@@ -98,7 +98,7 @@ For a single issue explicitly started with `--loop`, persist and begin without a
 For the current `queue[currentIndex]` item, or the parent when the queue is empty:
 
 1. Re-fetch the issue and compare its update timestamp with the baseline used for the current cycle.
-2. Move it to the team's exact In Progress state and add one start comment.
+2. Move it to the team's exact In Progress state and report the start in the current session.
 3. Apply the normal implement workflow without re-entering loop initialization:
    - search for existing code and tests first;
    - map the issue's acceptance criteria and flow steps;
@@ -111,7 +111,7 @@ For the current `queue[currentIndex]` item, or the parent when the queue is empt
 
 Only when every current-item AC passes and relevant tests pass:
 
-1. Add a completion comment containing files and verification evidence.
+1. Report completion, changed files, and verification evidence in the current session.
 2. For a sub-issue, move it to the team's Done/Completed state.
 3. Add its ID to `completedIssueIds`, increment `currentIndex`, clear failure tracking, and write state atomically.
 4. Continue with the next item.
@@ -124,7 +124,7 @@ Create a failure fingerprint from the failing command/error plus the unmet accep
 
 1. set `active: false`, `status: "blocked"`, and `blockReason`;
 2. preserve the state file for inspection;
-3. add a concise Linear blocker comment when authorized;
+3. report the blocker concisely in the current session;
 4. stop and ask for the missing decision or external change.
 
 Do not burn iterations repeating the same failure.
@@ -135,7 +135,7 @@ After all sub-issues finish:
 
 1. Re-fetch the parent and verify every parent AC against accumulated evidence.
 2. If an AC is unmet and no remaining issue owns it, set `active: false`, `status: "needs_input"`, and `blockReason`, then preserve state and stop; do not invent unplanned scope.
-3. Keep the implementation parent In Progress and add a "ready for verification/PR" comment. A parent becomes In Review after PR creation and Done only after merge.
+3. Keep the implementation parent In Progress and report "ready for verification/PR" in the current session. A parent becomes In Review after PR creation and Done only after merge.
 4. Set state to `active: false`, `status: "completed"`.
 
 The stop hook deletes a completed state and lets the session end. Report completion in your final message for the user; the hook does not read that text.

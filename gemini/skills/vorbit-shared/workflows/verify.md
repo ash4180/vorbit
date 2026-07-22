@@ -58,8 +58,9 @@ Scan for the leftovers listed in the Verification Schema below. Report findings 
 ## Step 7: Optional Linear Update
 
 If validating a Linear issue:
-- Stay read-only unless the user explicitly requested a Linear update
-- After a full pass, add the validation evidence and move to the team's review-ready state if authorized
+- Report all validation evidence in the current session
+- Stay read-only unless the user explicitly requested a Linear status update
+- After a full pass, move to the team's review-ready state only if authorized
 - Never mark the implementation parent Done before merge
 
 ---

@@ -132,7 +132,7 @@ Mark done only when every gate defined in Steps 3.5-6 above is satisfied.
 ## Step 7: On Task Completion
 
 - Keep the implementation parent "In Progress" until a PR exists. Implementation sub-issues may move to "Done" after their own ACs and tests pass.
-- Add a Linear comment with changed files, verification evidence, and remaining release steps.
+- Report changed files, verification evidence, and remaining release steps in the current session.
 
 ## Step 8: On Feature Completion
 

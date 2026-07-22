@@ -206,10 +206,6 @@ def _rules(agent: dict[str, str]) -> list[tuple[re.Pattern[str], object]]:
             "then the connector's issue-update operation to add or replace",
         ),
         lit(
-            "(`save_comment` in the vorbit Claude plugin)",
-            "(inspect the connector schema for the current comment-creation verb)",
-        ),
-        lit(
             "(`save_issue` in the vorbit Claude plugin)",
             "(inspect the connector schema for the current issue-update verb)",
         ),

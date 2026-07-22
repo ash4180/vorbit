@@ -1,6 +1,6 @@
 ---
 name: verify
-description: Use when the user asks for a post-implementation validation against explicit acceptance criteria or a linked issue or PRD. It runs the real project tests, checks each criterion and code hygiene with evidence, reports pass or fail, and may comment on or update the Linear issue. Do not use to implement fixes, perform an open-ended code review, or validate requirements that have not been supplied.
+description: Use when the user asks for a post-implementation validation against explicit acceptance criteria or a linked issue or PRD. It runs the real project tests, checks each criterion and code hygiene with evidence, reports pass or fail in the session, and may update Linear issue status only when explicitly requested. Do not use to implement fixes, perform an open-ended code review, or validate requirements that have not been supplied.
 ---
 
 # Verify Skill
@@ -61,8 +61,9 @@ Scan for the leftovers listed in the Verification Schema below. Report findings 
 ## Step 7: Optional Linear Update
 
 If validating a Linear issue:
-- Stay read-only unless the user explicitly requested a Linear update
-- After a full pass, add the validation evidence and move to the team's review-ready state if authorized
+- Report all validation evidence in the current session
+- Stay read-only unless the user explicitly requested a Linear status update
+- After a full pass, move to the team's review-ready state only if authorized
 - Never mark the implementation parent Done before merge
 
 ---

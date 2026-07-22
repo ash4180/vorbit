@@ -17,6 +17,10 @@ Before an external write, destructive local change, commit, push, or publication
 
 Do not guess unavailable tool names. A missing required capability ends as `blocked_missing_capability`. Ordinary local edits explicitly requested by the user do not need redundant confirmation.
 
+## Tracker Communication
+
+Do not create Linear comments. Report progress, evidence, blockers, cancellation, and completion in the current session instead. Explicitly authorized issue creation, description edits, and status changes remain allowed.
+
 ## Source Baseline
 
 For requirements-driven work, record the source artifact ID/URL and update timestamp or revision. Carry globally unique user-story IDs (`US-*`) forward; reference acceptance criteria by quoting their text verbatim and flow steps as `Flow N, step M`. If the source changes mid-work, stop and reconcile before continuing.

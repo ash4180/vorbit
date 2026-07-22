@@ -277,6 +277,44 @@ def test_prd_user_stories_own_one_colocated_flow():
             ), contract
 
 
+def test_workflows_report_in_session_instead_of_posting_linear_comments():
+    roots = [CANONICAL_SKILLS, CODEX_SKILLS, GEMINI_SKILLS]
+    contracts = [
+        path
+        for root in roots
+        for path in sorted(root.rglob("*.md"))
+    ]
+    forbidden = {
+        "save_comment",
+        "comment-creation operation",
+        "Add a Linear comment",
+        "Linear cancellation comment",
+        "Linear comment was skipped",
+        "comments until completion",
+        "comment when starting",
+        "add one start comment",
+        "add a completion comment",
+        "blocker comment",
+        'comment "ready for verification/PR"',
+        "may comment on or update the Linear issue",
+    }
+
+    for contract in contracts:
+        content = contract.read_text()
+        for phrase in forbidden:
+            assert phrase not in content, (contract, phrase)
+
+    execution_contracts = [
+        CANONICAL_SKILLS / "_shared" / "execution-contract.md",
+        CODEX_SKILLS / "vorbit-shared" / "references" / "execution-contract.md",
+        GEMINI_SKILLS / "vorbit-shared" / "references" / "execution-contract.md",
+    ]
+    for contract in execution_contracts:
+        contract_text = contract.read_text()
+        assert "Do not create Linear comments" in contract_text, contract
+        assert "current session" in contract_text, contract
+
+
 def test_loop_workflows_define_inactive_human_input_state():
     loop_contracts = [
         CANONICAL_SKILLS / "implement-loop" / "SKILL.md",
