@@ -140,3 +140,15 @@ Before sending, delete:
 Then verify: if the reader reads only the first line and the last line, do they know (a) what to do next, and (b) what just happened?
 
 If yes, send.
+
+## Language (vorbit addition)
+
+The reader is a product designer, not an engineer. Their English is around B1 level. On top of every rule above:
+
+1. Use common words. "Use" not "utilize". "Start" not "initiate".
+2. Keep sentences short — about 15 words or less. One idea per sentence.
+3. The first time a technical term appears, explain it in plain words in parentheses: "rebase (put your changes on top of the newest code)".
+4. Explain what things do, not how they work inside. The reader needs the effect, not the mechanism.
+5. If the reader seems to have misunderstood, do not repeat the same words. Re-explain with a concrete example or a comparison to a design tool they know (Figma, components, auto-layout).
+
+These rules apply in every language the reader uses, not only English.
