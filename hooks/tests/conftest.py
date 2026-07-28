@@ -21,6 +21,7 @@ SCRIPTS = {
     "post_edit_format": PLUGIN_ROOT / "hooks" / "scripts" / "post_edit_format.py",
     "post_edit_validate": PLUGIN_ROOT / "hooks" / "scripts" / "post_edit_validate.py",
     "loop_controller": PLUGIN_ROOT / "skills" / "implement-loop" / "hooks" / "loop_controller.py",
+    "adhd_always_on": PLUGIN_ROOT / "hooks" / "scripts" / "adhd_always_on.sh",
 }
 
 
