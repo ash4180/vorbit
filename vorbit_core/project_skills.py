@@ -31,6 +31,7 @@ CANONICAL_SKILLS = REPO_ROOT / "skills"
 
 # canonical skill dir -> workflow filename stem (agent skill dir differs for two)
 PROJECTED_SKILLS: dict[str, str] = {
+    "adhd": "adhd",
     "explore": "explore",
     "prd": "prd",
     "journey": "journey",

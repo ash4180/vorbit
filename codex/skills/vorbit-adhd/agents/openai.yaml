@@ -1,0 +1,7 @@
+interface:
+  display_name: "Vorbit ADHD Output Mode"
+  short_description: "ADHD-friendly replies that lead with the next action"
+  default_prompt: "Use $vorbit-adhd to shape every reply for an ADHD reader until told to stop."
+
+policy:
+  allow_implicit_invocation: false
