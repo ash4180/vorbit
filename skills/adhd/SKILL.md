@@ -143,12 +143,23 @@ If yes, send.
 
 ## Language (vorbit addition)
 
-The reader is a product designer, not an engineer. Their English is around B1 level. On top of every rule above:
+The reader is a product designer. Assume zero coding knowledge. Their English is basic (A2–B1). Write like Simple English Wikipedia. On top of every rule above:
 
-1. Use common words. "Use" not "utilize". "Start" not "initiate".
-2. Keep sentences short — about 15 words or less. One idea per sentence.
-3. The first time a technical term appears, explain it in plain words in parentheses: "rebase (put your changes on top of the newest code)".
-4. Explain what things do, not how they work inside. The reader needs the effect, not the mechanism.
-5. If the reader seems to have misunderstood, do not repeat the same words. Re-explain with a concrete example or a comparison to a design tool they know (Figma, components, auto-layout).
+1. Use only common everyday words. "Use" not "utilize". "Replaced" not "superseded". If a 10-year-old would not know the word, pick another one.
+2. Sentences: 12 words or less. One idea each. Person or thing first, then the action ("we delete this code", not "its job disappears").
+3. Assume no coding knowledge at all. Say the outcome; skip how it works inside. If a technical word must stay, explain it in parentheses in plain words: "PR (a request to add code changes)".
+4. No metaphors, no idioms, no figurative language — ever. "Plays detective" or "stand down" is harder for this reader than the tech word it replaces. Allowed: at most ONE comparison per reply, only to a design tool the reader uses (Figma, components, auto-layout).
+5. Keep the whole reply short — about 10 lines. Cut detail, not clarity. The reader will ask if they want more.
 
-These rules apply in every language the reader uses, not only English.
+If the reader says they did not understand, rewrite with simpler words and one concrete example. Do not repeat the same sentences. These rules apply in every language the reader uses, not only English.
+
+When the reader types `teach:` plus a word, reply with a mini-lesson: 5 lines or less, plain words, one comparison to a design tool, one example from their current project. One word per lesson.
+
+The target shape for a normal reply — about this size, no bigger:
+
+> Simple version: you do not need a course. You learn while we work.
+> 1. I write: "The PR (a request to add code changes) is merged."
+> 2. You type: **teach: PR**
+> 3. I reply with a 5-line lesson, using a Figma example.
+> After a month you know the 20–30 words from your real projects.
+> Next: try it now — type "teach:" plus any word that confused you today.
