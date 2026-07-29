@@ -1,6 +1,6 @@
 ---
 name: vorbit-implement-loop
-description: Use only when the user explicitly invokes loop mode, supplies --loop or --cancel, or asks to autonomously work through an ordered Linear epic or sub-issue queue. After one queue confirmation it changes code, runs tests, updates Linear statuses, and reports progress in the session until completion. Loop execution requires a Linear issue; do not use for a one-off implementation, issue planning, or unattended work without explicit loop intent.
+description: Use only when the user explicitly invokes loop mode, supplies --loop or --cancel, or asks to autonomously work through an ordered task queue from the branch epic plan or a Linear epic. After one queue confirmation it changes code, runs tests, updates task or issue statuses, and reports progress in the session until completion. Loop execution requires a branch spec story or a Linear issue; do not use for a one-off implementation, issue planning, or unattended work without explicit loop intent.
 ---
 
 # Vorbit Implement Loop

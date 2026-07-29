@@ -8,13 +8,14 @@ Read and follow `../references/execution-contract.md` before starting.
 
 ## Step 1: Resolve Requirements
 
-If the user supplied an external artifact, preflight required connectors: confirm each needed connector is configured in Gemini CLI and inspect its current operation/parameter schemas; never guess tool names. Linear is the canonical PRD source; pasted acceptance criteria and local descriptions remain valid read-only inputs.
+The branch spec files are the canonical requirements source — read `../references/spec-files.md` for path resolution. If the user supplied a Linear artifact, preflight required connectors: confirm each needed connector is configured in Gemini CLI and inspect its current operation/parameter schemas; never guess tool names before fetching it. Pasted acceptance criteria and local descriptions remain valid read-only inputs.
 
 ## Step 2: Determine Context
 
-1. **IF Linear issue ID**: Fetch issue and its acceptance criteria. If the issue carries a `## Test Criteria` section, it is the authoritative test contract — validate each entry alongside the acceptance criteria
-2. **IF description**: Use explicit criteria; otherwise propose a checklist and label it as proposed
-3. **IF no args**: Ask what to validate
+1. **IF spec task or story ID** (`T3`, `US-002`) — or no args while the branch spec plan exists: read the task section(s) and story header from `epic.md` and the owning story from `prd.md`. Their acceptance criteria plus every `Test Criteria` section are the authoritative contract. With no args, confirm with the user which story to validate
+2. **IF Linear issue ID**: Fetch issue and its acceptance criteria. If the issue carries a `## Test Criteria` section, it is the authoritative test contract — validate each entry alongside the acceptance criteria
+3. **IF description**: Use explicit criteria; otherwise propose a checklist and label it as proposed
+4. **IF no args and no spec plan**: Ask what to validate
 
 Map every acceptance criterion to an observable check before running tests. Enumerate them in document order and check each one — none may be skipped.
 
@@ -55,7 +56,12 @@ Scan for the leftovers listed in the Verification Schema below. Report findings 
 - [Anything not run or not observable, with reason]
 ```
 
-## Step 7: Optional Linear Update
+## Step 7: Optional Status Update
+
+If validating a spec task or story:
+- Report all validation evidence in the current session
+- Stay read-only unless the user explicitly requested a status update; then set the validated task's `**Status:**` line (`done` on pass, `blocked` plus the reason in the report on fail) and change nothing else in the file
+- Suggest `$vorbit-linear-sync` to refresh the Linear summaries after a status change
 
 If validating a Linear issue:
 - Report all validation evidence in the current session

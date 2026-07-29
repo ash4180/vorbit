@@ -1,6 +1,6 @@
 ---
 name: vorbit-prd
-description: Use when the user asks to define a feature as a product requirements document or to review whether sub-issues cover an existing PRD. In creation mode it clarifies requirements, drafts user stories, acceptance criteria, flows, constraints, and success metrics, then creates one Linear ticket after approval. Requires Linear for creation; do not use for early brainstorming, engineering issue decomposition, implementation, or a multi-ticket epic plan.
+description: Use when the user asks to define a feature as a product requirements document or to review whether the branch epic plan covers an existing PRD. In creation mode it clarifies requirements, drafts user stories, acceptance criteria, flows, constraints, and success metrics, then writes the approved PRD to the branch spec file after approval. No Linear connection is required; do not use for early brainstorming, engineering decomposition, implementation, or posting Linear summaries (that is linear-sync).
 ---
 
 # Vorbit PRD

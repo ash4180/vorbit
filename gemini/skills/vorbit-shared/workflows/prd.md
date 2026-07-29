@@ -2,23 +2,26 @@
 
 # PRD Skill
 
-Create a Linear ticket that captures a product requirement. No fluff, just what needs building.
+Create a branch spec file that captures a product requirement. No fluff, just what needs building.
 
 Read and follow `../references/execution-contract.md` before starting.
 
-Before any Linear call, preflight required connectors: confirm each needed connector is configured in Gemini CLI and inspect its current operation/parameter schemas; never guess tool names. Verb names below describe intent; never substitute an operation name remembered from another runtime.
+Read `../references/spec-files.md` for spec path resolution, write guards, and file ownership before any spec read or write.
 
 ## Step 1: Gather Context (Draft First)
 
-The goal is a drafted PRD before touching Linear. Connection problems must never block drafting.
+The goal is a drafted PRD before touching the filesystem. Connection problems must never block drafting.
 
-**Source-of-truth rule:** Linear is the canonical PRD provider and the confirmed output is a Linear **spec ticket**. Pasted text and explicit local files are legacy import inputs, not competing sources of truth. Preserve their intent, record their provenance in the draft, and normalize them into the Linear ticket rather than continuing to maintain two PRDs.
+**Source-of-truth rule:** The branch spec file `.vorbit/specs/<branch-slug>/prd.md` is the canonical PRD and the confirmed output of this skill. Linear tickets, pasted text, and explicit local files are import inputs, not competing sources of truth. Preserve their intent, record their provenance in the draft working notes, and normalize them into the spec file rather than continuing to maintain two PRDs.
 
 Resolve context in this order:
 
-**IF a Linear ticket URL or ID is provided (canonical PRD, existing draft, similar feature, etc.):**
-1. Use `get_issue` to fetch the source ticket and read its description for context
-2. Restructure: keep the source intent, normalize wording to the schema below, mark gaps as `TBD-###`
+**IF a spec file already exists for the current branch:** read it and treat this run as a revision of that file.
+
+**IF a Linear ticket URL or ID is provided (legacy PRD, existing draft, similar feature, etc.):**
+1. Preflight required connectors: confirm each needed connector is configured in Gemini CLI and inspect its current operation/parameter schemas; never guess tool names; verb names describe intent — never substitute an operation name remembered from another runtime
+2. Fetch the source ticket with the connector's issue-read operation and read its description for context
+3. Restructure: keep the source intent, normalize wording to the schema below, mark gaps as `TBD-###`, record `Imported from: <ticket URL>` in the draft working notes
 
 **ELSE IF the user pastes legacy content or gives an explicit local file path:**
 1. Use the pasted text directly, or `Read` the user-specified local file
@@ -29,7 +32,7 @@ Resolve context in this order:
 
 **IF conversation already covers the feature:** use that context as input.
 
-**IF starting fresh:** proceed to Step 2. Do not require an existing Linear ticket to draft; Linear becomes canonical only after the approved creation step.
+**IF starting fresh:** proceed to Step 2. Nothing needs to exist before drafting; the spec file becomes canonical only after the approved write step.
 
 ## Step 2: Clarify Requirements
 
@@ -46,8 +49,8 @@ Use plain-text chat questions and batch related unknowns together. A few rounds 
 For anything still unknown:
 1. Mark it inline as `TBD-001`, `TBD-002`, ... where it would appear in the PRD
 2. Ask the user via plain-text chat questions (batched)
-3. Replace the `TBD` with the answer before ticket confirmation
-4. If the user can't or won't resolve it, leave the ID with a short label and classify it as `implementation-affecting` or `non-blocking`. Anything that can change observable behavior, AC wording, flow branches, API/data contracts, issue boundaries, dependencies, or test criteria is `implementation-affecting`; epic planning must block until it is resolved. Never invent a number or promote an inference into a constraint merely to remove a TBD
+3. Replace the `TBD` with the answer before write confirmation
+4. If the user can't or won't resolve it, leave the ID with a short label and classify it as `implementation-affecting` or `non-blocking`. Anything that can change observable behavior, AC wording, flow branches, API/data contracts, task boundaries, dependencies, or test criteria is `implementation-affecting`; epic planning must block until it is resolved. Never invent a number or promote an inference into a constraint merely to remove a TBD
 
 Every `TBD` must have a matching question attempt.
 
@@ -56,7 +59,7 @@ Every `TBD` must have a matching question attempt.
 Use the template below. Match VIB-2978's prose style — no big tables.
 
 **Required content:**
-- Feature name (3-8 words, no jargon) — this becomes the Linear ticket **title**
+- Feature name (3-8 words, no jargon) — this becomes the document **H1** and, after linear-sync, the Linear summary ticket title prefix
 - Description: one short paragraph under the H1
 - Problem: 1-2 short paragraphs, no tech detail
 - User Stories: `US-001`, `US-002`, ... each representing one end-to-end user outcome with exactly one colocated user flow followed by acceptance-criteria checkboxes
@@ -65,9 +68,9 @@ Use the template below. Match VIB-2978's prose style — no big tables.
 
 Do not fill required sections by invention. Put unresolved assumptions in `## Open Questions` with their provenance and impact classification. A structurally complete review draft may contain permitted TBDs.
 
-Before showing the draft, run the coverage gate: every acceptance criterion is satisfied by at least one step in its own story's flow. This is a check, not a section — verify it, state the result in chat, and keep the mapping out of the ticket body.
+Before showing the draft, run the coverage gate: every acceptance criterion is satisfied by at least one step in its own story's flow. This is a check, not a section — verify it, state the result in chat, and keep the mapping out of the spec body.
 
-If the user requested a draft or review only, stop after showing it; do not ask to create or call Linear. Report `needs_input` when an implementation-affecting TBD remains, otherwise `completed`. For creation requests, ask after the draft: **"Does this look good? Ready to create the Linear ticket?"**
+If the user requested a draft or review only, stop after showing it; do not ask to save and do not write any file. Report `needs_input` when an implementation-affecting TBD remains, otherwise `completed`. For creation requests, ask after the draft: **"Does this look good? Ready to save the PRD to the branch spec file?"**
 
 ### Template
 
@@ -144,50 +147,44 @@ As a [user], I want [goal], so [benefit].
 - User story IDs are document-unique: `US-001`, `US-002`, ...
 - Acceptance criteria carry no IDs. They are plain checkboxes under their story; the story heading already identifies them
 - Flow steps carry no IDs. Reference them outside the document as `US-001, flow step 2`
-- Coverage gate: every acceptance criterion is satisfied by at least one step in its own story's flow. Resolve any gap before confirmation. Run it as a check and report the result in chat; never write the mapping into the ticket
+- Coverage gate: every acceptance criterion is satisfied by at least one step in its own story's flow. Resolve any gap before confirmation. Run it as a check and report the result in chat; never write the mapping into the spec
 
 ## Step 4: Confirm Draft
 
-Only proceed after the user confirms the draft and any implementation-affecting TBDs are resolved. If they ask for changes, edit the draft in chat and re-confirm. A request for a draft, review, or analysis is not approval to create the ticket.
+Only proceed after the user confirms the draft and any implementation-affecting TBDs are resolved. If they ask for changes, edit the draft in chat and re-confirm. A request for a draft, review, or analysis is not approval to write the spec file.
 
-## Step 5: Create the Linear Ticket
+## Step 5: Write the Branch Spec File
 
-1. Use the connector's verified lightweight identity/read operation to verify auth/session.
-2. Use its verified team-list operation with a scoped limit (for example 10-20). If multiple teams exist, ask the user which one.
-3. Use its verified project-list operation scoped to the selected team. If multiple projects exist, ask; if none exist, omit the project field.
-4. Call the operation whose inspected schema explicitly **creates an issue**. Do not assume `save_issue` or `create_issue` across runtimes. Supply:
-   - `title`: the feature name (the H1 line, without the `#`)
-   - team: the selected team value in the exact field/type required by the inspected schema
-   - project: the selected project value, if any, in the exact field/type required by the schema
-   - `description`: the full PRD body in markdown, starting at `## Description` and including everything below
+1. Resolve the spec folder and run the write guards per `../references/spec-files.md`: worktree root, branch slug, protected-branch check, `.gitignore` line.
+2. Create `.vorbit/specs/<branch-slug>/` when missing.
+3. Write the full approved document to `prd.md`, starting at the H1.
+4. When revising an existing `prd.md`, preserve any `## Linear Sync` section verbatim at the end of the file — it belongs to the linear-sync skill.
+5. Re-read the written file and confirm it matches the schema (story count, one flow per story, required sections).
 
-**Reliability rules:**
-- Keep reads scoped by the selected team and a limit when the schema supports them. Don't run unfiltered workspace-wide listing
-- On temporary MCP/API error, retry once with the same parameters
-- If team listing fails but creation accepts a typed team, ask the user for the team value required by the schema
-- Only block execution when auth fails
+No Linear write happens in this skill. Posting human-readable summaries is a separate explicit step: `$vorbit-linear-sync`.
 
 ## Step 6: Report
 
-- Linear ticket **URL**
-- Team and project used
+- Spec file **path** and branch name
 - Quick summary: X user stories, X colocated flows, Z success criteria
-- Source note: Linear is now canonical; include legacy import provenance when applicable
-- Suggested next step:
-  - `$vorbit-epic <ticket-id>` to break the ticket into engineering sub-issues
+- If `.gitignore` was updated, say so
+- Reminder: the file lives only in this worktree and is gitignored; deleting the worktree deletes it, and Linear holds only summaries
+- Source note: the spec file is now canonical; include legacy import provenance when applicable
+- Suggested next steps:
+  - `$vorbit-epic` to break the PRD into an ordered task plan
+  - `$vorbit-linear-sync` to post short human-readable Linear summaries
   - `$vorbit-journey` to draw a flow diagram in FigJam
 
 ---
 
 ## Coverage Review Mode
 
-When asked to review whether sub-issues fulfill a parent PRD ticket:
+When asked to review whether the epic plan fulfills the branch PRD:
 
-1. Read the PRD spec ticket (`get_issue`) and its `## Implementation Parents` index. The spec ticket is not an implementation parent. For a legacy ticket without the index, ask for the implementation-parent URLs; never treat the spec's direct children as the new topology by assumption.
-2. Fetch every indexed implementation parent, then use `list_issues` with each implementation parent's `parentId` to fetch only its children.
-3. Verify one indexed parent per `US-###`, and map every acceptance criterion to child issue(s) under that story's parent.
-4. Flag missing/duplicate parents, cross-parent children, and work that **cannot be bundled** into an existing child as gaps; bundle-able housekeeping is not a gap.
-5. Report: topology check, coverage matrix (story → parent → children), gaps, verdict (covered / has gaps).
+1. Resolve the spec folder per `../references/spec-files.md` and read both `prd.md` and `epic.md`. If either is missing, report which one and stop — check `git worktree list` for a sibling worktree that may hold them.
+2. Verify one `## US-###` story section in `epic.md` per PRD story, and map every acceptance criterion to task(s) inside that story's section.
+3. Flag missing or duplicate story sections, tasks that quote criteria from a different story, and work that **cannot be bundled** into an existing task as gaps; bundle-able housekeeping is not a gap.
+4. Report: topology check, coverage matrix (story → tasks), gaps, verdict (covered / has gaps).
 
 ---
 
@@ -197,7 +194,7 @@ All sections below are required.
 
 | Section | Rules |
 |---------|-------|
-| Title (H1) | 3-8 words, no jargon. Becomes the Linear ticket title |
+| Title (H1) | 3-8 words, no jargon. Becomes the spec title and the linear-sync ticket title prefix |
 | Description | 1-2 short sentences, plain English, no tech detail |
 | Problem | 1-2 short paragraphs of user pain, not the technical fix |
 | User Stories | `As a [user], I want [goal], so [benefit]`; one end-to-end outcome, exactly one colocated flow before at least one plain-checkbox criterion |

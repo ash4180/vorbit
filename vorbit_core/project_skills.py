@@ -36,6 +36,7 @@ PROJECTED_SKILLS: dict[str, str] = {
     "prd": "prd",
     "journey": "journey",
     "epic": "epic",
+    "linear-sync": "linear-sync",
     "figma": "figma",
     "pencil": "pencil",
     "prototype": "prototype",
@@ -72,10 +73,11 @@ AGENTS: dict[str, dict[str, str]] = {
 
 # Appended verbatim to specific projected workflows for one agent.
 AGENT_NOTES: dict[tuple[str, str], str] = {
-    ("codex", "prd"): (
+    ("codex", "linear-sync"): (
         "\n> Codex note: the current Linear creation operation is `create_issue` — "
-        "after inspecting its schema, call `create_issue` with title, full PRD "
-        "description, team, and project. Never use `save_issue` as a guessed alias.\n"
+        "after inspecting its schema, call `create_issue` with the composed summary "
+        "title, description, team, and project. Never use `save_issue` as a guessed "
+        "alias.\n"
     ),
 }
 
@@ -129,6 +131,10 @@ def _rules(agent: dict[str, str]) -> list[tuple[re.Pattern[str], object]]:
         lit(
             "../_shared/mock-registry.md",
             "../references/mock-registry.md",
+        ),
+        lit(
+            "../_shared/spec-files.md",
+            "../references/spec-files.md",
         ),
         lit(
             'save using the "Save Content" section in `_shared/mcp-tool-routing.md` and pass',
@@ -274,7 +280,11 @@ def _workflow_path(agent_key: str, canonical_name: str) -> Path:
     )
 
 
-MIRRORED_SHARED: tuple[str, ...] = ("execution-contract.md", "mock-registry.md")
+MIRRORED_SHARED: tuple[str, ...] = (
+    "execution-contract.md",
+    "mock-registry.md",
+    "spec-files.md",
+)
 
 
 def _shared_target(agent_key: str, filename: str) -> Path:

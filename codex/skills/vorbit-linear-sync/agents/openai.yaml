@@ -1,0 +1,7 @@
+interface:
+  display_name: "Vorbit Linear Sync"
+  short_description: "Post short Linear summaries from branch spec files"
+  default_prompt: "Use $vorbit-linear-sync to post or refresh the human-readable Linear summary tickets for the current branch specs."
+
+policy:
+  allow_implicit_invocation: false

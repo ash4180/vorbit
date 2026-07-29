@@ -6,7 +6,7 @@ A disciplined, Test-Driven Development (TDD) workflow for implementing features 
 
 Read and follow `../references/execution-contract.md` before starting.
 
-> **Linear tools**: Use the connected Linear tools shipped with Vorbit. Verify the available operation and parameter schema before calling it; never guess a verb or field name.
+> **Requirement sources**: Branch spec tasks come from `.vorbit/specs/<branch-slug>/epic.md` — read `../references/spec-files.md` for path resolution and status fields. Linear issues remain fully supported: use the connected Linear tools shipped with Vorbit and verify the available operation and parameter schema before calling; never guess a verb or field name.
 
 ## Handle Loop Mode
 
@@ -17,21 +17,20 @@ Use the **implement-loop** skill for loop state management and sub-issue trackin
 
 ## Step 1: Resolve Input and Capabilities
 
-Preflight required connectors: confirm each needed connector is configured in Gemini CLI and inspect its current operation/parameter schemas; never guess tool names. Only require Linear for a Linear issue or URL. A connection failure blocks Linear tracking, not implementation from a complete user-provided description.
+Preflight required connectors: confirm each needed connector is configured in Gemini CLI and inspect its current operation/parameter schemas; never guess tool names. Only require Linear for a Linear issue or URL — a branch spec task needs no Linear connection at all. A connection failure blocks Linear tracking, not implementation from a spec task or a complete user-provided description.
 
 ## Step 2: Determine Context
 
-**Priority order for finding issue:**
+**Priority order for finding work:**
 
-1. **IF args = Linear issue ID** (e.g., `ABC-123`): Fetch issue details from Linear
-2. **IF args = Linear URL**: Extract issue ID from URL, fetch details
-3. **IF args = a git branch name containing a ticket ID** (e.g. `feature/vib-3814-signup-ux-...`, as copied from Linear's branch button): extract the ticket ID (`vib-3814` → `VIB-3814`), fetch the issue, and treat the pasted name as the target branch for Step 2.7
-4. **IF no args, check conversation**: Look for Linear issue URLs from recent `$vorbit-epic` output
-   - If found: "I see you just created [issue title]. Work on this one?" (Yes/No)
+1. **IF args = a spec task or story ID** (`T3`, `US-002`) — or args are empty while the branch spec plan `.vorbit/specs/<branch-slug>/epic.md` exists: use the spec chain. Read `prd.md` and `epic.md`; no Linear connection is needed. For empty args, list that plan's `pending` tasks in implementation order and ask which one to take
+2. **IF args = Linear issue ID** (e.g., `ABC-123`): Fetch issue details from Linear
+3. **IF args = Linear URL**: Extract issue ID from URL, fetch details
+4. **IF args = a git branch name containing a ticket ID** (e.g. `feature/vib-3814-signup-ux-...`, as copied from Linear's branch button): extract the ticket ID (`vib-3814` → `VIB-3814`), fetch the issue, and treat the pasted name as the target branch for Step 2.7
 5. **IF nothing found**: Ask what to implement. Do not select assigned work without the user's request
-6. **IF description only**: Work directly on what user describes (no Linear tracking)
+6. **IF description only**: Work directly on what user describes (no spec or Linear tracking)
 
-For a Linear issue, record the issue ID and description update timestamp used as the requirement baseline. If it changes during implementation, stop and reconcile the new requirements.
+For a spec task, the requirement baseline is the task section plus its story header in `epic.md`, and the quoted criteria's source story in `prd.md`; note the file state at read time. For a Linear issue, record the issue ID and description update timestamp. If the baseline changes during implementation, stop and reconcile the new requirements.
 
 ## Step 2.7: Branch Setup
 
@@ -53,6 +52,12 @@ Branch setup completes before Step 3 moves the issue to In Progress, so an abort
 
 ## Step 3: Before Starting
 
+For spec tasks:
+- Read the task section and its story header in `epic.md`, and the owning story in `prd.md`
+- Map the task to its story (`US-*`), its acceptance criteria, and its flow steps
+- Confirm no implementation-affecting `TBD` remains
+- Only after those gates pass, set the task's `**Status:**` line to `in-progress` — edit exactly that line and nothing else in the file
+
 For Linear issues:
 - Read issue description for requirements
 - Check parent issue for SDD and style findings
@@ -63,13 +68,13 @@ For Linear issues:
 
 ## Step 3.5: Parse Enhanced Issue Format
 
-**CRITICAL: If issue contains these sections, use them:**
+**CRITICAL: If the task or issue contains these sections, use them:**
 
-### Check "Related Parent Acceptance Criteria"
+### Check "Related Story Acceptance Criteria" (spec task) or "Related Parent Acceptance Criteria" (Linear)
 If present:
-1. Read the implementation parent's acceptance criteria listed in the issue
+1. Read the story or parent acceptance criteria listed in the task/issue
 2. These are your PRIMARY success criteria
-3. **Rule:** Task is NOT done until ALL listed parent criteria are satisfied
+3. **Rule:** Task is NOT done until ALL listed criteria are satisfied
 
 ### Check "Test Criteria"
 If present, this is the test contract: write these tests first (TDD) and treat the task as incomplete until each listed check passes or has an honest recorded blocker.
@@ -109,7 +114,7 @@ Detect whether the project uses any localization system (libraries, locale files
 
 ## Step 5: Handle Parent Issues
 
-If the selected issue has open sub-issues, do not silently implement the whole tree. Show the queue from the parent's `## Implementation Order` section and ask the user to choose one sub-issue or explicitly start loop mode. Normal implementation owns one issue at a time; implement-loop owns multi-issue progression.
+If the selected input is a story (`US-###`) with multiple pending tasks, or a Linear issue with open sub-issues, do not silently implement the whole tree. Show the queue from its `Implementation Order` section and ask the user to choose one task or sub-issue, or explicitly start loop mode. Normal implementation owns one item at a time; implement-loop owns multi-item progression.
 
 ## Step 6: TDD Implementation
 
@@ -131,7 +136,8 @@ Mark done only when every gate defined in Steps 3.5-6 above is satisfied.
 
 ## Step 7: On Task Completion
 
-- Keep the implementation parent "In Progress" until a PR exists. Implementation sub-issues may move to "Done" after their own ACs and tests pass.
+- Spec task: set its `**Status:**` line to `done` once its ACs and tests pass. The story is complete only when all of its tasks are `done`; suggest `$vorbit-linear-sync` to refresh the Linear summaries.
+- Linear: keep the implementation parent "In Progress" until a PR exists. Implementation sub-issues may move to "Done" after their own ACs and tests pass.
 - Report changed files, verification evidence, and remaining release steps in the current session.
 
 ## Step 8: On Feature Completion
@@ -149,4 +155,4 @@ Do not create a generic `memory.md`. Record durable decisions only in an existin
 
 For simple tasks (< 30 lines):
 - Keep the same search, scope, and verification rules
-- Skip issue ceremony only when no Linear issue was supplied
+- Skip issue ceremony only when no spec task and no Linear issue was supplied
