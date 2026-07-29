@@ -1,19 +1,20 @@
 ---
 name: epic
-description: Use when user says "create issues", "break down PRD", "set up epic", "create Linear tasks", "plan sprint", "convert to issues", "draft ticket", "make ticket", "create ticket for [feature]", or wants to transform PRD user stories into Linear epics and sub-issues. Also triggers when user describes a feature idea without a PRD - will use UX skill to gather requirements first.
+description: Use when user says "create issues", "break down PRD", "set up epic", "create Linear tasks", "plan sprint", "convert to issues", "draft ticket", "make ticket", "create ticket for [feature]", or wants to transform PRD user stories into an executable epic plan file with ordered tasks, plus optional short Linear summary tickets. Also triggers when user describes a feature idea without a PRD - will use UX skill to gather requirements first.
 ---
 
 # Epic Planning Skill
 
-Transform User Stories (from PRD) into executable Engineering Tasks (Epics/Issues) in Linear.
+Transform User Stories (from PRD) into an executable epic plan, saved as a markdown file next to the PRD file. The full engineering detail lives in that file; Linear optionally gets one short, human-readable summary ticket per user story — never full sub-issue trees.
 
 **Key Features:**
-- Sub-issues include plain-language "Why" section
-- Each sub-issue references parent epic's acceptance criteria
+- Tasks include plain-language "Why" section
+- Each task references its epic's acceptance criteria
 - File paths are specified with exact locations
 - Existing code patterns and constants are identified for reuse
-- UI sub-issues include reminder for implementer to use ui-patterns skill
+- UI tasks include reminder for implementer to use ui-patterns skill
 - Visual dependency tree shows implementation order by phase
+- Every task carries a `**Status:**` line (`pending` | `in-progress` | `done` | `blocked`) so progress lives in the plan file
 
 ## Step 1: Detect Platform & Verify Connection
 
@@ -75,14 +76,14 @@ cat skills/ux/SKILL.md
 
 **Rule:** Never skip UX questioning when requirements are incomplete. Vague tickets = bugs.
 
-## Step 3: Detect Team's Linear Setup
+## Step 3: Detect Team's Linear Setup (only if summary tickets are wanted)
+
+Skip this step unless the user wants the optional Linear summary tickets (Step 8.5).
 
 **Adapt to team's existing patterns.**
 
 Use Linear MCP:
 - `list_teams` - Get team ID
-- `list_issue_statuses` - Get actual state names
-- `list_issue_labels` - Get existing labels
 - `list_projects` - Get relevant project
 
 Ask user if unclear: "Which team/project?"
@@ -123,11 +124,11 @@ find . -name "constants*" -o -name "config*" | head -20
 ### 4.4 Check for Mock Data
 If prototype exists with mock data:
 - List all mock locations (`mocks/` folders)
-- Include "Swap mock to real API" as sub-issue
+- Include "Swap mock to real API" as a task
 
 ### 4.5 Detect UI Work
 If feature includes UI components:
-- Add note in sub-issue: "⚠️ Implementer: Use `/vorbit:design:ui-patterns` skill"
+- Add note in task: "⚠️ Implementer: Use `/vorbit:design:ui-patterns` skill"
 - Identify existing UI patterns to follow
 
 ## Step 5: Create Technical Plan (SDD)
@@ -149,7 +150,7 @@ Create SDD (Specification-Driven Development) document:
 Present plan and ask:
 - "Does this approach make sense?"
 - "Any concerns?"
-- "Ready to create Linear issues?"
+- "Ready to save the epic plan? Want short Linear summary tickets too?"
 
 **DO NOT proceed until user confirms.**
 
@@ -160,13 +161,13 @@ Present plan and ask:
 For each User Story, create:
 - **Title**: Transform user story goal → kebab-case (e.g., "I want to login" → `add-user-login`)
 - **Description**: User story + acceptance criteria + **test criteria (REQUIRED for TDD)**
-- **Sub-issues** (if complex): Apply **Parallel** label only when truly independent
+- **Tasks** (if complex): Set `Parallel: yes` only when truly independent
 
 **TDD rule:** Every issue MUST include `## Test Criteria` section. Tests are written FIRST before implementation.
 
-### Sub-issue Creation Checklist
+### Task Creation Checklist
 
-For EACH sub-issue, include all these sections:
+For EACH task, include all these sections:
 
 | Section | Required | Purpose |
 |---------|----------|---------|
@@ -183,9 +184,9 @@ For EACH sub-issue, include all these sections:
 
 ### Required Skills Detection
 
-Analyze each sub-issue and add required skills:
+Analyze each task and add required skills:
 
-| If sub-issue involves... | Add Required Skill |
+| If task involves... | Add Required Skill |
 |--------------------------|-------------------|
 | React/Next.js components | `react-best-practices` |
 | UI components, forms, modals, accessibility | `ui-patterns` |
@@ -193,20 +194,20 @@ Analyze each sub-issue and add required skills:
 
 **Rule:** Implementer MUST read these skill files before writing any code.
 
-### Mapping Epic AC to Sub-issues
+### Mapping Epic AC to Tasks
 
 1. List all Epic Acceptance Criteria (numbered)
-2. For each sub-issue, identify which Epic ACs it satisfies
+2. For each task, identify which Epic ACs it satisfies
 3. Copy those specific ACs into "Related Epic AC" section
-4. **Rule:** Every Epic AC must be covered by at least one sub-issue
+4. **Rule:** Every Epic AC must be covered by at least one task
 
 ### Plan Implementation Phases (REQUIRED)
 
 **Before creating issues, determine execution order:**
 
-1. **Identify dependencies** between sub-issues:
-   - Which sub-issues can run in parallel? (no shared files, no dependencies)
-   - Which sub-issues block others? (API before UI, schema before queries)
+1. **Identify dependencies** between tasks:
+   - Which tasks can run in parallel? (no shared files, no dependencies)
+   - Which tasks block others? (API before UI, schema before queries)
 
 2. **Group into phases:**
    - **Phase 1**: No dependencies (can run in parallel)
@@ -214,20 +215,34 @@ Analyze each sub-issue and add required skills:
    - **Phase 3**: Depends on Phase 2
    - etc.
 
-3. **Set blocked_by relationships:**
-   - For each dependent sub-issue, note which issues block it
-   - This will be used in Linear and in the final report
+3. **Set blocked-by relationships:**
+   - For each dependent task, note which tasks block it (`**Blocked by:** T1, T2`)
+   - This is written into the plan file and shown in the final report
 
 **Rule:** Always plan phases BEFORE creating issues. Implementation Order in report comes from this planning.
 
-## Step 8: Create in Linear
+## Step 8: Save the Epic Plan File
 
-Using plan from Step 7:
-1. Create parent issue (epic) first
-2. Create sub-issues with `parentId` = epic ID
-3. **Set `blocked_by` relationships** based on Implementation Phases planned above
-4. Apply **Parallel** label to Phase 1 issues (no dependencies)
-5. Use team's existing labels/states
+Using plan from Step 7, save one markdown file in the user's workspace folder, next to the PRD file.
+
+Filename format: `epic-[feature-name-kebab-case].md`
+
+Structure:
+1. Header: feature name, PRD file/link, date
+2. One `## US-XXX / Epic` section per user story: story, acceptance criteria scenarios, test criteria, and its `## Implementation Order` (phases with task IDs)
+3. Tasks numbered `T1`, `T2`, ... unique across the whole file, each using the Task template below and starting with `**Status:** pending`
+4. Never renumber existing tasks when revising the file; new tasks get fresh IDs
+
+The plan file is the source of truth for implementation and progress. Task `**Status:**` lines are updated as work happens.
+
+## Step 8.5: Optional Short Linear Summaries
+
+Only when the user said yes in Step 6:
+1. Create **one** ticket per user story — no sub-issues, no full trees
+2. Title: `[Feature]: [Story title]`
+3. Description, written for a non-technical reader: one-sentence story goal, acceptance criteria as plain checkboxes, and `Full plan: epic-[feature].md (saved in the workspace folder)`
+4. Record each ticket URL in the plan file under its story section as `**Linear:** [URL]`
+5. Re-running the sync updates the same tickets (found via the recorded URLs) instead of creating duplicates
 
 ## Step 9: Report
 
@@ -235,10 +250,10 @@ Using plan from Step 7:
 
 ### 1. Summary
 ```
-**Epic:** [ABC-100] [Epic title]
-**URL:** [Linear URL]
-**Sub-issues:** X total (P1: Y, P2: Z, P3: W)
-**PRD:** [URL or object ID]
+**Plan file:** epic-[feature].md
+**Stories:** X | **Tasks:** Y total (P1: A, P2: B, P3: C)
+**Linear summaries:** [one URL per story | skipped]
+**PRD:** [file, URL, or object ID]
 ```
 
 ### 2. Implementation Order (REQUIRED - DO NOT SKIP)
@@ -251,37 +266,37 @@ Show the phased dependency tree so implementer knows execution order:
 ## Implementation Order
 
 Phase 1 (Parallel - no dependencies)
-├── ABC-101: [Issue title]
-├── ABC-102: [Issue title]
-└── ABC-103: [Issue title]
+├── T1: [Task title]
+├── T2: [Task title]
+└── T3: [Task title]
 
 Phase 2 (depends on Phase 1)
-└── ABC-104: [Issue title]
-    └── blocked by: ABC-101, ABC-102
+└── T4: [Task title]
+    └── blocked by: T1, T2
 
 Phase 3 (depends on Phase 2)
-├── ABC-105: [Issue title]
-│   └── blocked by: ABC-104
-└── ABC-106: [Issue title]
-    └── blocked by: ABC-104
+├── T5: [Task title]
+│   └── blocked by: T4
+└── T6: [Task title]
+    └── blocked by: T4
 ```
 
 **Rules for dependency tree:**
-- Phase 1 = issues with no dependencies (can run in parallel)
+- Phase 1 = tasks with no dependencies (can run in parallel)
 - Each subsequent phase depends on previous phase completing
-- Show `blocked by:` for each issue with dependencies
+- Show `blocked by:` for each task with dependencies
 - Group parallel work within same phase
 
 ### 3. Verification Checklist (Pre-Close)
 
-**Include in epic description for implementer to check before closing:**
+**Include in each epic section of the plan file for implementer to check before closing:**
 
 ```markdown
 ## Verification (Check before closing epic)
 
 ### Completeness
-- [ ] All sub-issues completed
-- [ ] Every Epic AC addressed by at least one sub-issue
+- [ ] All tasks `done`
+- [ ] Every Epic AC addressed by at least one task
 - [ ] No orphaned requirements (ACs without implementation)
 
 ### Correctness
@@ -301,7 +316,7 @@ Phase 3 (depends on Phase 2)
 ### 4. Next Steps
 ```
 Ready to implement! Start with Phase 1:
-→ `/vorbit:implement:implement ABC-101`
+→ implement T1 from epic-[feature].md
 ```
 
 **Rule:** Never finish epic without showing Implementation Order. Implementer needs this to know where to start.
@@ -326,9 +341,9 @@ Ready to implement! Start with Phase 1:
 
 ## Issue Structure
 
-### Epic (Parent)
+### Epic (one `## US-XXX / Epic` section in the plan file)
 
-**Description template:**
+**Section template:**
 ```markdown
 ## User Story
 US-XXX: As a [user], I want [goal]...
@@ -364,7 +379,7 @@ US-XXX: As a [user], I want [goal]...
 ## Verification (Check before closing epic)
 
 ### Completeness
-- [ ] All sub-issues completed
+- [ ] All tasks `done`
 - [ ] Every AC scenario addressed
 
 ### Correctness
@@ -379,20 +394,27 @@ US-XXX: As a [user], I want [goal]...
 [Link]
 ```
 
-### Sub-issue (Child)
+### Task (`### T#:` heading inside its epic section)
 
-**Title**: `component-name` or `step-name` (use **Parallel** label, not prefix)
+**Title**: `component-name` or `step-name`
 
-**Description template:**
+**Task template:**
 ```markdown
+### T1: [task title]
+
+**Status:** pending
+**Priority:** P1 | P2 | P3
+**Parallel:** yes | no
+**Blocked by:** — | T2, T3
+
 ## Why This Is Needed
 **What this does:** [Simple 1-sentence explanation]
 **Why it matters:** [Business/user impact - what breaks without this?]
 
 ## Related Epic Acceptance Criteria
-> This sub-issue must satisfy these goals from the parent epic:
-- [ ] [Epic AC #1 that this sub-issue addresses]
-- [ ] [Epic AC #2 that this sub-issue addresses]
+> This task must satisfy these goals from the parent epic:
+- [ ] [Epic AC #1 that this task addresses]
+- [ ] [Epic AC #2 that this task addresses]
 
 ⚠️ **Before marking done:** Verify ALL checked items above are satisfied.
 
@@ -413,7 +435,7 @@ US-XXX: As a [user], I want [goal]...
 | `react-best-practices` | `skills/react-best-practices/SKILL.md` | Performance patterns, waterfall elimination |
 | `ui-patterns` | `skills/ui-patterns/SKILL.md` | Accessibility, Tailwind, animation rules |
 
-*(Remove rows not applicable to this sub-issue)*
+*(Remove rows not applicable to this task)*
 
 ## Reuse & Patterns
 > Existing code to reference - DO NOT recreate, NO magic numbers
@@ -490,18 +512,18 @@ US-XXX: As a [user], I want [goal]...
 
 **CRITICAL: All implementation follows Test-Driven Development.**
 
-Every issue (epic and sub-issue) MUST include `## Test Criteria` section:
+Every epic section and task MUST include `## Test Criteria` section:
 - Tests are written FIRST before implementation code
 - Implementation is only "done" when all tests pass
 - No issue is complete without corresponding tests
 
 ---
 
-## Parallel Label Criteria
+## Parallel Criteria
 
-**Apply Parallel label ONLY when ALL are true:**
-1. Sub-issue has NO dependencies on other sub-issues
-2. Sub-issue does NOT block other sub-issues
+**Set `Parallel: yes` ONLY when ALL are true:**
+1. Task has NO dependencies on other tasks
+2. Task does NOT block other tasks
 3. Works on separate files/components (no merge conflicts)
 
-**Default: Sequential.** When in doubt, don't add Parallel label.
+**Default: `Parallel: no`.** When in doubt, keep it sequential.
