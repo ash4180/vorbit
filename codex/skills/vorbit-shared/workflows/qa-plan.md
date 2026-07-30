@@ -63,6 +63,7 @@ Show the full draft in chat and ask: **"Ready to save the QA plan?"** Do not wri
 - Reminder: the plan lives only in this worktree and is gitignored
 - Next steps:
   - test by hand and tick the boxes (recording rules below)
+  - `$vorbit-qa-report` to run the automated checks and write the dated report
   - `$vorbit-linear-sync` to show "QA: N of M checks passed" on each story ticket
 
 ## How the Tester Records Results

@@ -1,0 +1,78 @@
+---
+name: qa-report
+description: Use when the user asks to run the QA checks or produce a QA report for the current branch. It reads the manual results in qa-plan.md, optionally executes the plan's automated E2E commands (Playwright or any runner the plan lists), and writes a dated human-readable qa-report.md in the branch spec folder — newest run first, with a ready or not-ready verdict. It never writes to Linear. Requires an existing qa-plan.md; do not use to author the plan (qa-plan), validate acceptance criteria (verify), or fix code.
+---
+
+# QA Report Skill
+
+Turn the current QA state into a dated, forwardable report: what passed, what failed, and whether the feature is ready. The report is a plain-language file a stakeholder can read without opening the app or the plan.
+
+Read and follow `../_shared/execution-contract.md` before starting.
+
+Read `../_shared/spec-files.md` for spec path resolution, write guards, and file ownership before any spec read or write.
+
+This skill never writes to Linear. The story tickets keep only linear-sync's short `QA: N of M` count line.
+
+## Step 1: Read the Plan and Its Results
+
+1. Resolve the spec folder per `../_shared/spec-files.md`.
+2. Require `qa-plan.md`. If missing, run `git worktree list`, report any sibling worktree that may hold it, direct the user to `/vorbit:implement:qa-plan`, and stop.
+3. Collect manual results: ticked boxes, unticked boxes, and `**Fail:**` notes, per section.
+4. If no box is ticked and no fail is noted anywhere, ask once: has manual testing happened yet? Offer to continue with the automated checks only, and mark every manual check `not tested` in the report.
+
+## Step 2: Run the Automated Checks (optional, approved once)
+
+Only when the plan has an `Automated checks` section:
+
+1. List the `QP#` commands and ask once for approval to run them all. Skip this run entirely if the user declines — the report then uses the QP boxes as they stand, marked `not run this time`.
+2. Run each command exactly as the plan stores it. The tool does not matter — Playwright, Cypress, Maestro, or any open-source runner works the same because the plan stores the command, not the tool.
+3. Judge each run by exit status plus the runner's own summary line; quote failing test names in plain words. When a Playwright HTML/JSON results file exists, use it for the failing-test details.
+4. Update `qa-plan.md` to match reality: tick a `QP#` box on pass; on fail, untick it and add the `**Fail:**` note line. Touch nothing else in the plan file.
+5. A command that cannot run (missing dependency, no browser, no environment) is recorded as `blocked: [reason]` — never guessed as pass or fail.
+
+## Step 3: Write the Report
+
+1. Run the write guards per `../_shared/spec-files.md`.
+2. Write `qa-report.md` in the spec folder. Newest run goes **on top**; earlier run sections stay untouched below. Never rewrite an old run.
+3. Every line is plain language for a non-technical reader. Name checks by ID plus a short human phrase, not by test-file paths.
+
+### Report schema (one run section)
+
+```markdown
+# QA Report: [Feature Name]
+
+## Run [YYYY-MM-DD]
+
+**Branch:** [branch] | **Environment:** [where tested] | **Devices:** [what was actually used]
+**Verdict: READY** — all checks passed
+(or) **Verdict: NOT READY** — [N] checks failed, [M] not tested
+
+### Per story
+- US-001 [Story title]: 5 of 6 passed — 1 fail
+- US-002 [Story title]: all 4 passed
+
+### Failed checks
+- QA3: Submit with empty email — expected "Email required", the form submitted with no error
+- QP1: login E2E run — 2 of 14 tests failed (wrong redirect after login, missing error text)
+
+### Automated run
+- QP1: `npx playwright test e2e/login.spec.ts` → 12 passed, 2 failed
+- QP2: not run this time (user skipped)
+
+### Not tested
+- QA7, QA8 (device matrix rows for Safari — no Safari available this run)
+
+---
+```
+
+**Verdict rule:** `READY` only when every check in the plan is ticked. Any fail, block, or untested check = `NOT READY`, with the reason listed. Never soften a fail.
+
+## Step 4: Report in the Session
+
+- Verdict, one line
+- File path
+- Fails in plain words (max 5; if more, count them and name the worst)
+- Reminder: the report is local and gitignored — copy the run section out to share it
+- Next steps:
+  - fix fails via `/vorbit:implement:implement`, then re-run this skill
+  - `/vorbit:implement:linear-sync` refreshes only the short `QA: N of M` count on the story tickets — report details never go to Linear

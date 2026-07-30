@@ -1,0 +1,7 @@
+interface:
+  display_name: "Vorbit QA Report"
+  short_description: "Run QA checks and write the dated QA report file"
+  default_prompt: "Use $vorbit-qa-report to run the branch QA checks and write the dated report."
+
+policy:
+  allow_implicit_invocation: true
