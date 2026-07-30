@@ -15,21 +15,21 @@ This skill never writes to Linear. The story tickets keep only linear-sync's sho
 1. Resolve the spec folder per `../references/spec-files.md`.
 2. Require `qa-plan.md`. If missing, run `git worktree list`, report any sibling worktree that may hold it, direct the user to `$vorbit-qa-plan`, and stop.
 3. Collect manual results: ticked boxes, unticked boxes, and `**Fail:**` notes, per section.
-4. If unticked manual checks remain, offer both paths in one question: the user tests them by hand first, or the agent runs them in the browser now (Step 2.5), or the report marks them `not tested`.
+4. If unticked manual checks remain and a browser-automation capability exists, the agent runs them itself by default (Step 2.5) — the single Step 2 approval covers it; no extra question. Hand-testing is only for what the agent honestly cannot do: those checks come back marked `needs human`. Ask the user to choose (test by hand now, or `not tested` in the report) only when no browser capability exists or the app is unreachable.
 
 ## Step 2: Run the Automated Checks (optional, approved once)
 
 Only when the plan has an `Automated checks` section:
 
-1. List the `QP#` commands and ask once for approval to run them all. Skip this run entirely if the user declines — the report then uses the QP boxes as they stand, marked `not run this time`.
+1. List the `QP#` commands and ask once for approval to run the whole plan — this one approval covers both the commands here and the browser checks in Step 2.5. If the user declines, the report uses the boxes as they stand, marked `not run this time`.
 2. Run each command exactly as the plan stores it. The tool does not matter — Playwright, Cypress, Maestro, or any open-source runner works the same because the plan stores the command, not the tool.
 3. Judge each run by exit status plus the runner's own summary line; quote failing test names in plain words. When a Playwright HTML/JSON results file exists, use it for the failing-test details.
 4. Update `qa-plan.md` to match reality: tick a `QP#` box on pass; on fail, untick it and add the `**Fail:**` note line. Touch nothing else in the plan file.
 5. A command that cannot run (missing dependency, no browser, no environment) is recorded as `blocked: [reason]` — never guessed as pass or fail.
 
-## Step 2.5: Agent-Run Manual Checks (optional, approved once)
+## Step 2.5: Agent-Run Manual Checks (default when possible)
 
-Only when the runtime has a browser-automation capability (for example Playwright MCP tools or a connected browser) AND the user chose this path in Step 1:
+Runs by default when the runtime has a browser-automation capability (for example Playwright MCP tools or a connected browser) and the Step 2 approval was given — no second question:
 
 1. Confirm the test environment from the plan header (URL, test account) and that the app is reachable. If not, ask or fall back to `not tested`.
 2. For each unticked manual check, in plan order: perform the action exactly as written, then compare what actually appears against the check's `You should see:` text.
