@@ -15,6 +15,7 @@ Files, one owner each:
 
 - `prd.md` — written by the **prd** skill. Canonical requirements: user stories, acceptance criteria, flows, constraints, success criteria.
 - `epic.md` — written by the **epic** skill. Technical plan: one section per story, fully specified tasks, implementation order, task status.
+- `qa-plan.md` — written by the **qa-plan** skill. Human-runnable test plan: story checks, edge cases, device matrix, regression, performance. Whoever tests ticks the boxes and adds `**Fail:**` notes; skills never untick them.
 
 ## Guards (before any spec write)
 
