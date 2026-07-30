@@ -1,11 +1,11 @@
 ---
 name: qa-report
-description: Use when the user asks to run the QA checks or produce a QA report for the current branch. It reads the manual results in qa-plan.md, optionally executes the plan's automated E2E commands (Playwright or any runner the plan lists), and writes a dated human-readable qa-report.md in the branch spec folder — newest run first, with a ready or not-ready verdict. It never writes to Linear. Requires an existing qa-plan.md; do not use to author the plan (qa-plan), validate acceptance criteria (verify), or fix code.
+description: Use when the user asks to run the QA checks or produce a QA report for the current branch. It executes the plan's automated E2E commands (Playwright or any runner the plan lists), can click through the unticked manual checks itself when a browser-automation capability is available, records honest results in qa-plan.md, and writes a dated human-readable qa-report.md — newest run first, with a ready or not-ready verdict. It never writes to Linear. Requires an existing qa-plan.md; do not use to author the plan (qa-plan), validate acceptance criteria (verify), or fix code.
 ---
 
 # QA Report Skill
 
-Turn the current QA state into a dated, forwardable report: what passed, what failed, and whether the feature is ready. The report is a plain-language file a stakeholder can read without opening the app or the plan.
+Run the QA plan and turn the results into a dated, forwardable report: what passed, what failed, and whether the feature is ready. Testing and reporting happen in one run — the skill executes the automated commands, can click through manual checks in a real browser, and then writes the report. The report is a plain-language file a stakeholder can read without opening the app or the plan.
 
 Read and follow `../_shared/execution-contract.md` before starting.
 
@@ -18,7 +18,7 @@ This skill never writes to Linear. The story tickets keep only linear-sync's sho
 1. Resolve the spec folder per `../_shared/spec-files.md`.
 2. Require `qa-plan.md`. If missing, run `git worktree list`, report any sibling worktree that may hold it, direct the user to `/vorbit:implement:qa-plan`, and stop.
 3. Collect manual results: ticked boxes, unticked boxes, and `**Fail:**` notes, per section.
-4. If no box is ticked and no fail is noted anywhere, ask once: has manual testing happened yet? Offer to continue with the automated checks only, and mark every manual check `not tested` in the report.
+4. If unticked manual checks remain, offer both paths in one question: the user tests them by hand first, or the agent runs them in the browser now (Step 2.5), or the report marks them `not tested`.
 
 ## Step 2: Run the Automated Checks (optional, approved once)
 
@@ -29,6 +29,19 @@ Only when the plan has an `Automated checks` section:
 3. Judge each run by exit status plus the runner's own summary line; quote failing test names in plain words. When a Playwright HTML/JSON results file exists, use it for the failing-test details.
 4. Update `qa-plan.md` to match reality: tick a `QP#` box on pass; on fail, untick it and add the `**Fail:**` note line. Touch nothing else in the plan file.
 5. A command that cannot run (missing dependency, no browser, no environment) is recorded as `blocked: [reason]` — never guessed as pass or fail.
+
+## Step 2.5: Agent-Run Manual Checks (optional, approved once)
+
+Only when the runtime has a browser-automation capability (for example Playwright MCP tools or a connected browser) AND the user chose this path in Step 1:
+
+1. Confirm the test environment from the plan header (URL, test account) and that the app is reachable. If not, ask or fall back to `not tested`.
+2. For each unticked manual check, in plan order: perform the action exactly as written, then compare what actually appears against the check's `You should see:` text.
+3. Record honestly, using the same rules a human tester follows:
+   - matches → tick the box
+   - differs → leave unchecked and add `**Fail:** [what actually appeared] ([date])`
+   - cannot truly perform it (real phone in hand, camera, printed output, a browser the tool cannot open) → add `needs human: [reason]` under the check and leave it unchecked
+4. Device-matrix rows may be run with an emulated screen size; then note `(emulated)` on that check — an emulated phone is not a real phone.
+5. **Never tick a check the agent did not actually observe.** No screenshot or page state seen = not tested.
 
 ## Step 3: Write the Report
 
@@ -44,6 +57,7 @@ Only when the plan has an `Automated checks` section:
 ## Run [YYYY-MM-DD]
 
 **Branch:** [branch] | **Environment:** [where tested] | **Devices:** [what was actually used]
+**Run by:** [human | agent (browser) | mixed]
 **Verdict: READY** — all checks passed
 (or) **Verdict: NOT READY** — [N] checks failed, [M] not tested
 
@@ -61,6 +75,7 @@ Only when the plan has an `Automated checks` section:
 
 ### Not tested
 - QA7, QA8 (device matrix rows for Safari — no Safari available this run)
+- QA9 (needs human: real phone in hand)
 
 ---
 ```

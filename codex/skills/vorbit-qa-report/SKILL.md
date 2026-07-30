@@ -1,6 +1,6 @@
 ---
 name: vorbit-qa-report
-description: Use when the user asks to run the QA checks or produce a QA report for the current branch. It reads the manual results in qa-plan.md, optionally executes the plan's automated E2E commands (Playwright or any runner the plan lists), and writes a dated human-readable qa-report.md in the branch spec folder — newest run first, with a ready or not-ready verdict. It never writes to Linear. Requires an existing qa-plan.md; do not use to author the plan (qa-plan), validate acceptance criteria (verify), or fix code.
+description: Use when the user asks to run the QA checks or produce a QA report for the current branch. It executes the plan's automated E2E commands (Playwright or any runner the plan lists), can click through the unticked manual checks itself when a browser-automation capability is available, records honest results in qa-plan.md, and writes a dated human-readable qa-report.md — newest run first, with a ready or not-ready verdict. It never writes to Linear. Requires an existing qa-plan.md; do not use to author the plan (qa-plan), validate acceptance criteria (verify), or fix code.
 ---
 
 # Vorbit QA Report
