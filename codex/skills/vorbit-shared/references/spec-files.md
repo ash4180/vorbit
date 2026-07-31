@@ -8,7 +8,7 @@ Resolve once per run, inside the repository the user is working in (never the Vo
 
 1. Root: `git rev-parse --show-toplevel` — the current worktree's root.
 2. Branch: `git branch --show-current`.
-3. Spec folder: `<root>/.vorbit/specs/` — flat, no branch subfolder. The worktree already belongs to one branch; the branch link lives inside each file (see Branch linkage below).
+3. Spec folder: `<root>/.vorbit/` — flat, no branch subfolder. The worktree already belongs to one branch; the branch link lives inside each file (see Branch linkage below).
 
 Files, one owner each:
 

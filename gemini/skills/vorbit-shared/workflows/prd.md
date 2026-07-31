@@ -12,7 +12,7 @@ Read `../references/spec-files.md` for spec path resolution, write guards, and f
 
 The goal is a drafted PRD before touching the filesystem. Connection problems must never block drafting.
 
-**Source-of-truth rule:** The spec file `.vorbit/specs/prd.md` in the current worktree is the canonical PRD and the confirmed output of this skill. Linear tickets, pasted text, and explicit local files are import inputs, not competing sources of truth. Preserve their intent, record their provenance in the draft working notes, and normalize them into the spec file rather than continuing to maintain two PRDs.
+**Source-of-truth rule:** The spec file `.vorbit/prd.md` in the current worktree is the canonical PRD and the confirmed output of this skill. Linear tickets, pasted text, and explicit local files are import inputs, not competing sources of truth. Preserve their intent, record their provenance in the draft working notes, and normalize them into the spec file rather than continuing to maintain two PRDs.
 
 Resolve context in this order:
 
@@ -158,7 +158,7 @@ Only proceed after the user confirms the draft and any implementation-affecting 
 ## Step 5: Write the Branch Spec File
 
 1. Resolve the spec folder and run the write guards per `../references/spec-files.md`: worktree root, current branch, protected-branch check, `.gitignore` line.
-2. Create `.vorbit/specs/` when missing.
+2. Create `.vorbit/` when missing.
 3. Write the full approved document to `prd.md`, starting at the H1, with the `Branch:` line filled in.
 4. When revising an existing `prd.md`, preserve any `## Linear Sync` section verbatim at the end of the file — it belongs to the linear-sync skill.
 5. Re-read the written file and confirm it matches the schema (story count, one flow per story, required sections).

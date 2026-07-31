@@ -53,7 +53,7 @@ QA: [N] of [M] checks passed (counted from the story's qa-plan.md section — om
 
 ## Where the full spec lives
 Branch: `[branch name]`
-Full spec: `.vorbit/specs/` inside that branch's worktree (local working files, not in git)
+Full spec: `.vorbit/` inside that branch's worktree (local working files, not in git)
 Summary last synced: [YYYY-MM-DD]
 ```
 
