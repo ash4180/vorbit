@@ -2,7 +2,7 @@
 
 Use for autonomous iteration through a task queue — the branch spec plan's story tasks (spec mode), or Linear sub-issues (Linear mode) — until completion.
 
-1. Load the Vorbit runtime contract and durable rules. Require loop/auto-continue intent plus a queue source: a story (`US-###`) from the branch spec plan at `.vorbit/specs/<branch-slug>/epic.md` (see `../references/spec-files.md` for resolution, status fields, and the worktree-only trade-off), or an explicit Linear issue. Spec mode needs no Linear connection.
+1. Load the Vorbit runtime contract and durable rules. Require loop/auto-continue intent plus a queue source: a story (`US-###`) from the branch spec plan at `.vorbit/specs/epic.md` in the current worktree (see `../references/spec-files.md` for resolution, the `Branch:` line check, status fields, and the worktree-only trade-off), or an explicit Linear issue. Spec mode needs no Linear connection.
 2. Resolve runtime storage from `vorbit-resolve-rules` and use `<storage-root>/state/<project-slug>/codex-implement-loop.json`; do not write Claude-specific state into the repository.
 3. For cancel: read state, report cancellation in the current session, delete runtime state, and leave code untouched.
 4. For resume: never overwrite an existing state. Re-read the source (the story section in `epic.md`, or the Linear parent). If its baseline changed (file modification time, or issue update timestamp), persist `active: false`, `status: needs_input`, and the reason. An inactive `needs_input`, `blocked`, or `failed` state resumes only after the user supplies or confirms the missing resolution; then reconcile, update the baseline, clear failure tracking, reset `iteration` to 1, and set it back to `active: true`, `status: running`.

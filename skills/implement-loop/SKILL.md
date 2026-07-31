@@ -9,7 +9,7 @@ Run an approved implementation queue — a story from the branch epic plan, or a
 
 Read and follow `../_shared/execution-contract.md` before starting.
 
-Spec mode reads the queue from `.vorbit/specs/<branch-slug>/epic.md` — read `../_shared/spec-files.md` for path resolution and status fields — and needs no Linear connection. Linear mode: use the connected Linear tools only after verifying their current schemas. The Vorbit Claude plugin normally exposes `get_issue`, `list_issues`, `save_issue`, and `list_issue_statuses`.
+Spec mode reads the queue from `.vorbit/specs/epic.md` in the current worktree — read `../_shared/spec-files.md` for path resolution, the `Branch:` line check, and status fields — and needs no Linear connection. Linear mode: use the connected Linear tools only after verifying their current schemas. The Vorbit Claude plugin normally exposes `get_issue`, `list_issues`, `save_issue`, and `list_issue_statuses`.
 
 ## Inputs and Preconditions
 

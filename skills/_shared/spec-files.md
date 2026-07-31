@@ -8,8 +8,7 @@ Resolve once per run, inside the repository the user is working in (never the Vo
 
 1. Root: `git rev-parse --show-toplevel` — the current worktree's root.
 2. Branch: `git branch --show-current`.
-3. Slug: the branch name with every `/` replaced by `-` (`feature/vib-12-login` → `feature-vib-12-login`).
-4. Spec folder: `<root>/.vorbit/specs/<slug>/`.
+3. Spec folder: `<root>/.vorbit/specs/` — flat, no branch subfolder. The worktree already belongs to one branch; the branch link lives inside each file (see Branch linkage below).
 
 Files, one owner each:
 
@@ -23,6 +22,12 @@ Files, one owner each:
 - Empty branch output (detached HEAD): stop and ask the user to create or switch to a feature branch.
 - Branch is `main`, `master`, `dev`, `develop`, or `demo`: warn that specs are branch-scoped working documents and confirm before writing.
 - Ensure `<root>/.gitignore` contains a `.vorbit/` line; append it when missing and report the append in the session. Leave the `.gitignore` change uncommitted for the user.
+
+## Branch linkage
+
+- Every spec file records its branch in a `Branch:` line near the top (`prd.md` directly under the H1; the other files in their headers).
+- Before reading or writing specs, compare each file's `Branch:` line with the current branch. A mismatch means the folder holds another branch's leftovers (possible in a shared checkout after a branch switch): stop and ask before touching them.
+- Branch renamed? Update the `Branch:` lines and report it. No folders move — that is the point of keeping the path flat.
 
 ## Worktree scope (accepted trade-off)
 

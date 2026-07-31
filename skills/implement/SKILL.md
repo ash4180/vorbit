@@ -9,7 +9,7 @@ A disciplined, Test-Driven Development (TDD) workflow for implementing features 
 
 Read and follow `../_shared/execution-contract.md` before starting.
 
-> **Requirement sources**: Branch spec tasks come from `.vorbit/specs/<branch-slug>/epic.md` — read `../_shared/spec-files.md` for path resolution and status fields. Linear issues remain fully supported: use the connected Linear tools shipped with Vorbit and verify the available operation and parameter schema before calling; never guess a verb or field name.
+> **Requirement sources**: Branch spec tasks come from `.vorbit/specs/epic.md` in the current worktree — read `../_shared/spec-files.md` for path resolution, the `Branch:` line check, and status fields. Linear issues remain fully supported: use the connected Linear tools shipped with Vorbit and verify the available operation and parameter schema before calling; never guess a verb or field name.
 
 ## Handle Loop Mode
 
@@ -26,7 +26,7 @@ Read and follow `_shared/mcp-tool-routing.md` (glob for `**/skills/_shared/mcp-t
 
 **Priority order for finding work:**
 
-1. **IF args = a spec task or story ID** (`T3`, `US-002`) — or args are empty while the branch spec plan `.vorbit/specs/<branch-slug>/epic.md` exists: use the spec chain. Read `prd.md` and `epic.md`; no Linear connection is needed. For empty args, list that plan's `pending` tasks in implementation order and ask which one to take
+1. **IF args = a spec task or story ID** (`T3`, `US-002`) — or args are empty while the branch spec plan `.vorbit/specs/epic.md` exists (its `Branch:` line matching the current branch): use the spec chain. Read `prd.md` and `epic.md`; no Linear connection is needed. For empty args, list that plan's `pending` tasks in implementation order and ask which one to take
 2. **IF args = Linear issue ID** (e.g., `ABC-123`): Fetch issue details from Linear
 3. **IF args = Linear URL**: Extract issue ID from URL, fetch details
 4. **IF args = a git branch name containing a ticket ID** (e.g. `feature/vib-3814-signup-ux-...`, as copied from Linear's branch button): extract the ticket ID (`vib-3814` → `VIB-3814`), fetch the issue, and treat the pasted name as the target branch for Step 2.7
