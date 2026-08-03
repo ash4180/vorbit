@@ -73,6 +73,7 @@ Runs by default when the runtime has a browser-automation capability (for exampl
 ### Automated run
 - QP1: `npx playwright test e2e/login.spec.ts` → 12 passed, 2 failed
 - QP2: not run this time (user skipped)
+- Full technical detail: `playwright-report/index.html` (include this line only when the runner produced a report; use the runner's actual output path)
 
 ### Not tested
 - QA7, QA8 (device matrix rows for Safari — no Safari available this run)
