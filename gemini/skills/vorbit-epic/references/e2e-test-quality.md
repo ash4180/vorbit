@@ -7,3 +7,4 @@ Apply these rules when writing E2E test criteria for any sub-issue, regardless o
 3. **Cover every material branch.** Happy, error, empty, and retry paths each need an E2E check when present.
 4. **Make assertions non-vacuous.** Assert that a resource exists before asserting its content. A negative content assertion against a missing resource proves nothing.
 5. **Exercise the integrated system.** Use real HTTP, database, and file I/O at the E2E boundary. Reserve mocked internals for unit tests.
+6. **A clean console is part of passing.** For UI checks, read the browser console after the flow; an unexpected error fails the check even when the screen looks right.

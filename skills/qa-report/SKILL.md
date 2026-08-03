@@ -36,12 +36,13 @@ Runs by default when the runtime has a browser-automation capability (for exampl
 
 1. Confirm the test environment from the plan header (URL, test account) and that the app is reachable. If not, ask or fall back to `not tested`.
 2. For each unticked manual check, in plan order: perform the action exactly as written, then compare what actually appears against the check's `You should see:` text.
-3. Record honestly, using the same rules a human tester follows:
+3. After each check, read the browser console (the browser's hidden error list). Any new error there fails the check even when the screen looks right — quote the error in the `**Fail:**` note.
+4. Record honestly, using the same rules a human tester follows:
    - matches → tick the box
    - differs → leave unchecked and add `**Fail:** [what actually appeared] ([date])`
    - cannot truly perform it (real phone in hand, camera, printed output, a browser the tool cannot open) → add `needs human: [reason]` under the check and leave it unchecked
-4. Device-matrix rows may be run with an emulated screen size; then note `(emulated)` on that check — an emulated phone is not a real phone.
-5. **Never tick a check the agent did not actually observe.** No screenshot or page state seen = not tested.
+5. Device-matrix rows may be run with an emulated screen size; then note `(emulated)` on that check — an emulated phone is not a real phone.
+6. **Never tick a check the agent did not actually observe.** No screenshot or page state seen = not tested.
 
 ## Step 3: Write the Report
 

@@ -188,6 +188,10 @@ For each User Story, create:
 
 **Verification rule:** Every story section and every task MUST include a `## Test Criteria` section. Behavior tests are written first when the repository has a runnable harness; otherwise specify an honest observable validation method.
 
+**Test quality rules (every Test Criteria section):**
+- Unit tests mock only at the network edge (fake the API answer, never the app's own modules); every story includes at least one test that exercises the real API or the full integrated path
+- UI test criteria treat an unexpected browser-console error as a failure, even when the screen looks right
+
 **Epic planning inputs per story (required):**
 - User story ID (`US-###`)
 - The story's acceptance criteria, quoted verbatim from the PRD
@@ -417,7 +421,7 @@ Run `$vorbit-ui-patterns` before implementing UI components.
 - [ ] Unit test: [specific behavior]
 - [ ] Unit test: [edge case]
 
-### E2E Tests (required if feature involves scripts, hooks, or data parsing)
+### E2E Tests (required for every task that touches a screen, and for scripts, hooks, or data parsing)
 - [ ] E2E: [happy path] — assert observable output ([file written / state changed]), not just exit code
 - [ ] E2E: [each code path / flow branch] — one test per distinct flow
 - [ ] E2E: [false positive / negative case] — inputs that must NOT trigger
