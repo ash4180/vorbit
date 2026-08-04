@@ -1,0 +1,7 @@
+interface:
+  display_name: "Vorbit Teach"
+  short_description: "Plain-language decision cards from technical answers"
+  default_prompt: "Use $vorbit-teach to re-explain the last technical answer as a plain-language decision card."
+
+policy:
+  allow_implicit_invocation: true

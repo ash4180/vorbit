@@ -39,6 +39,7 @@ PROJECTED_SKILLS: dict[str, str] = {
     "linear-sync": "linear-sync",
     "qa-plan": "qa-plan",
     "qa-report": "qa-report",
+    "teach": "teach",
     "figma": "figma",
     "pencil": "pencil",
     "prototype": "prototype",
