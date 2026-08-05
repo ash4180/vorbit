@@ -144,6 +144,16 @@ As a [user], I want [goal], so [benefit].
 - Split materially different flows or outcomes into separate user stories instead of adding another flow to one story
 - Keep the single flow readable without deleting branches, retries, loops, or requirements that belong to its outcome
 
+### Plain-language rules (whole document)
+
+The PRD is written for a non-technical reader, in ADHD-friendly shape. Simplify the wording, never the substance — every rule, limit, and number survives, said simply.
+
+- Plain everyday words. Short sentences, one idea each. High-level: say what must be true for users, not how the code does it
+- **No file paths, component names, folder names, API routes, or library names anywhere in the PRD.** Name screens, buttons, and fields the way the user sees them. The epic plan rediscovers the technical anchors during its codebase study — that is where they belong
+- Each constraint is one short sentence in product words: what must stay true, plus why when it helps. "Dashboard pages keep their current header; only Settings changes" — not the component that enforces it
+- Exact values stay exact: numbers, language codes (en, ko, zh-TW), time targets
+- A PRD that needs two screens of constraints or reads like an engineering plan is doing the epic's job — move that content out
+
 ### Identifier and coverage rules
 
 - User story IDs are document-unique: `US-001`, `US-002`, ...
@@ -200,7 +210,7 @@ All sections below are required.
 | Description | 1-2 short sentences, plain English, no tech detail |
 | Problem | 1-2 short paragraphs of user pain, not the technical fix |
 | User Stories | `As a [user], I want [goal], so [benefit]`; one end-to-end outcome, exactly one colocated flow before at least one plain-checkbox criterion |
-| Constraints | Limits the implementation must respect |
+| Constraints | Plain-language product limits — what must stay true; no file paths or component names |
 | Success Criteria | Sourced numbers (percentages, times, counts), or classified `TBD-###` placeholders |
 
 - **AC coverage**: every acceptance criterion is satisfied by at least one step in its own story's flow. Verified before the draft is shown; reported in chat, never persisted as a section
@@ -217,3 +227,5 @@ All sections below are required.
 | A standalone `## User Flows` section | One `**User Flow:**` inside each user story | The outcome, flow, and acceptance criteria stay together |
 | Multiple flows inside one user story | Split materially different flows into separate user stories | One story owns one end-to-end user outcome |
 | Prefixing criteria or flow steps with IDs | `- [ ] Clicking Create shows an error` | The story heading and the list position already identify them. IDs only earn their keep when something *outside* the document points at them |
+| "Reuse `src/components/ui/`; no new UI library" | "Use today's building blocks; do not add a new design system" | File paths and folder names are epic language, not PRD language |
+| "`PageHeader` is deliberately title-less for dashboards" | "Dashboard pages keep their current header; only Settings changes" | State the product rule, not the component that enforces it |
