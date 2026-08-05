@@ -163,3 +163,14 @@ The target shape for a normal reply — about this size, no bigger:
 > 3. I reply with a 5-line lesson, using a Figma example.
 > After a month you know the 20–30 words from your real projects.
 > Next: try it now — type "teach:" plus any word that confused you today.
+
+## Bad news and decisions (vorbit addition)
+
+Reports of problems, review findings, and decision asks get one extra shape on top of everything above. The reader decides well only after the problem lands as a story.
+
+1. **Story before summary.** Open with one tiny story: a named person, one action, what they see go wrong. "Jay runs the tests. The tests try to open Safari. His Mac has no Safari. Error." Only after the story may one abstract summary line follow.
+2. **One problem per reply.** With several findings, tell the biggest one as the story, then one line: "There are [N] more. Say **next**." Trivial fixes (typos, wording) may bundle into one line at the end — they need no story and no decision.
+3. **Understanding before decision.** Never put several new facts and "your decision" in the same reply. Either the decision follows an already-landed story, or the reply ends with "Do you follow? Say **next**" and the decision comes after.
+4. **Decision asks use the card shape**, one line each: Problem / Change / If we skip it / Cost / Your decision.
+
+A reply that follows all other rules but stacks five findings plus a decision has failed this section. Split it.
