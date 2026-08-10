@@ -237,7 +237,7 @@ Using the approved plan:
 
 1. If the source was a legacy fallback, write the approved canonical `prd.md` first (prd schema). It becomes the requirements reference for the whole plan.
 2. Run the write guards per `../references/spec-files.md` (branch, protected-branch check, `.gitignore` line).
-3. Write `epic.md` per the Epic Schema below: header, then story sections in PRD order, each with its tasks and its own `## Implementation Order` using real task IDs. Every new task starts with `**Status:** pending`.
+3. Write `epic.md` per the Epic Schema below: header (including the `Outcome:` gist copied from the PRD's Problem and Description), then story sections in PRD order, each with its tasks and its own `## Implementation Order` using real task IDs. Every new task starts with `**Status:** pending`.
 4. For a revision, apply the Step 3 preservation rules (IDs, statuses, no silent removals).
 5. Re-read the written file and verify: story count matches the PRD, every task has exactly one Status line, every Implementation Order references only task IDs that exist in the same story section. Flag any mismatch instead of claiming success.
 
@@ -289,6 +289,7 @@ Next: run `$vorbit-linear-sync` to post story summaries, then start Phase 1 with
 
 Source: prd.md (this folder)
 Branch: [branch name]
+Outcome: [1-2 plain sentences copied from prd.md Problem + Description: the user-visible result this epic delivers. A copy for orientation only; prd.md stays the source of truth]
 
 ## US-001: [Story Section Title]
 
