@@ -6,6 +6,8 @@ Quick idea exploration before PRD creation. Supports saving to Notion or Anytype
 
 Read and follow `../references/execution-contract.md` before starting.
 
+Read `../references/glossary.md`: use the project's `CONTEXT.md` glossary terms when it exists, and record newly agreed terms there.
+
 ## Step 1: Detect Platform & Verify Connection
 
 Preflight required connectors: confirm each needed connector is configured in Codex and inspect its current operation/parameter schemas; never guess tool names before any external call. Saving is optional: discover and verify Notion/Anytype when the user wants a saved artifact, but lack of a connection must not block questioning, analysis, or an approved chat draft.
@@ -13,6 +15,8 @@ Preflight required connectors: confirm each needed connector is configured in Co
 ## Step 2: Resolve the PRD-Blocking Unknowns
 
 Ask questions via plain-text chat questions until every unknown that would block a PRD is either answered or explicitly parked as unresolved. Depth is set by the information need, not a count: a well-specified idea may need 4 targeted questions; a vague one may need 15. Size each batch to what the user can answer comfortably.
+
+Work in rounds. Each round asks every question that is answerable now; a question whose answer depends on another question still open in the same round waits for a later round. Mark a recommended option on every question. Facts are your job, never the user's: anything discoverable from the codebase, connected tools, or the web gets looked up between rounds — ask the user only for decisions. After each round of answers, recompute what became askable.
 
 Cover these categories, skipping any the user's request already settles:
 - Core functionality decisions

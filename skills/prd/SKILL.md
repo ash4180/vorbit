@@ -11,6 +11,8 @@ Read and follow `../_shared/execution-contract.md` before starting.
 
 Read `../_shared/spec-files.md` for spec path resolution, write guards, and file ownership before any spec read or write.
 
+Read `../_shared/glossary.md`: use the project's `CONTEXT.md` glossary terms when it exists, and record newly agreed terms there.
+
 ## Step 1: Gather Context (Draft First)
 
 The goal is a drafted PRD before touching the filesystem. Connection problems must never block drafting.

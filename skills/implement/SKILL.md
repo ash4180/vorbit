@@ -9,6 +9,8 @@ A disciplined, Test-Driven Development (TDD) workflow for implementing features 
 
 Read and follow `../_shared/execution-contract.md` before starting.
 
+Read `../_shared/glossary.md`: use the project's `CONTEXT.md` glossary terms when it exists, and record newly agreed terms there.
+
 > **Requirement sources**: Branch spec tasks come from `.vorbit/epic.md` in the current worktree — read `../_shared/spec-files.md` for path resolution, the `Branch:` line check, and status fields. Linear issues remain fully supported: use the connected Linear tools shipped with Vorbit and verify the available operation and parameter schema before calling; never guess a verb or field name.
 
 ## Handle Loop Mode
@@ -124,6 +126,8 @@ If the selected input is a story (`US-###`) with multiple pending tasks, or a Li
 **RULE: Task is NOT done until tests pass.**
 
 Keep the change within the selected issue. Do not add a frontend or backend counterpart unless its acceptance criteria require it.
+
+**Bug fixes — reproduce before diagnosing:** before naming a cause, build one command that fails on the reported bug and shows the user's exact symptom — a failing test at the right seam, or for UI bugs a browser run capturing the actual console error. No repro, no hypothesis. The repro becomes the Red test below; after Green, re-run it against the original scenario.
 
 For each task, follow Red/Green/Refactor:
 

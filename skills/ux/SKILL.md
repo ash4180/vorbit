@@ -47,6 +47,8 @@ This file contains 14 question categories. Use ALL relevant categories.
 Use `AskUserQuestion` with 2-4 questions per batch. Go through each category:
 the categories and their questions are defined in the matrix file loaded in Step 1.
 
+Each batch asks only what is answerable now — a question that depends on an answer still open waits for a later batch. Mark a recommended option on every question. Look up facts (codebase, connected tools) yourself between batches; ask the user only for decisions.
+
 **Skip categories not relevant to the task.**
 
 ### Step 3: Cross-Check Edge Cases

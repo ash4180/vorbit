@@ -11,6 +11,8 @@ Read and follow `../_shared/execution-contract.md` before starting.
 
 Read `../_shared/spec-files.md` for spec path resolution, write guards, identifiers, and status fields before any spec read or write.
 
+Read `../_shared/glossary.md`: use the project's `CONTEXT.md` glossary terms when it exists, and record newly agreed terms there.
+
 ## Step 1: Locate the Branch PRD
 
 PRDs live as branch spec files written by [`/vorbit:design:prd`](../../skills/prd/SKILL.md). Resolve the spec folder per `../_shared/spec-files.md`:
@@ -186,6 +188,7 @@ For each User Story, create:
 - **Section title**: `## US-###: [clear, human-readable title derived from the story goal]`
 - **Section header**: user story + related flow context + acceptance criteria + **test criteria (REQUIRED for TDD)**
 - **Tasks**: Decompose into executable tasks when the story needs more than one ordered unit of work. A story that is itself one small executable unit gets a single task carrying its Test Criteria. Apply **Parallel** per the criteria at the end of this document
+- **Slice vertically**: prefer tasks that cut one narrow but complete path through every layer the story touches (data → API → UI → test), so each finished task is demoable or verifiable on its own. Avoid tasks that build a single layer with nothing observable. Exception — a wide mechanical refactor (rename, retype) that breaks many call sites at once: sequence it as expand (add new form beside old) → migrate call sites in batches → contract (delete old form), each its own task
 
 **Verification rule:** Every story section and every task MUST include a `## Test Criteria` section. Behavior tests are written first when the repository has a runnable harness; otherwise specify an honest observable validation method.
 

@@ -140,6 +140,10 @@ def _rules(agent: dict[str, str]) -> list[tuple[re.Pattern[str], object]]:
             "../references/spec-files.md",
         ),
         lit(
+            "../_shared/glossary.md",
+            "../references/glossary.md",
+        ),
+        lit(
             'save using the "Save Content" section in `_shared/mcp-tool-routing.md` and pass',
             "save via the connected platform's current content-creation tools "
             "(inspect schemas first) and pass",
@@ -285,6 +289,7 @@ def _workflow_path(agent_key: str, canonical_name: str) -> Path:
 
 MIRRORED_SHARED: tuple[str, ...] = (
     "execution-contract.md",
+    "glossary.md",
     "mock-registry.md",
     "spec-files.md",
 )

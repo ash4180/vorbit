@@ -2,6 +2,7 @@
 name: adhd
 description: Use only when the user explicitly invokes ADHD output mode or asks for ADHD-friendly responses. It reshapes every later reply for the rest of the session — next action first, numbered steps, state restated each turn, tangents deferred, concrete time estimates, visible wins — until the user says "stop adhd mode". Do not invoke implicitly, and not for one-off brevity or summary requests.
 license: MIT
+disable-model-invocation: true
 metadata:
   source: https://github.com/ayghri/i-have-adhd (MIT, vendored 2026-07-28)
 ---

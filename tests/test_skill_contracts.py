@@ -29,6 +29,9 @@ EXPLICIT_ONLY = {
 PORTABLE_FRONTMATTER_KEYS = {
     "allowed-tools",
     "description",
+    # Claude Code-only: restricts a skill to explicit user invocation. The
+    # projector drops it from generated agent mirrors, so it stays portable.
+    "disable-model-invocation",
     "license",
     "metadata",
     "name",
