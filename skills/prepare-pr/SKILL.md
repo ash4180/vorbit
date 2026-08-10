@@ -262,13 +262,24 @@ For branches without design files, the skill still handles PR body generation an
 4. **Update Linear issue status** only when Linear integration was selected, resolved, and approved:
    - Call the Linear connector's issue-update operation (`save_issue` in the vorbit Claude plugin) with `state: "In Review"`
 
-5. **Report:**
+5. **Send a Slack DM to the user** (skip silently when no Slack connection exists):
+   - Resolve the Slack connector per `_shared/mcp-tool-routing.md` and send a direct message to the current logged-in user.
+   - Message is exactly two lines, nothing else:
+     ```
+     [{branch-name}]({pr-url})
+     {one-sentence summary}
+     ```
+   - The summary is ONE sentence in plain, everyday language stating the user-visible outcome — include a bug-fix count when bugs were fixed. Example: "All settings forms now share one narrow, readable layout, and four small save bugs are fixed." No file names, code identifiers, or technical jargon: the user forwards this line to non-technical stakeholders as-is.
+   - A Slack failure never rolls back or blocks anything — record it for the report.
+
+6. **Report:**
    ```
    PR created: {pr-url}
 
      Branch:        {branch} → {base}
      Design files:  {count} stripped, recovery hash recorded
      Linear:        {issue-id} → "In Review" | skipped with reason
+     Slack DM:      sent | skipped (no Slack connection) | failed ({reason})
      Recovery:      returned in the current session | not applicable
    ```
 
