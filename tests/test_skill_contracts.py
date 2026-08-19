@@ -77,7 +77,7 @@ def test_agent_skill_sets_and_descriptions_stay_in_sync():
     gemini = _skill_directories(GEMINI_SKILLS)
 
     assert [path.name for path in codex] == [path.name for path in gemini]
-    assert len(codex) == 22
+    assert len(codex) == 23
 
     for codex_dir, gemini_dir in zip(codex, gemini):
         codex_meta = _frontmatter(codex_dir / "SKILL.md")
@@ -192,7 +192,7 @@ def test_projected_workflows_have_no_legacy_agent_or_handoff_syntax(root: Path):
 
 def test_canonical_skills_load_the_execution_contract():
     skill_dirs = _skill_directories(CANONICAL_SKILLS)
-    assert len(skill_dirs) == 22
+    assert len(skill_dirs) == 23
     contract = CANONICAL_SKILLS / "_shared" / "execution-contract.md"
     assert contract.is_file()
     for skill_dir in skill_dirs:

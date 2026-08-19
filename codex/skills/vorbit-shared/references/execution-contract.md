@@ -19,7 +19,7 @@ Do not guess unavailable tool names. A missing required capability ends as `bloc
 
 ## Tracker Communication
 
-Do not create Linear comments. Report progress, evidence, blockers, cancellation, and completion in the current session instead. Explicitly authorized issue creation, description edits, and status changes remain allowed.
+Do not create Linear comments, except the single user-approved comment the tutorial workflow may post. Report progress, evidence, blockers, cancellation, and completion in the current session instead. Explicitly authorized issue creation, description edits, and status changes remain allowed.
 
 ## Source Baseline
 
