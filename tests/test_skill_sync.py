@@ -12,6 +12,7 @@ from vorbit_core.sync import build_sync_plan
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 RESOLVER_SCRIPT = REPO_ROOT / "scripts" / "vorbit-resolve-rules"
+GITHUB_MCP_SCRIPT = REPO_ROOT / "scripts" / "vorbit-github-mcp"
 
 
 def _run_sync(
@@ -33,7 +34,7 @@ def _run_sync(
 
 
 @pytest.mark.parametrize("agent", ["codex", "gemini"])
-def test_sync_installs_every_current_skill_and_rule_resolver_resource(
+def test_sync_installs_every_current_skill_and_agent_resource(
     agent,
     temp_home,
 ):
@@ -69,14 +70,22 @@ def test_sync_installs_every_current_skill_and_rule_resolver_resource(
     )
     assert json.loads(resolver_result.stdout)["agent"] == agent
 
+    if agent == "codex":
+        installed_github_mcp = agent_home / "bin" / "vorbit-github-mcp"
+        assert installed_github_mcp.is_symlink()
+        assert installed_github_mcp.resolve() == GITHUB_MCP_SCRIPT.resolve()
+
     manifest = json.loads((agent_home / ".vorbit-managed-links.json").read_text())
     assert manifest["schema_version"] == 1
     assert manifest["agent"] == agent
     assert manifest["links"]["bin/vorbit-resolve-rules"] == str(RESOLVER_SCRIPT.resolve())
-    assert set(manifest["links"]) == {
+    expected_links = {
         "bin/vorbit-resolve-rules",
         *(f"skills/{source.name}" for source in source_skills.iterdir()),
     }
+    if agent == "codex":
+        expected_links.add("bin/vorbit-github-mcp")
+    assert set(manifest["links"]) == expected_links
 
 
 def test_sync_prunes_only_manifest_owned_and_legacy_repo_owned_stale_links(

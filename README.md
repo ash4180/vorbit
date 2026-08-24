@@ -27,11 +27,18 @@ Restart your Claude Code session after running the setup script.
 
 ```bash
 cd /path/to/vorbit
-bash scripts/sync-codex-skills.sh
+bash scripts/setup-codex.sh
 ```
 
-This syncs Vorbit skills into `~/.codex/skills/` and installs the deterministic
-rule resolver at `~/.codex/bin/vorbit-resolve-rules`.
+This installs Vorbit skills, the deterministic rule resolver, and GitHub MCP.
+GitHub MCP reads each repository's `origin` owner and uses the matching account
+already saved by `gh auth login`. No GitHub token is stored by Vorbit.
+
+To sync only skills and managed helper links, run:
+
+```bash
+bash scripts/sync-codex-skills.sh
+```
 
 ### Gemini CLI
 
@@ -95,6 +102,7 @@ vorbit/
 │   └── skills/                # Gemini CLI skills (workflows GENERATED from skills/)
 ├── scripts/
 │   ├── sync-codex-skills.sh   # Install Codex skills
+│   ├── setup-codex.sh         # Install Codex skills and GitHub MCP
 │   ├── sync-gemini-skills.sh  # Install Gemini skills
 │   └── vorbit-resolve-rules   # Resolve enabled rules + precedence metadata
 ├── tests/                     # Runtime and cross-agent skill-contract tests
