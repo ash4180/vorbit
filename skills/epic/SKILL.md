@@ -242,7 +242,7 @@ Using the approved plan:
 4. For a revision, apply the Step 3 preservation rules (IDs, statuses, no silent removals).
 5. Re-read the written file and verify: story count matches the PRD, every task has exactly one Status line, every Implementation Order references only task IDs that exist in the same story section. Flag any mismatch instead of claiming success.
 
-No Linear write happens in this skill. Posting human-readable summaries is a separate explicit step: `/vorbit:implement:linear-sync`.
+No direct Linear write happens in this skill. Ticket creation is the `/vorbit:ticket` workflow: one summary ticket per story, detail stays in the spec files. If the user asked for a ticket in this request, run `/vorbit:ticket` right after this step; otherwise offer it as the next step.
 
 ## Step 9: Report
 
@@ -252,7 +252,7 @@ Present the following:
 2. **All story sections**, in PRD user-story order, with the owning `US-###`
 3. **Per story:** task count by priority and its own Implementation Order (the same tree persisted in Step 8)
 4. **Topology verification:** X user stories, X story sections, Y total tasks; flag any mismatch instead of claiming success
-5. Reminder: the plan lives only in this worktree and is gitignored; Linear holds only summaries until `/vorbit:implement:linear-sync` runs
+5. Reminder: the plan lives only in this worktree and is gitignored; Linear holds only summaries until `/vorbit:ticket` runs
 
 ### Implementation Order Format
 
@@ -277,7 +277,7 @@ Implementation order is calculated independently for each story section:
 - Group parallel work within same phase
 - Include only tasks that belong to the story section being reported
 
-Next: run `/vorbit:implement:linear-sync` to post story summaries, then start Phase 1 with `/vorbit:implement:implement T1`
+Next: run `/vorbit:ticket` to post story summaries, then start Phase 1 with `/vorbit:implement:implement T1`
 
 ---
 

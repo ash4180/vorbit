@@ -92,4 +92,4 @@ Runs by default when the runtime has a browser-automation capability (for exampl
 - Reminder: the report is local and gitignored — copy the run section out to share it
 - Next steps:
   - fix fails via `/vorbit:implement:implement`, then re-run this skill
-  - `/vorbit:implement:linear-sync` refreshes only the short `QA: N of M` count on the story tickets — report details never go to Linear
+  - `/vorbit:ticket` refreshes only the short `QA: N of M` count on the story tickets — report details never go to Linear

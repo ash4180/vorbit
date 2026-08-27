@@ -178,7 +178,7 @@ Only proceed after the user confirms the draft and any implementation-affecting 
 4. When revising an existing `prd.md`, preserve any `## Linear Sync` section verbatim at the end of the file — it belongs to the linear-sync skill.
 5. Re-read the written file and confirm it matches the schema (story count, one flow per story, required sections).
 
-No Linear write happens in this skill. Posting human-readable summaries is a separate explicit step: `/vorbit:implement:linear-sync`.
+No direct Linear write happens in this skill. Ticket creation is the `/vorbit:ticket` workflow: one summary ticket per story, detail stays in the spec files. If the user asked for a ticket in this request, run `/vorbit:ticket` right after the PRD is written; otherwise offer it as the next step.
 
 ## Step 6: Report
 
@@ -189,7 +189,7 @@ No Linear write happens in this skill. Posting human-readable summaries is a sep
 - Source note: the spec file is now canonical; include legacy import provenance when applicable
 - Suggested next steps:
   - `/vorbit:implement:epic` to break the PRD into an ordered task plan
-  - `/vorbit:implement:linear-sync` to post short human-readable Linear summaries
+  - `/vorbit:ticket` to post short human-readable Linear summaries
   - `/vorbit:design:journey` to draw a flow diagram in FigJam
 
 ---

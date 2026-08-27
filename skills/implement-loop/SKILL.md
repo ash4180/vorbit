@@ -135,7 +135,7 @@ After all sub-issues finish:
 
 1. Re-read the source (the story section, or the Linear parent) and verify every story/parent AC against accumulated evidence.
 2. If an AC is unmet and no remaining item owns it, set `active: false`, `status: "needs_input"`, and `blockReason`, then preserve state and stop; do not invent unplanned scope.
-3. Report "ready for verification/PR" in the current session. Spec mode: suggest `/vorbit:implement:linear-sync` to refresh the story summaries. Linear mode: keep the implementation parent In Progress; a parent becomes In Review after PR creation and Done only after merge.
+3. Report "ready for verification/PR" in the current session. Spec mode: suggest `/vorbit:ticket` to refresh the story summaries. Linear mode: keep the implementation parent In Progress; a parent becomes In Review after PR creation and Done only after merge.
 4. Set state to `active: false`, `status: "completed"`.
 
 The stop hook deletes a completed state and lets the session end. Report completion in your final message for the user; the hook does not read that text.

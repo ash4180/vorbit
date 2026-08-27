@@ -64,7 +64,7 @@ Scan for the leftovers listed in the Verification Schema below. Report findings 
 If validating a spec task or story:
 - Report all validation evidence in the current session
 - Stay read-only unless the user explicitly requested a status update; then set the validated task's `**Status:**` line (`done` on pass, `blocked` plus the reason in the report on fail) and change nothing else in the file
-- Suggest `/vorbit:implement:linear-sync` to refresh the Linear summaries after a status change
+- Suggest `/vorbit:ticket` to refresh the Linear summaries after a status change
 
 If validating a Linear issue:
 - Report all validation evidence in the current session

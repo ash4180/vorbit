@@ -125,6 +125,9 @@ def _rules(agent: dict[str, str]) -> list[tuple[re.Pattern[str], object]]:
         # -- markdown links wrapping slash commands, then slash commands ------
         (re.compile(r"\[`(/vorbit:[^`]+)`\]\([^)]*\)"), r"`\1`"),
         (re.compile(r"/vorbit:(?:design|implement):([a-z-]+)"), r"$vorbit-\1"),
+        # /vorbit:ticket is the top-level Claude Code command for the
+        # linear-sync skill; agent skill dirs keep the linear-sync stem.
+        (re.compile(r"/vorbit:ticket\b"), "$vorbit-linear-sync"),
         # -- shared file pointers --------------------------------------------
         # Generated workflows live in vorbit-shared/workflows/, so the shared
         # contract is one level up in ../references/, not ../vorbit-shared/.

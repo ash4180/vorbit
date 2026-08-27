@@ -145,7 +145,7 @@ Mark done only when every gate defined in Steps 3.5-6 above is satisfied.
 
 ## Step 7: On Task Completion
 
-- Spec task: set its `**Status:**` line to `done` once its ACs and tests pass. The story is complete only when all of its tasks are `done`; suggest `/vorbit:implement:linear-sync` to refresh the Linear summaries.
+- Spec task: set its `**Status:**` line to `done` once its ACs and tests pass. The story is complete only when all of its tasks are `done`; suggest `/vorbit:ticket` to refresh the Linear summaries.
 - Linear: keep the implementation parent "In Progress" until a PR exists. Implementation sub-issues may move to "Done" after their own ACs and tests pass.
 - Report changed files, verification evidence, and remaining release steps in the current session.
 
