@@ -1,6 +1,6 @@
 ---
 name: explore
-description: Use when the user asks to brainstorm, research options, or explore an early feature idea before committing to requirements. It asks targeted questions until the PRD-blocking unknowns are resolved, compares approaches, recommends one, and saves the approved exploration to Notion or Anytype when connected. Do not use for writing a final PRD, decomposing tickets, or implementing code.
+description: Use when the user asks to brainstorm, research options, or explore an early feature idea before committing to requirements. It asks targeted questions until the PRD-blocking unknowns are resolved, compares approaches, recommends one, and saves the approved exploration to Notion or Anytype when connected. For UI/UX asks it first asks whether the target is existing code or a fresh idea, researches real products via Mobbin or the web, and auto-publishes a visual solution artifact with live animation and micro-interaction demos. Do not use for writing a final PRD, decomposing tickets, or implementing code.
 ---
 
 # Explore Skill
@@ -21,6 +21,8 @@ Ask questions via AskUserQuestion until every unknown that would block a PRD is 
 
 Work in rounds. Each round asks every question that is answerable now; a question whose answer depends on another question still open in the same round waits for a later round. Mark a recommended option on every question. Facts are your job, never the user's: anything discoverable from the codebase, connected tools, or the web gets looked up between rounds — ask the user only for decisions. After each round of answers, recompute what became askable.
 
+**UI/UX asks:** when the request is about screens, flows, visual design, or interactions, the FIRST question batch must ask: "Is this for existing code or a fresh idea?" Existing code: read the relevant screens and components before analyzing, and ground every proposal in them. Fresh idea: skip the codebase and ground proposals in reference research only.
+
 Cover these categories, skipping any the user's request already settles:
 - Core functionality decisions
 - Scale and performance needs
@@ -31,21 +33,42 @@ Cover these categories, skipping any the user's request already settles:
 
 Before proceeding to Step 3, list each question asked with the user's answer (one line each), then list the unknowns that remain open. Open unknowns go to the PRD Handoff's unresolved decisions — never silently fill them with assumptions.
 
-## Step 3: Analyze
+## Step 3: Research References (UI/UX asks)
+
+For UI/UX explorations, gather real-product evidence before analyzing:
+1. Mobbin first, when connected: search screens, flows, and sections for the pattern. Flows also show transitions and motion worth borrowing.
+2. Web search as fallback, or to add named products Mobbin lacks.
+3. For "existing code" asks, also read the current screens and components so proposals reuse what exists.
+
+Collect per candidate pattern: app name, what it does well, and any motion worth borrowing. Skip this step for non-UI explorations.
+
+## Step 4: Analyze
 
 After gathering context:
 1. Summarize insights from all question answers
 2. Identify root cause (not symptoms)
 3. Propose 2-3 approaches with pros/cons/effort/risk
 4. Make recommendation addressing constraints
+5. UI/UX asks: define the key animations and micro-interactions of the recommended approach, following `references/motion-principles.md` (relative to this skill)
 
-## Step 4: Draft in Chat
+## Step 5: Publish the Solution Artifact (UI/UX asks, automatic)
+
+After analysis, build one self-contained HTML page presenting the recommended solution. Publish it as an artifact when the platform supports artifacts; otherwise save the file outside the repo and give the user the path. Do not ask permission first; this page is part of the exploration deliverable.
+
+The page contains:
+- The user flow of the recommended approach, step by step.
+- The reference patterns from research, with app names.
+- One micro-interaction card per key interaction, with a live CSS demo, using the card shape in `references/motion-principles.md` (relative to this skill). Follow its role models and hard limits, including `prefers-reduced-motion`.
+
+The page presents the solution. It is not a pixel-perfect mockup and not a PRD.
+
+## Step 6: Draft in Chat
 
 **Show the complete exploration document in chat for review**, using the Template in the schema section below.
 
 **After showing draft, ask:** "Does this look good? Ready to save?"
 
-## Step 5: Save Document
+## Step 7: Save Document
 
 **Only proceed after user confirms the draft.**
 
@@ -53,9 +76,10 @@ If a connected destination was selected, save using the "Save Content" section i
 
 An exploration document is a decision input, not a PRD source of truth. Do not label it a PRD or create implementation issues from it directly. The PRD workflow imports the confirmed decisions and creates the canonical Linear spec ticket.
 
-## Step 6: Report
+## Step 8: Report
 
 - URL or object ID (if saved)
+- Solution artifact link (UI/UX asks)
 - Platform used (Notion/Anytype)
 - Recommended approach summary
 - Unresolved decisions to carry into PRD clarification (do not silently convert them into requirements)
@@ -75,6 +99,7 @@ An exploration document is a decision input, not a PRD source of truth. Do not l
 - No option obviously superior (otherwise why explore?)
 - Recommendation addresses constraints from context
 - PRD Handoff separates confirmed decisions from unresolved questions
+- UI/UX asks only: Reference Patterns present with at least 2 real products, and the solution artifact is published and linked in the report
 
 ## Template
 
@@ -90,6 +115,10 @@ Competitors: [existing solutions mentioned]
 
 ## Problem Statement
 [One sentence - what's the root cause?]
+
+## Reference Patterns (UI/UX asks only)
+- [App name]: [what it does well] ([Mobbin/web])
+- [App name]: [motion worth borrowing] ([Mobbin/web])
 
 ## Options
 
