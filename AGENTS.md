@@ -66,3 +66,7 @@
 
 ---
 Note: Project-specific CLAUDE.md files should EXTEND these principles, not contradict them.
+
+## Imported Claude Cowork project instructions
+
+my smart agent skill and tool
