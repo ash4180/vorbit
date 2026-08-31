@@ -33,16 +33,22 @@ cat > "$MARKETPLACE_DIR/.claude-plugin/marketplace.json" <<EOF
 }
 EOF
 
-# 3. Symlink plugin source into marketplace (skip if already exists)
-if [ -L "$MARKETPLACE_DIR/plugins/$PLUGIN_NAME" ]; then
-  echo "→ Symlink already exists, skipping"
-elif [ -e "$MARKETPLACE_DIR/plugins/$PLUGIN_NAME" ]; then
-  echo "→ Warning: $MARKETPLACE_DIR/plugins/$PLUGIN_NAME exists but is not a symlink. Remove it manually."
-  exit 1
-else
-  ln -s "$PLUGIN_SOURCE" "$MARKETPLACE_DIR/plugins/$PLUGIN_NAME"
-  echo "→ Symlinked plugin source"
+# 3. Marketplace plugin dir: real directory with symlinked contents.
+# Claude Code 2.1.25x refuses a plugin source symlink that resolves outside
+# the marketplace directory ("Plugin source path refused"). Same trick as the
+# cache dir below: keep the directory real, symlink each item inside it.
+MP_PLUGIN_DIR="$MARKETPLACE_DIR/plugins/$PLUGIN_NAME"
+if [ -L "$MP_PLUGIN_DIR" ] || [ -e "$MP_PLUGIN_DIR" ]; then
+  rm -rf "$MP_PLUGIN_DIR"
 fi
+mkdir -p "$MP_PLUGIN_DIR"
+for item in "$PLUGIN_SOURCE"/* "$PLUGIN_SOURCE"/.[!.]* ; do
+  [ -e "$item" ] || continue
+  basename="$(basename "$item")"
+  [ "$basename" = ".git" ] && continue
+  ln -s "$item" "$MP_PLUGIN_DIR/$basename"
+done
+echo "→ Built marketplace plugin dir (real dir, contents symlinked)"
 
 # 4. Register marketplace (skip if already registered)
 if claude plugin marketplace list --json 2>/dev/null | grep -q "\"name\": *\"$MARKETPLACE_NAME\""; then
