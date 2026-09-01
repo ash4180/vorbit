@@ -148,6 +148,10 @@ def _rules(agent: dict[str, str]) -> list[tuple[re.Pattern[str], object]]:
             "../references/glossary.md",
         ),
         lit(
+            "../_shared/design-knowledge/",
+            "../references/design-knowledge/",
+        ),
+        lit(
             'save using the "Save Content" section in `_shared/mcp-tool-routing.md` and pass',
             "save via the connected platform's current content-creation tools "
             "(inspect schemas first) and pass",
@@ -298,6 +302,10 @@ MIRRORED_SHARED: tuple[str, ...] = (
     "spec-files.md",
 )
 
+# Whole directories under skills/_shared/ mirrored into each agent's
+# vorbit-shared/references/ (vendored design reference content).
+MIRRORED_SHARED_DIRS: tuple[str, ...] = ("design-knowledge",)
+
 
 def _shared_target(agent_key: str, filename: str) -> Path:
     return (
@@ -343,6 +351,12 @@ def write_all() -> None:
         for filename in MIRRORED_SHARED:
             source = CANONICAL_SKILLS / "_shared" / filename
             _shared_target(agent_key, filename).write_text(source.read_text())
+        for dirname in MIRRORED_SHARED_DIRS:
+            source = CANONICAL_SKILLS / "_shared" / dirname
+            target = _shared_target(agent_key, dirname)
+            if target.exists():
+                shutil.rmtree(target)
+            shutil.copytree(source, target)
         for source, target in _iter_asset_pairs(agent_key):
             if target.exists():
                 shutil.rmtree(target)
@@ -362,6 +376,11 @@ def check_all() -> list[str]:
             target = _shared_target(agent_key, filename)
             if not target.is_file() or target.read_text() != source.read_text():
                 stale.append(str(target.relative_to(REPO_ROOT)))
+        for dirname in MIRRORED_SHARED_DIRS:
+            source = CANONICAL_SKILLS / "_shared" / dirname
+            dir_target = _shared_target(agent_key, dirname)
+            if not _dirs_equal(source, dir_target):
+                stale.append(str(dir_target.relative_to(REPO_ROOT)))
         for source, asset_target in _iter_asset_pairs(agent_key):
             if not _dirs_equal(source, asset_target):
                 stale.append(str(asset_target.relative_to(REPO_ROOT)))

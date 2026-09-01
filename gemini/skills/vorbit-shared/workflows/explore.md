@@ -35,9 +35,12 @@ Before proceeding to Step 3, list each question asked with the user's answer (on
 ## Step 3: Research References (UI/UX asks)
 
 For UI/UX explorations, gather real-product evidence before analyzing:
-1. Mobbin first, when connected: search screens, flows, and sections for the pattern. Flows also show transitions and motion worth borrowing.
-2. Web search as fallback, or to add named products Mobbin lacks.
-3. For "existing code" asks, also read the current screens and components so proposals reuse what exists.
+1. Named-brand asks ("like Linear", "like Stripe"): check `../references/design-knowledge/design-systems/INDEX.md` first. When a brand file exists, read it for exact colors, fonts, and guardrails instead of guessing from screenshots.
+2. Mobbin next, when connected: search screens, flows, and sections for the pattern. Flows also show transitions and motion worth borrowing.
+3. Web search as fallback, or to add named products Mobbin lacks.
+4. For "existing code" asks, also read the current screens and components so proposals reuse what exists.
+
+Fresh-idea asks with no style reference: offer the closest presets from `../references/design-knowledge/style-seeds.md` as style-direction options.
 
 Collect per candidate pattern: app name, what it does well, and any motion worth borrowing. Skip this step for non-UI explorations.
 
@@ -48,7 +51,7 @@ After gathering context:
 2. Identify root cause (not symptoms)
 3. Propose 2-3 approaches with pros/cons/effort/risk
 4. Make recommendation addressing constraints
-5. UI/UX asks: define the key animations and micro-interactions of the recommended approach, following `references/motion-principles.md` (from this skill's installed directory)
+5. UI/UX asks: define the key animations and micro-interactions of the recommended approach, following `references/motion-principles.md` (from this skill's installed directory). Name concrete candidate effects from `../references/design-knowledge/motion-library.md` and respect its performance principles.
 
 ## Step 5: Publish the Solution Artifact (UI/UX asks, automatic)
 

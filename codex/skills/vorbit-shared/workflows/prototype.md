@@ -104,6 +104,8 @@ Preflight required connectors: confirm each needed connector is configured in Co
 
 **Wait for answers before proceeding.**
 
+**Style references (optional):** If the user names a brand look ("like Linear"), check `../references/design-knowledge/design-systems/INDEX.md` and read the matching brand file for exact tokens. For a fresh visual direction with no reference, offer the closest presets from `../references/design-knowledge/style-seeds.md`. Codebase styling patterns still win on conflicts. If the prototype needs animation or micro-interactions, pick effects from `../references/design-knowledge/motion-library.md` and follow its performance principles.
+
 **Don't invent features:**
 - Adding search/filter without asking
 - Creating tabs or navigation not requested
