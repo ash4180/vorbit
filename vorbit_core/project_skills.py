@@ -144,6 +144,10 @@ def _rules(agent: dict[str, str]) -> list[tuple[re.Pattern[str], object]]:
             "../references/spec-files.md",
         ),
         lit(
+            "../_shared/pre-existing-findings.md",
+            "../references/pre-existing-findings.md",
+        ),
+        lit(
             "../_shared/glossary.md",
             "../references/glossary.md",
         ),
@@ -299,6 +303,7 @@ MIRRORED_SHARED: tuple[str, ...] = (
     "execution-contract.md",
     "glossary.md",
     "mock-registry.md",
+    "pre-existing-findings.md",
     "spec-files.md",
 )
 

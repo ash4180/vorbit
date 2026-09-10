@@ -6,6 +6,8 @@ Confirm that implementation meets Requirements, passes Tests, and maintains Qual
 
 Read and follow `../references/execution-contract.md` before starting.
 
+Read `../references/pre-existing-findings.md` for how to tag, report, and follow up failures this branch did not cause. They never change the Status line.
+
 ## Step 1: Resolve Requirements
 
 The branch spec files are the canonical requirements source — read `../references/spec-files.md` for path resolution. If the user supplied a Linear artifact, preflight required connectors: confirm each needed connector is configured in Codex and inspect its current operation/parameter schemas; never guess tool names before fetching it. Pasted acceptance criteria and local descriptions remain valid read-only inputs.
@@ -29,6 +31,7 @@ For each criterion:
 1. Check if implementation satisfies requirement
 2. Mark PASS or FAIL with evidence (output format per the Verification Schema below)
 3. Note any gaps
+4. A failing test or broken behavior outside the criteria is tagged per `../references/pre-existing-findings.md` Step 1. Pre-existing ones go in the `Pre-existing (follow-up)` section and do not set Status to FAIL. A criterion itself can never be pre-existing: an unmet criterion is always FAIL.
 
 ## Step 5: Code Hygiene
 
@@ -54,7 +57,12 @@ Scan for the leftovers listed in the Verification Schema below. Report findings 
 
 ### Unverified
 - [Anything not run or not observable, with reason]
+
+### Pre-existing (follow-up)
+- [What, where, blame evidence, then `Linear:` and `Slack:` lines; omit the section when none]
 ```
+
+After the report, when pre-existing findings exist, ask the one batched ticket question per `../references/pre-existing-findings.md` Step 4.
 
 ## Step 7: Optional Status Update
 

@@ -1,6 +1,6 @@
 ---
 name: qa-report
-description: Use when the user asks to run the QA checks or produce a QA report for the current branch. It executes the plan's automated E2E commands (Playwright or any runner the plan lists), can click through the unticked manual checks itself when a browser-automation capability is available, records honest results in qa-plan.md, and writes a dated human-readable qa-report.md — newest run first, with a ready or not-ready verdict. It never writes to Linear. Requires an existing qa-plan.md; do not use to author the plan (qa-plan), validate acceptance criteria (verify), or fix code.
+description: Use when the user asks to run the QA checks or produce a QA report for the current branch. It executes the plan's automated E2E commands (Playwright or any runner the plan lists), can click through the unticked manual checks itself when a browser-automation capability is available, records honest results in qa-plan.md, and writes a dated human-readable qa-report.md — newest run first, with a ready or not-ready verdict. Fails this branch did not cause become follow-ups, not blockers; it checks Linear and Slack for prior discussion and asks before creating a ticket. Otherwise it never writes to Linear. Requires an existing qa-plan.md; do not use to author the plan (qa-plan), validate acceptance criteria (verify), or fix code.
 ---
 
 # QA Report Skill
@@ -11,7 +11,9 @@ Read and follow `../_shared/execution-contract.md` before starting.
 
 Read `../_shared/spec-files.md` for spec path resolution, write guards, and file ownership before any spec read or write.
 
-This skill never writes to Linear. The story tickets keep only linear-sync's short `QA: N of M` count line.
+Read `../_shared/pre-existing-findings.md` for how to tag, report, and follow up fails this branch did not cause.
+
+This skill writes to Linear only for a follow-up ticket the user approves per `pre-existing-findings.md`. The story tickets keep only linear-sync's short `QA: N of M` count line.
 
 ## Step 1: Read the Plan and Its Results
 
@@ -46,7 +48,7 @@ Runs by default when the runtime has a browser-automation capability (for exampl
 
 ## Step 3: Write the Report
 
-1. Run the write guards per `../_shared/spec-files.md`.
+1. Run the write guards per `../_shared/spec-files.md`. Tag every fail `from this branch` or `pre-existing` per `../_shared/pre-existing-findings.md` Step 1. A pre-existing fail keeps its `**Fail:**` note in `qa-plan.md` with the prefix `pre-existing:`.
 2. Write `qa-report.md` in the spec folder. Newest run goes **on top**; earlier run sections stay untouched below. Never rewrite an old run.
 3. Every line is plain language for a non-technical reader. Name checks by ID plus a short human phrase, not by test-file paths.
 
@@ -70,6 +72,10 @@ Runs by default when the runtime has a browser-automation capability (for exampl
 - QA3: Submit with empty email — expected "Email required", the form submitted with no error
 - QP1: login E2E run — 2 of 14 tests failed (wrong redirect after login, missing error text)
 
+### Pre-existing (follow-up)
+- QA5: Profile photo upload shows no progress bar. Evidence: `ProfilePhoto.tsx` untouched on this branch, last changed in commit a1b2c3d on main. Linear: nothing found. Slack: #design, 2 Sep, "photo upload feels frozen".
+(omit this section when there are none)
+
 ### Automated run
 - QP1: `npx playwright test e2e/login.spec.ts` → 12 passed, 2 failed
 - QP2: not run this time (user skipped)
@@ -82,13 +88,14 @@ Runs by default when the runtime has a browser-automation capability (for exampl
 ---
 ```
 
-**Verdict rule:** `READY` only when every check in the plan is ticked. Any fail, block, or untested check = `NOT READY`, with the reason listed. Never soften a fail.
+**Verdict rule:** `READY` only when every check in the plan is ticked or tagged pre-existing. Any branch-caused fail, block, or untested check = `NOT READY`, with the reason listed. Never soften a fail, and never re-tag a fail as pre-existing to reach `READY`.
 
 ## Step 4: Report in the Session
 
 - Verdict, one line
 - File path
 - Fails in plain words (max 5; if more, count them and name the worst)
+- Pre-existing fails, each with its Linear and Slack line, then the one batched ticket question per `../_shared/pre-existing-findings.md` Step 4
 - Reminder: the report is local and gitignored — copy the run section out to share it
 - Next steps:
   - fix fails via `/vorbit:implement:implement`, then re-run this skill
