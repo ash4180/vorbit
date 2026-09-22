@@ -120,7 +120,7 @@ Apply the approved fixes directly, re-run the relevant checks, and report what w
 ```
 Done. Fixed X issues across Y files.
 
-Run `$vorbit-verify` when ready.
+Run `$vorbit-qa-plan` when ready.
 ```
 
 ---

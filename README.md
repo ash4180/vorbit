@@ -76,10 +76,9 @@ is deterministic, but it does not let agent guidance override shared policy.
 3. **Journey** — visualize user flows in FigJam (`/vorbit:design:journey`)
 4. **Epic** — convert PRD stories into Linear issues with dependency tree (`/vorbit:implement:epic`)
 5. **Implement** — TDD-first coding (tests before code) (`/vorbit:implement:implement`)
-6. **Verify** — validate against acceptance criteria (`/vorbit:implement:verify`)
-7. **Review** — 3-layer code review before merge (`/vorbit:implement:code-review`)
-8. **Cleanup mocks** — approve the API contract, integrate the real backend, then remove mocks atomically (`/vorbit:implement:cleanup-mocks`)
-9. **Prepare PR** — verify, preview branch mutations, and publish the approved PR (`/vorbit:implement:prepare-pr`)
+6. **Review** — 3-layer code review before merge (`/vorbit:implement:code-review`)
+7. **Cleanup mocks** — approve the API contract, integrate the real backend, then remove mocks atomically (`/vorbit:implement:cleanup-mocks`)
+8. **Prepare PR** — verify, preview branch mutations, and publish the approved PR (`/vorbit:implement:prepare-pr`)
 
 The slash-command forms above are Claude Code entry points. In Codex or Gemini, invoke the corresponding `$vorbit-*` skill or describe the same intent. For a full command list, run `/help` in Claude Code or inspect `commands/`.
 

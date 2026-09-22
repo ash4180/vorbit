@@ -155,7 +155,7 @@ Do not create a generic `memory.md`. Record durable decisions only in an existin
 - What was implemented
 - Files changed
 - Tests added/updated
-- Next: `$vorbit-verify` to verify; `$vorbit-qa-plan` to build or refresh the human test plan
+- Next: `$vorbit-qa-plan` to build or refresh the human test plan
 
 ## Quick Mode
 

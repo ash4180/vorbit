@@ -8,7 +8,7 @@ Read and follow `../references/execution-contract.md` before starting.
 
 Read `../references/spec-files.md` for spec path resolution, write guards, and file ownership before any spec read or write.
 
-This plan is for a person testing by hand. Agent-run acceptance validation stays in `$vorbit-verify`; the two do not replace each other.
+This plan is for a person testing by hand. The implement skill already checks every acceptance criterion before a task is done; the two do not replace each other.
 
 ## Step 1: Read the Branch Specs
 

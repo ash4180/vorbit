@@ -40,7 +40,7 @@ If the PRD has stories without acceptance criteria, or flows whose steps are an 
 **IF no product PRD but the user explicitly provides a technical work description** (pasted spec, a named file, or explicit scope in the command arguments — e.g. a migration, upgrade, or refactor with no user-facing stories):
 1. Write that description verbatim into the epic plan's baseline section under a `Technical epic — no product PRD` label
 2. The baseline must contain explicit acceptance-criteria checkboxes; if the description lacks them, draft them from its stated outcomes and confirm with the user before writing the plan. Tasks quote these verbatim as usual
-3. Do not invent `US-###` stories or user flows for it. Create one story section for the technical scope (or one per explicitly named workstream) headed `TS-001`, `TS-002`, ...; the TBD gate, verbatim criterion quoting, and Implementation Order apply unchanged, with the baseline section as what `/vorbit:implement:verify` and implement-loop bind to
+3. Do not invent `US-###` stories or user flows for it. Create one story section for the technical scope (or one per explicitly named workstream) headed `TS-001`, `TS-002`, ...; the TBD gate, verbatim criterion quoting, and Implementation Order apply unchanged, with the baseline section as what implement and implement-loop bind to
 
 **IF no branch PRD, no explicit legacy artifact, and no explicit technical description:** stop and direct the user to `/vorbit:design:prd`. Do not invent requirements from casual conversation inside epic planning.
 

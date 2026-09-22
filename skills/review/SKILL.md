@@ -121,7 +121,7 @@ Apply the approved fixes directly, re-run the relevant checks, and report what w
 ```
 Done. Fixed X issues across Y files.
 
-Run `/vorbit:implement:verify` when ready.
+Run `/vorbit:implement:qa-plan` when ready.
 ```
 
 ---

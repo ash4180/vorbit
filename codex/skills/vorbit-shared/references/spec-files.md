@@ -35,7 +35,7 @@ Files, one owner each:
 Spec files live in the worktree where they were written, and they are gitignored:
 
 - They never appear in commits, PRs, or clones on other machines.
-- They do not follow the branch into another worktree. Run the whole chain (prd → epic → linear-sync → implement → verify) inside one worktree.
+- They do not follow the branch into another worktree. Run the whole chain (prd → epic → ticket → implement → qa-plan → qa-report) inside one worktree.
 - If an expected spec file is missing, run `git worktree list` and report which sibling worktree may hold it before doing anything else. Never silently regenerate a missing spec.
 - Deleting the worktree deletes its specs. The Linear summaries are the only durable copy, and they are summaries — not the full spec.
 

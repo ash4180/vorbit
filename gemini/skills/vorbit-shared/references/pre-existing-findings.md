@@ -2,7 +2,7 @@
 
 Read `execution-contract.md` in this directory first.
 
-Applies to every skill that reports findings, fails, or a verdict: `review`, `qa-report`, `verify`.
+Applies to every skill that reports findings, fails, or a verdict: `review`, `qa-report`.
 
 ## Rule
 
@@ -13,7 +13,7 @@ A bug this branch did not cause never blocks. It becomes a follow-up, not a fail
 Tag each finding `from this branch` or `pre-existing`. Use the code as proof, never a guess:
 
 1. Get the branch scope: `git diff --name-only $(git merge-base HEAD main)..HEAD`. When that diff is empty, use the uncommitted diff instead.
-2. Find the code behind the finding: file and lines for a review or verify finding, the screen handler or component for a QA check.
+2. Find the code behind the finding: file and lines for a review finding, the screen handler or component for a QA check.
 3. Run `git blame -L <start>,<end> <file>` on those lines. Compare each blamed commit against `git rev-list $(git merge-base HEAD main)..HEAD`.
 4. Tag `pre-existing` only when ALL of these hold:
    - the blamed lines were not changed by any commit on this branch

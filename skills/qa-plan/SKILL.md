@@ -1,6 +1,6 @@
 ---
 name: qa-plan
-description: Use when the user asks to build or update a QA test plan for the current branch — a human-runnable checklist covering story flows, test data, edge cases and error paths, list and table reliability, device and browser coverage, regression risks, performance checks, and automated Playwright runs when the project has them. It drafts from the branch prd.md and epic.md when they exist, or from answers the user gives when they do not, and writes the plan to the branch spec folder. Do not use for agent-run acceptance validation (that is verify), writing requirements, or implementing fixes.
+description: Use when the user asks to build or update a QA test plan for the current branch — a human-runnable checklist covering story flows, test data, edge cases and error paths, list and table reliability, device and browser coverage, regression risks, performance checks, and automated Playwright runs when the project has them. It drafts from the branch prd.md and epic.md when they exist, or from answers the user gives when they do not, and writes the plan to the branch spec folder. Do not use for agent-run acceptance checks (the implement skill does those), writing requirements, or implementing fixes.
 ---
 
 # QA Plan Skill
@@ -11,7 +11,7 @@ Read and follow `../_shared/execution-contract.md` before starting.
 
 Read `../_shared/spec-files.md` for spec path resolution, write guards, and file ownership before any spec read or write.
 
-This plan is for a person testing by hand. Agent-run acceptance validation stays in `/vorbit:implement:verify`; the two do not replace each other.
+This plan is for a person testing by hand. The implement skill already checks every acceptance criterion before a task is done; the two do not replace each other.
 
 ## Step 1: Read the Branch Specs
 
