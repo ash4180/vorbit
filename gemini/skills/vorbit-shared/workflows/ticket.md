@@ -1,6 +1,6 @@
-<!-- GENERATED from skills/linear-sync/SKILL.md — edit the canonical file, then run: python3 -m vorbit_core.project_skills --write -->
+<!-- GENERATED from skills/ticket/SKILL.md — edit the canonical file, then run: python3 -m vorbit_core.project_skills --write -->
 
-# Linear Sync Skill
+# Ticket Skill
 
 Post short, human-readable Linear summaries of the branch spec files: one compact ticket per user story. Linear is the shared window for humans; the spec files stay the source of truth.
 
@@ -83,4 +83,4 @@ Do not create sub-issues, labels, statuses, comments, or any engineering breakdo
    - Tickets created and updated, with URLs, in PRD order
    - Progress snapshot per story (tasks done / total)
    - Team and project used
-   - Reminder: summaries go stale as work continues — re-run `$vorbit-linear-sync` after finishing tasks to refresh them
+   - Reminder: summaries go stale as work continues — re-run `$vorbit-ticket` after finishing tasks to refresh them

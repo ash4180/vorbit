@@ -1,6 +1,6 @@
 # Branch Spec Files
 
-Branch-scoped requirement storage for the prd → epic → implement chain. The spec files are the canonical requirements source. Linear carries only the short human-readable summaries posted by the linear-sync skill.
+Branch-scoped requirement storage for the prd → epic → implement chain. The spec files are the canonical requirements source. Linear carries only the short human-readable summaries posted by the ticket skill.
 
 ## Resolution
 
@@ -16,6 +16,7 @@ Files, one owner each:
 - `epic.md` — written by the **epic** skill. Technical plan: one section per story, fully specified tasks, implementation order, task status.
 - `qa-plan.md` — written by the **qa-plan** skill. Human-runnable test plan: story checks, edge cases, device matrix, regression, performance, plus automated E2E runs when the project has a runner. Whoever tests ticks the boxes and adds `**Fail:**` notes; the qa-report skill may also update check states, but only after a real observed run (automated command or agent-run browser check) — never by guessing.
 - `qa-report.md` — written by the **qa-report** skill. Dated run history, newest run first, with a ready/not-ready verdict; old run sections are never rewritten. Other skills never edit it, and its content never goes to Linear.
+- `qa-screenshots/<YYYY-MM-DD>/` — written by the **qa-report** skill. One picture per check it ran, one folder per run date, embedded in `qa-report.md` by relative path. Other skills never write here. Gitignored with the rest of `.vorbit/`, so the pictures travel only when the user copies the folder.
 
 ## Guards (before any spec write)
 
@@ -43,4 +44,4 @@ Spec files live in the worktree where they were written, and they are gitignored
 - Stories: `US-###`, defined in `prd.md`, document-unique.
 - Tasks: `T1`, `T2`, ... globally unique across one `epic.md`. Never renumber an existing task; new tasks get fresh IDs.
 - Every task carries exactly one `**Status:**` line: `pending` | `in-progress` | `done` | `blocked`. The implement and implement-loop skills update this line; nothing else tracks task state.
-- `prd.md` may end with a `## Linear Sync` section, written by the linear-sync skill only: one `US-### → <ticket ID> — <URL> (synced <date>)` line per story. It is the create-vs-update record for syncing; other skills preserve it verbatim and never edit it.
+- `prd.md` may end with a `## Linear Sync` section, written by the ticket skill only: one `US-### → <ticket ID> — <URL> (synced <date>)` line per story. It is the create-vs-update record for syncing; other skills preserve it verbatim and never edit it.

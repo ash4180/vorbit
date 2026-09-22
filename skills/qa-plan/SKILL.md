@@ -5,7 +5,7 @@ description: Use when the user asks to build or update a QA test plan for the cu
 
 # QA Plan Skill
 
-Build a manual test plan a human can click through: plain language, one action and one expected result per check. The plan lives next to the other branch specs, and linear-sync reports its progress on the story tickets.
+Build a manual test plan a human can click through: plain language, one action and one expected result per check. The plan lives next to the other branch specs, and the ticket skill reports its progress on the story tickets.
 
 Read and follow `../_shared/execution-contract.md` before starting.
 
@@ -88,7 +88,7 @@ Whoever runs the plan (a person, in the app):
 - **Failed** → leave the box unchecked and add one indented line under the check: `**Fail:** [what actually happened] ([date])`
 - Never delete or rewrite a check while recording results; notes go under the check.
 
-linear-sync counts ticked boxes per story section and flags `**Fail:**` notes on the story ticket.
+The ticket skill counts ticked boxes per story section and flags `**Fail:**` notes on the story ticket.
 
 ---
 

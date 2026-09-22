@@ -2,7 +2,7 @@
 
 # QA Plan Skill
 
-Build a manual test plan a human can click through: plain language, one action and one expected result per check. The plan lives next to the other branch specs, and linear-sync reports its progress on the story tickets.
+Build a manual test plan a human can click through: plain language, one action and one expected result per check. The plan lives next to the other branch specs, and the ticket skill reports its progress on the story tickets.
 
 Read and follow `../references/execution-contract.md` before starting.
 
@@ -75,7 +75,7 @@ Show the full draft in chat and ask: **"Ready to save the QA plan?"** Do not wri
 - Next steps:
   - test by hand and tick the boxes (recording rules below)
   - `$vorbit-qa-report` to run the automated checks and write the dated report
-  - `$vorbit-linear-sync` to show "QA: N of M checks passed" on each story ticket
+  - `$vorbit-ticket` to show "QA: N of M checks passed" on each story ticket
 
 ## How the Tester Records Results
 
@@ -85,7 +85,7 @@ Whoever runs the plan (a person, in the app):
 - **Failed** → leave the box unchecked and add one indented line under the check: `**Fail:** [what actually happened] ([date])`
 - Never delete or rewrite a check while recording results; notes go under the check.
 
-linear-sync counts ticked boxes per story section and flags `**Fail:**` notes on the story ticket.
+The ticket skill counts ticked boxes per story section and flags `**Fail:**` notes on the story ticket.
 
 ---
 

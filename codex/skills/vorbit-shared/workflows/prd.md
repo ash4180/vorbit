@@ -61,7 +61,7 @@ Every `TBD` must have a matching question attempt.
 Use the template below. Match VIB-2978's prose style — no big tables.
 
 **Required content:**
-- Feature name (3-8 words, no jargon) — this becomes the document **H1** and, after linear-sync, the Linear summary ticket title prefix
+- Feature name (3-8 words, no jargon) — this becomes the document **H1** and, after the ticket skill runs, the Linear summary ticket title prefix
 - Description: one short paragraph under the H1
 - Problem: 1-2 short paragraphs, no tech detail
 - User Stories: `US-001`, `US-002`, ... each representing one end-to-end user outcome with exactly one colocated user flow followed by acceptance-criteria checkboxes
@@ -172,10 +172,10 @@ Only proceed after the user confirms the draft and any implementation-affecting 
 1. Resolve the spec folder and run the write guards per `../references/spec-files.md`: worktree root, current branch, protected-branch check, `.gitignore` line.
 2. Create `.vorbit/` when missing.
 3. Write the full approved document to `prd.md`, starting at the H1, with the `Branch:` line filled in.
-4. When revising an existing `prd.md`, preserve any `## Linear Sync` section verbatim at the end of the file — it belongs to the linear-sync skill.
+4. When revising an existing `prd.md`, preserve any `## Linear Sync` section verbatim at the end of the file — it belongs to the ticket skill.
 5. Re-read the written file and confirm it matches the schema (story count, one flow per story, required sections).
 
-No direct Linear write happens in this skill. Ticket creation is the `$vorbit-linear-sync` workflow: one summary ticket per story, detail stays in the spec files. If the user asked for a ticket in this request, run `$vorbit-linear-sync` right after the PRD is written; otherwise offer it as the next step.
+No direct Linear write happens in this skill. Ticket creation is the `$vorbit-ticket` workflow: one summary ticket per story, detail stays in the spec files. If the user asked for a ticket in this request, run `$vorbit-ticket` right after the PRD is written; otherwise offer it as the next step.
 
 ## Step 6: Report
 
@@ -186,7 +186,7 @@ No direct Linear write happens in this skill. Ticket creation is the `$vorbit-li
 - Source note: the spec file is now canonical; include legacy import provenance when applicable
 - Suggested next steps:
   - `$vorbit-epic` to break the PRD into an ordered task plan
-  - `$vorbit-linear-sync` to post short human-readable Linear summaries
+  - `$vorbit-ticket` to post short human-readable Linear summaries
   - `$vorbit-journey` to draw a flow diagram in FigJam
 
 ---
@@ -208,7 +208,7 @@ All sections below are required.
 
 | Section | Rules |
 |---------|-------|
-| Title (H1) | 3-8 words, no jargon. Becomes the spec title and the linear-sync ticket title prefix |
+| Title (H1) | 3-8 words, no jargon. Becomes the spec title and the ticket title prefix |
 | Description | 1-2 short sentences, plain English, no tech detail |
 | Problem | 1-2 short paragraphs of user pain, not the technical fix |
 | User Stories | `As a [user], I want [goal], so [benefit]`; one end-to-end outcome, exactly one colocated flow before at least one plain-checkbox criterion |

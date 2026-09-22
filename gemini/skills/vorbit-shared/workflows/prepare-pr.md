@@ -260,13 +260,16 @@ For branches without design files, the skill still handles PR body generation an
    - Call the Linear connector's issue-update operation (inspect the connector schema for the current issue-update verb) with `state: "In Review"`
 
 5. **Send a Slack DM to the user** (skip silently when no Slack connection exists):
+   - A request such as "DM me" means this short PR notification. It does not approve publication. If no PR exists yet, defer the notification until it does. Keep approval questions in the current session; send a PR preview to Slack only when explicitly requested.
    - Resolve the Slack connector per your connector preflight and send a direct message to the current logged-in user.
-   - Message is exactly two lines, nothing else:
+   - Message has exactly two non-empty lines with one newline between them:
      ```
      [{branch-name}]({pr-url})
      {one-sentence summary}
      ```
+   - Link the full branch name to the confirmed GitHub PR URL.
    - The summary is ONE sentence in plain, everyday language stating the user-visible outcome — include a bug-fix count when bugs were fixed. Example: "All settings forms now share one narrow, readable layout, and four small save bugs are fixed." No file names, code identifiers, or technical jargon: the user forwards this line to non-technical stakeholders as-is.
+   - Do not include headings, the PR body, approval steps, test output, or a footer.
    - A Slack failure never rolls back or blocks anything — record it for the report.
 
 6. **Report:**

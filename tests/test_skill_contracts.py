@@ -19,7 +19,7 @@ EXPLICIT_ONLY = {
     "vorbit-adhd",
     "vorbit-cleanup-mocks",
     "vorbit-implement-loop",
-    "vorbit-linear-sync",
+    "vorbit-ticket",
     "vorbit-prepare-pr",
     "vorbit-ux",
 }

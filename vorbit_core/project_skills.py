@@ -36,7 +36,7 @@ PROJECTED_SKILLS: dict[str, str] = {
     "prd": "prd",
     "journey": "journey",
     "epic": "epic",
-    "linear-sync": "linear-sync",
+    "ticket": "ticket",
     "qa-plan": "qa-plan",
     "qa-report": "qa-report",
     "tutorial": "tutorial",
@@ -77,7 +77,7 @@ AGENTS: dict[str, dict[str, str]] = {
 
 # Appended verbatim to specific projected workflows for one agent.
 AGENT_NOTES: dict[tuple[str, str], str] = {
-    ("codex", "linear-sync"): (
+    ("codex", "ticket"): (
         "\n> Codex note: the current Linear creation operation is `create_issue` — "
         "after inspecting its schema, call `create_issue` with the composed summary "
         "title, description, team, and project. Never use `save_issue` as a guessed "
@@ -125,9 +125,9 @@ def _rules(agent: dict[str, str]) -> list[tuple[re.Pattern[str], object]]:
         # -- markdown links wrapping slash commands, then slash commands ------
         (re.compile(r"\[`(/vorbit:[^`]+)`\]\([^)]*\)"), r"`\1`"),
         (re.compile(r"/vorbit:(?:design|implement):([a-z-]+)"), r"$vorbit-\1"),
-        # /vorbit:ticket is the top-level Claude Code command for the
-        # linear-sync skill; agent skill dirs keep the linear-sync stem.
-        (re.compile(r"/vorbit:ticket\b"), "$vorbit-linear-sync"),
+        # /vorbit:ticket has no namespace segment, so the generic rule above
+        # does not catch it.
+        (re.compile(r"/vorbit:ticket\b"), "$vorbit-ticket"),
         # -- shared file pointers --------------------------------------------
         # Generated workflows live in vorbit-shared/workflows/, so the shared
         # contract is one level up in ../references/, not ../vorbit-shared/.

@@ -4,6 +4,6 @@ argument-hint: [optional team or project hint]
 allowed-tools: Read, Write, Edit, Bash, Grep, Glob, Skill, ToolSearch, AskUserQuestion, mcp__plugin_linear_linear__*
 ---
 
-Use the **linear-sync** skill.
+Use the **ticket** skill.
 
 **Input:** $ARGUMENTS
