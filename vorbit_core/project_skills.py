@@ -4,7 +4,7 @@ One source of truth: `skills/<name>/SKILL.md` is authored once; this module
 generates `{codex,gemini}/skills/vorbit-shared/workflows/<name>.md` from it by
 applying a deterministic, per-agent substitution table (tool idioms, storage
 paths, slash-command syntax). It also mirrors skill-local asset directories
-(`references/`, `examples/`) into the agent skill folders and ships the
+(`references/`, `examples/`, `scripts/`) into the agent skill folders and ships the
 agent-neutral execution contract.
 
 `implement-loop` is intentionally NOT projected: its Claude implementation is
@@ -59,7 +59,7 @@ AGENT_DIR_NAME: dict[str, str] = {
     "implement-cleanup-mocks": "vorbit-cleanup-mocks",
 }
 
-ASSET_DIRS = ("references", "examples")
+ASSET_DIRS = ("references", "examples", "scripts")
 
 AGENTS: dict[str, dict[str, str]] = {
     "codex": {
@@ -386,7 +386,9 @@ def write_all() -> None:
         for source, target in _iter_asset_pairs(agent_key):
             if target.exists():
                 shutil.rmtree(target)
-            shutil.copytree(source, target)
+            shutil.copytree(
+                source, target, ignore=shutil.ignore_patterns("__pycache__")
+            )
 
 
 def check_all() -> list[str]:

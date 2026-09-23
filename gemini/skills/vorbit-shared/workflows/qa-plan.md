@@ -1,5 +1,7 @@
 <!-- GENERATED from skills/qa-plan/SKILL.md — edit the canonical file, then run: python3 -m vorbit_core.project_skills --write -->
 
+> Skill assets: paths like `references/...` in this workflow resolve inside the installed `vorbit-qa-plan` skill directory (a sibling of `vorbit-shared`).
+
 # QA Plan Skill
 
 Build a manual test plan a human can click through: plain language, one action and one expected result per check. The plan lives next to the other branch specs, and the ticket skill reports its progress on the story tickets.
@@ -10,13 +12,19 @@ Read `../references/spec-files.md` for spec path resolution, write guards, and f
 
 This plan is for a person testing by hand. The implement skill already checks every acceptance criterion before a task is done; the two do not replace each other.
 
+## Unattended Runs
+
+A run is unattended when the caller says no one is watching (for example "do not ask questions") or the session cannot take answers. In an unattended run, never stop to ask. Every place below that says "ask" becomes: make the sensible choice named there, and record it in the plan header as one `Assumed:` line per choice. Save the plan without the approval question. An unattended run never ends as `needs_input`.
+
 ## Step 1: Read the Branch Specs
 
 1. Resolve the spec folder per `../references/spec-files.md`.
 2. Read `prd.md` when it exists — it is the best source (stories, flows, criteria). If it is missing, run `git worktree list` first and report any sibling worktree that may hold it before building from scratch.
 3. **No PRD is not a blocker.** When no `prd.md` exists anywhere, build the plan from the user instead: ask, batched, what the feature does, the main user actions (happy path), and what must never break. Their answers take the place of stories and criteria. Record `Source: conversation` in the file header, and group checks under one `## Feature checks` section instead of story sections. Mention once that `$vorbit-prd` would give the plan a firmer base, then continue.
-4. Read `epic.md` when present — the regression list is built from its File Changes tables. Without it, build the other sections and state plainly that the regression list is skipped until the epic plan exists.
-5. If `qa-plan.md` already exists, this run is a revision — the Step 4 preservation rules apply.
+   - Unattended: do not ask. Read the PR title and description (`gh pr view`) when a PR exists, the commit list since the base branch, and the diff. Record `Source: PR + diff` (or `Source: commits + diff`) instead of `Source: conversation`.
+4. Read `epic.md` when present — it is the first choice for the regression list (its File Changes tables).
+5. **Always run the regression scan**: `python3 scripts/regression_scan.py` from this skill's folder, run inside the repository. Add `--base <ref>` when the caller names what the branch is compared against (for a release, the branch that is live now). Without it, the script uses the open PR's base branch, then the remote's default branch. It prints the modified shared files with the files that use them, and the project's E2E suite commands. With `epic.md`, use the scan only to add shared files the epic missed and to find the E2E suite. Without `epic.md`, the scan is the regression source.
+6. If `qa-plan.md` already exists, this run is a revision — the Step 4 preservation rules apply.
 
 ## Step 2: Resolve Test Targets
 
@@ -27,9 +35,16 @@ Ask the user, batched, whatever the PRD does not answer. Never guess:
 3. **Performance targets** — take numbers from the PRD Success Criteria first; if none apply, ask for simple observable targets (for example "list appears in under 3 seconds"), or mark `TBD-###`
 4. **Test environment** — where the tester clicks through (local app, staging URL, test account)
 5. **Test data and preconditions** — the account, role, records, and starting state needed to run the checks. For any list or table, require repeated values in the displayed sort field and enough records to cross a page, lazy-load, or group boundary when those states are reachable.
-6. **Automated E2E runner** — do not ask; detect it: a `playwright.config.*` file or a Playwright/Cypress dependency in `package.json`. If found, the plan gets an Automated checks section (Step 3)
+6. **Automated E2E runner** — do not ask; detect it: a `playwright.config.*` file, a Playwright/Cypress dependency in `package.json`, or an `e2e_suites` entry from the Step 1 scan. If found, the plan gets an Automated checks section (Step 3)
 
 Record unresolved items as `TBD-###` with the prd skill's impact classification. Only performance targets may stay TBD in a saved plan; unresolved devices, browsers, environment, or required test data block the save.
+
+Unattended: nothing blocks the save. Use these choices and write each one as an `Assumed:` line in the header:
+- Devices: desktop, plus mobile when the diff touches layout or responsive styles
+- Browsers: Chrome (the browser the E2E runner and browser tools use)
+- Performance: `TBD-###`, unless the PR description states a number
+- Environment: the preview or staging URL in the PR description; else the local dev server from the project's `dev` or `start` script
+- Test data: the test account and seed data the repository documents (E2E setup, README, `.env.example`); else "any account with access to the changed screens"
 
 ## Step 3: Draft the Plan
 
@@ -50,20 +65,21 @@ Record unresolved items as `TBD-###` with the prd skill's impact classification.
   - range or bulk selection works across reachable boundaries
   - an intermittent or fetch-sensitive action succeeds five times without rows jumping
 - **Device & browser matrix** — map only the checks whose behavior can differ per device or browser to the targets from Step 2. Do not list every check.
-- **Regression checks** — from `epic.md` File Changes: for each modified shared file, name the existing feature that uses it and add one check that it still works. Skip created-from-scratch files.
+- **Regression checks** — never skipped. Source: `epic.md` File Changes when it exists; otherwise the Step 1 scan's `shared_modified_files`. For each modified shared file, name the existing features that use it (from the consumer folders, in the words a user sees on screen) and add one check per feature that it still works. Skip created-from-scratch files. When many features use one file, check the three most-used screens and name the rest in one line. When the scan finds no shared files, write one line saying so and naming the base branch. Always write `Regression source: epic.md` or `Regression source: git diff against [base]` under the section heading.
+- **Full regression suite** — when the scan returns an `e2e_suites` entry with `primary: true`, add it as the first `QP#` check in Automated checks, with its exact `command` (for example `yarn e2e`), labeled `Full regression suite`. It covers the whole app, not one story. Put it in Automated checks so qa-report runs it with the other `QP#` commands. Use the plain suite, not the environment variants (such as `e2e:staging`), unless the caller names that environment. In `## Regression checks`, add one line pointing to that `QP#`.
 - **Performance checks** — human-observable phrasing of the Step 2 targets ("page is ready in under 3 seconds on a normal connection", "scrolling a long list stays smooth"). One check per target.
 - **Automated checks (Playwright)** — only when Step 2 detected an E2E runner. Search the project's E2E folders for spec files touching the screens and flows in this plan. One check per relevant spec file, with its exact run command and which manual checks a green run covers — so the tester can skip hand-testing what the machine already proves. Add at most one `suggested:` line per story for an important flow no spec covers yet; when list or table reliability lacks automation, that gap takes priority. A suggestion does not replace the manual reliability check.
 
 Before showing the draft, verify both coverage gates and state their results in chat: requirements coverage and applicable list/table reliability coverage. Keep the mappings out of the file. A plan fails the second gate if it uses only small, unique, single-page data for a reachable list or table state.
 
-Show the full draft in chat and ask: **"Ready to save the QA plan?"** Do not write the file before approval. A request for a draft or review only stops here.
+Show the full draft in chat and ask: **"Ready to save the QA plan?"** Do not write the file before approval. A request for a draft or review only stops here. Unattended: skip the question and save; the `Assumed:` lines take the place of the approval.
 
 ## Step 4: Write the File
 
 1. Run the write guards per `../references/spec-files.md`.
 2. Write `qa-plan.md` in the spec folder per the schema below.
-3. **Revision rules:** preserve the `- [x]` state and any `**Fail:**` note of every unchanged check; never renumber existing IDs; new checks get fresh IDs continuing each sequence; list removed checks explicitly and ask before dropping any check that has a `**Fail:**` note.
-4. Re-read the written file: one section per PRD story, all IDs unique, every section from the schema present, and every applicable list or table story has reliability checks (Regression may carry the "skipped — no epic.md" note).
+3. **Revision rules:** preserve the `- [x]` state and any `**Fail:**` note of every unchanged check; never renumber existing IDs; new checks get fresh IDs continuing each sequence; list removed checks explicitly and ask before dropping any check that has a `**Fail:**` note (unattended: keep that check instead of asking).
+4. Re-read the written file: one section per PRD story, all IDs unique, every section from the schema present, and every applicable list or table story has reliability checks, and the Regression section names its source and has at least one check or the "no shared files changed" line.
 
 ## Step 5: Report
 
@@ -71,6 +87,8 @@ Show the full draft in chat and ask: **"Ready to save the QA plan?"** Do not wri
 - Counts: story checks, edge cases, list/table reliability checks, matrix rows, regression checks, performance checks (per story where it applies)
 - Requirements coverage gate and list/table reliability gate results
 - Any `TBD-###` left open
+- Regression source (epic.md or git diff against which base) and whether the full E2E suite is in the plan
+- Unattended: every `Assumed:` line
 - Reminder: the plan lives only in this worktree and is gitignored
 - Next steps:
   - test by hand and tick the boxes (recording rules below)
@@ -100,6 +118,7 @@ Branch: [branch name]
 Updated: [YYYY-MM-DD]
 Environment: [where to test]
 Devices: [list] | Browsers: [list]
+Assumed: [unattended only: one line per choice made without asking]
 
 ## Test data & preconditions
 
@@ -141,15 +160,19 @@ Only checks that can behave differently per device or browser get a row.
 
 ## Regression checks
 
+Regression source: [epic.md | git diff against origin/dev]
+
 - [ ] QR1: [existing feature touched by this change] still works: [action]. You should see: [result]
+- Full regression suite: see QP1
 
 ## Automated checks (Playwright)
 
-- [ ] QP1: run `npx playwright test e2e/login.spec.ts`. You should see: all tests pass. Covers: QA1, QA2
+- [ ] QP1: Full regression suite: run `yarn e2e`. You should see: all tests pass. Covers: whole app
+- [ ] QP2: run `npx playwright test e2e/login.spec.ts`. You should see: all tests pass. Covers: QA1, QA2
 - suggested: no spec covers the empty-email error yet (QA3)
 ```
 
-Include the Automated checks section only when the project has an E2E runner; `QP#` IDs follow the same never-renumber rule. In conversation mode (no `prd.md`), the header carries `Source: conversation` and story sections are replaced by one `## Feature checks` section.
+Include the Automated checks section only when the project has an E2E runner, and the `Assumed:` line only in unattended runs; `QP#` IDs follow the same never-renumber rule. In conversation mode (no `prd.md`), the header carries `Source: conversation` and story sections are replaced by one `## Feature checks` section.
 
 Include `### List & table reliability` only for stories with reachable list or table behavior. Its checks and concrete test data are mandatory when it applies.
 
