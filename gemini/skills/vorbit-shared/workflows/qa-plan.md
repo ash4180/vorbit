@@ -81,9 +81,10 @@ Show the full draft in chat and ask: **"Ready to save the QA plan?"** Do not wri
 
 Whoever runs the plan (a person, in the app):
 
-- **Passed** → tick the box: `- [x] QA3: ...`
+- **Passed** → tick the box and add the test date: `- [x] QA3: ... (passed 2026-09-23)`
 - **Failed** → leave the box unchecked and add one indented line under the check: `**Fail:** [what actually happened] ([date])`
 - Never delete or rewrite a check while recording results; notes go under the check.
+- Update the `Updated:` line in the header to the test date. Dates let a daily report see which checks ran on which day.
 
 The ticket skill counts ticked boxes per story section and flags `**Fail:**` notes on the story ticket.
 
@@ -96,6 +97,7 @@ The ticket skill counts ticked boxes per story section and flags `**Fail:**` not
 
 Source: prd.md + epic.md (this folder)
 Branch: [branch name]
+Updated: [YYYY-MM-DD]
 Environment: [where to test]
 Devices: [list] | Browsers: [list]
 

@@ -66,11 +66,24 @@ AGENTS: dict[str, dict[str, str]] = {
         "label": "Codex",
         "slug": "codex",
         "repo_doc": "AGENTS.md",
+        # explore Step 5: how this runtime builds the visual solution page.
+        "solution_page": (
+            "Use your own `visualize` skill to build the visual, then turn it into "
+            "a full standalone page with that skill's `scripts/render.py "
+            "<fragment-path> <destination>.html`, using the path above as the "
+            "destination. There is no online publishing step."
+        ),
     },
     "gemini": {
         "label": "Gemini CLI",
         "slug": "gemini",
         "repo_doc": "GEMINI.md",
+        # explore Step 5: how this runtime builds the visual solution page.
+        "solution_page": (
+            "Build the page yourself as one self-contained HTML file, drawing the "
+            "diagrams and charts with inline SVG or CSS. There is no online "
+            "publishing step."
+        ),
     },
 }
 
@@ -97,6 +110,7 @@ FORBIDDEN_OUTPUT_TOKENS = (
     "at most 15 nodes",
     "no back-loops",
     "call `save_issue`",
+    "artifact-design",
 )
 
 
@@ -233,6 +247,14 @@ def _rules(agent: dict[str, str]) -> list[tuple[re.Pattern[str], object]]:
         lit(
             "(`save_issue` in the vorbit Claude plugin)",
             "(inspect the connector schema for the current issue-update verb)",
+        ),
+        # -- explore solution page: each runtime uses its own visual tool -----
+        lit(
+            "Use the `artifact-design` skill and the Artifact tool: write the HTML "
+            "to that path first, then publish that same file as an artifact, with "
+            "the saved reference pictures as supporting files, and keep its link "
+            "for Step 7.",
+            agent["solution_page"],
         ),
         # -- misc ---------------------------------------------------------------
         lit("relative to this skill", "from this skill's installed directory"),

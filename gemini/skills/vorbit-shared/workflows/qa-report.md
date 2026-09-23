@@ -28,7 +28,7 @@ Only when the plan has an `Automated checks` section:
 2. Run each command exactly as the plan stores it. The tool does not matter — Playwright, Cypress, Maestro, or any open-source runner works the same because the plan stores the command, not the tool.
 3. Judge each run by exit status plus the runner's own summary line; quote failing test names in plain words. When a Playwright HTML/JSON results file exists, use it for the failing-test details.
 4. Copy the runner's own screenshots into the run picture folder before reporting. Playwright writes a failure shot under `test-results/.../test-failed-1.png` and wipes that folder on the next run, so a copy is the only version the report can keep. Name each copy `<QP#>-<short-label>.png`.
-5. Update `qa-plan.md` to match reality: tick a `QP#` box on pass; on fail, untick it and add the `**Fail:**` note line. Touch nothing else in the plan file.
+5. Update `qa-plan.md` to match reality: tick a `QP#` box on pass and add `(passed YYYY-MM-DD)`; on fail, untick it and add the `**Fail:**` note line. Set the header's `Updated:` line to today. Touch nothing else in the plan file.
 6. A command that cannot run (missing dependency, no browser, no environment) is recorded as `blocked: [reason]` — never guessed as pass or fail.
 
 ## Step 2.5: Agent-Run Manual Checks (default when possible)
@@ -44,7 +44,7 @@ Runs by default when the runtime has a browser-automation capability (for exampl
    - Scroll past or hide test data that looks private before the shot.
 5. After each check, read the browser console (the browser's hidden error list). Any new error there fails the check even when the screen looks right — quote the error in the `**Fail:**` note.
 6. Record honestly, using the same rules a human tester follows:
-   - matches → tick the box
+   - matches → tick the box and add `(passed YYYY-MM-DD)`, the same as a human tester
    - differs → leave unchecked and add `**Fail:** [what actually appeared] ([date])`
    - cannot truly perform it (real phone in hand, camera, printed output, a browser the tool cannot open) → add `needs human: [reason]` under the check and leave it unchecked
 7. Device-matrix rows may be run with an emulated screen size; then note `(emulated)` on that check — an emulated phone is not a real phone.
