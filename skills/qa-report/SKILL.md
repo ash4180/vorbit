@@ -1,6 +1,6 @@
 ---
 name: qa-report
-description: Use when the user asks to run the QA checks or produce a QA report for the current branch. It executes the plan's automated E2E commands (Playwright or any runner the plan lists), can click through the unticked manual checks itself when a browser-automation capability is available, records honest results in qa-plan.md, takes a screenshot of every check it runs, and writes a dated human-readable qa-report.md with those pictures embedded — newest run first, with a ready or not-ready verdict. Fails this branch did not cause become follow-ups, not blockers; it checks Linear and Slack for prior discussion and asks before creating a ticket. Otherwise it never writes to Linear. Requires an existing qa-plan.md; do not use to author the plan (qa-plan), check acceptance criteria (the implement skill does that), or fix code.
+description: Use when the user asks to run the QA checks or produce a QA report for the current branch. It executes the plan's automated E2E commands (Playwright or any runner the plan lists), can click through the unticked manual checks itself when a browser-automation capability is available, records honest results in qa-plan.md, takes a screenshot of every check it runs, and writes a dated human-readable qa-report.md with those pictures embedded — newest run first, with a ready or not-ready verdict. Fails this branch did not cause become follow-ups, not blockers; it checks Linear and Slack for prior discussion and asks before creating a ticket. When the caller names a Notion report hub, it also publishes the run as a page from the hub's template, one row and picture per check, and links that page on the Linear tickets. Otherwise it never writes to Linear. Requires an existing qa-plan.md; do not use to author the plan (qa-plan), check acceptance criteria (the implement skill does that), or fix code.
 ---
 
 # QA Report Skill
@@ -13,7 +13,7 @@ Read `../_shared/spec-files.md` for spec path resolution, write guards, and file
 
 Read `../_shared/pre-existing-findings.md` for how to tag, report, and follow up fails this branch did not cause.
 
-This skill writes to Linear only for a follow-up ticket the user approves per `pre-existing-findings.md`. The story tickets keep only the ticket skill's short `QA: N of M` count line.
+This skill writes to Linear only for a follow-up ticket the user approves per `pre-existing-findings.md`, and for the `QA report` link Step 3.5 adds. QA results never go into ticket descriptions.
 
 ## Step 1: Read the Plan and Its Results
 
@@ -92,6 +92,11 @@ Every failed check carries a suggested fix. This skill suggests only. It never e
 - US-001 [Story title]: 5 of 6 passed — 1 fail
 - US-002 [Story title]: all 4 passed
 
+### Needs your decision
+- QA6: plan expected a greyed Save button; the app hides the button instead. Safe, but the check needs rewording.
+  ![QA6](qa-screenshots/2026-09-16/qa6-save-hidden.png)
+(omit this section when there are none)
+
 ### Failed checks
 - QA3: Submit with empty email — expected "Email required", the form submitted with no error
   ![QA3](qa-screenshots/2026-09-16/qa3-empty-email.png)
@@ -132,16 +137,22 @@ Every failed check carries a suggested fix. This skill suggests only. It never e
 ---
 ```
 
-**Verdict rule:** `READY` only when every check in the plan is ticked or tagged pre-existing. Any branch-caused fail, block, or untested check = `NOT READY`, with the reason listed. Never soften a fail, and never re-tag a fail as pre-existing to reach `READY`.
+**Verdict rule:** `READY` only when every check in the plan is ticked or tagged pre-existing. Any branch-caused fail, block, untested check, or check that needs a human decision = `NOT READY`, with the reason listed. Never soften a fail, and never re-tag a fail as pre-existing to reach `READY`.
+
+A check where the app is safe but differs from the plan, or that needs a human decision, goes under `### Needs your decision` (between Per story and Failed checks), never under Passed.
+
+## Step 3.5: Publish to Notion (only when the caller names a hub)
+
+When the caller names a Notion report hub, read `references/notion-report.md` and follow it after the local report is written. Without a named hub, skip this step and mention in Step 4 that the report can be published to Notion.
 
 ## Step 4: Report in the Session
 
 - Verdict, one line
-- File path
+- File path, and the Notion page URL when Step 3.5 ran
 - Fails in plain words (max 5; if more, count them and name the worst), each with its suggested fix in one short line
 - Pre-existing fails, each with its Linear and Slack line, then the one batched ticket question per `../_shared/pre-existing-findings.md` Step 4
 - Picture folder path, so the user can open the shots directly
 - Reminder: the report is local and gitignored — copy the run section out to share it, and copy the `qa-screenshots/` folder with it or the pictures stop showing
 - Next steps:
   - fix fails via `/vorbit:implement:implement`, then re-run this skill
-  - `/vorbit:ticket` refreshes only the short `QA: N of M` count on the story tickets — report details never go to Linear
+  - report details never go into Linear ticket descriptions; publish to a Notion hub to share them

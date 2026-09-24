@@ -5,7 +5,7 @@ description: Use when the user asks to build or update a QA test plan for the cu
 
 # QA Plan Skill
 
-Build a manual test plan a human can click through: plain language, one action and one expected result per check. The plan lives next to the other branch specs, and the ticket skill reports its progress on the story tickets.
+Build a manual test plan a human can click through: plain language, one action and one expected result per check. The plan lives next to the other branch specs; the qa-report skill turns its results into the QA report.
 
 Read and follow `../_shared/execution-contract.md` before starting.
 
@@ -94,7 +94,6 @@ Show the full draft in chat and ask: **"Ready to save the QA plan?"** Do not wri
 - Next steps:
   - test by hand and tick the boxes (recording rules below)
   - `/vorbit:implement:qa-report` to run the automated checks and write the dated report
-  - `/vorbit:ticket` to show "QA: N of M checks passed" on each story ticket
 
 ## How the Tester Records Results
 
@@ -104,9 +103,6 @@ Whoever runs the plan (a person, in the app):
 - **Failed** → leave the box unchecked and add one indented line under the check: `**Fail:** [what actually happened] ([date])`
 - Never delete or rewrite a check while recording results; notes go under the check.
 - Update the `Updated:` line in the header to the test date. Dates let a daily report see which checks ran on which day.
-
-The ticket skill counts ticked boxes per story section and flags `**Fail:**` notes on the story ticket.
-
 ---
 
 # qa-plan.md Schema

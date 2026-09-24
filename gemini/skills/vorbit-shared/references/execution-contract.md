@@ -17,9 +17,20 @@ Before an external write, destructive local change, commit, push, or publication
 
 Do not guess unavailable tool names. A missing required capability ends as `blocked_missing_capability`. Ordinary local edits explicitly requested by the user do not need redundant confirmation.
 
+## Connector Login Failures
+
+When a connector (MCP) call fails because of login or access (expired token, 401, 403, "not authenticated", "reconnect"):
+
+1. Stop the step that needs it. Do not do the same job through another connector, another workspace, WebFetch, or a shell call.
+2. Tell the user which connector failed and the exact fix: reconnect it (in Claude Code, run `/mcp`). Then wait for the user.
+3. Never report that step as done, and never offer an unrelated workaround in place of the fix.
+4. Unattended run: finish every step that does not need the connector. Put the failure and the reconnect step at the top of the final result. The terminal status is `blocked_missing_capability`, with the finished steps listed.
+
 ## Tracker Communication
 
 Do not create Linear comments, except the single user-approved comment the tutorial workflow may post. Report progress, evidence, blockers, cancellation, and completion in the current session instead. Explicitly authorized issue creation, description edits, and status changes remain allowed.
+
+Keep Linear titles, descriptions, and approved comments focused on the project work. Do not mention Vorbit, add tool attribution, or expose local skill commands, private spec paths, or worktree locations. Include the project branch name or an available PR link when useful; local workflow details stay in the current session.
 
 ## Source Baseline
 

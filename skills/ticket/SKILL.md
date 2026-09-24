@@ -1,6 +1,6 @@
 ---
 name: ticket
-description: Use when the user asks to create a Linear ticket for the current branch work ("create ticket", "create the Linear ticket", "make a ticket") or to post or refresh its short human-readable Linear summaries. It reads the branch prd.md and epic.md, creates or updates one compact summary ticket per user story with progress and a pointer to the branch, and records ticket IDs back into prd.md. Tickets stay summaries; implementation detail lives only in the branch spec files. Requires Linear and an existing branch PRD; do not use to write the PRD or epic plan, implement code, or create engineering sub-issues.
+description: Use when the user asks to create a Linear ticket for the current branch work ("create ticket", "create the Linear ticket", "make a ticket") or to post or refresh its short human-readable Linear summaries. It reads the branch prd.md and epic.md, creates or updates one compact summary ticket per user story with its goal and acceptance criteria, and records ticket IDs back into prd.md. Tickets stay summaries; implementation detail lives only in the branch spec files. Requires Linear and an existing branch PRD; do not use to write the PRD or epic plan, implement code, or create engineering sub-issues.
 ---
 
 # Ticket Skill
@@ -17,9 +17,8 @@ Before any Linear call, read `_shared/mcp-tool-routing.md`. Verb names below des
 
 1. Resolve the spec folder per `../_shared/spec-files.md`.
 2. Require `prd.md`. If missing, run `git worktree list`, report any sibling worktree that may hold it, direct the user to `/vorbit:design:prd`, and stop.
-3. Read `epic.md` when present — it supplies task progress. Its absence is fine; sync then covers requirements only.
-4. Read `qa-plan.md` when present — it supplies the QA progress line (ticked boxes and `**Fail:**` notes per story section).
-5. Parse the `## Linear Sync` section in `prd.md` when present: it maps `US-###` to previously created ticket IDs. This decides create vs update; never trust memory of earlier runs over this record.
+3. Read `epic.md` when present — it shows which criteria are done, for the checkboxes. Its absence is fine; every box then stays unchecked.
+4. Parse the `## Linear Sync` section in `prd.md` when present: it maps `US-###` to previously created ticket IDs. This decides create vs update; never trust memory of earlier runs over this record.
 
 ## Step 2: Verify Linear and Resolve Team
 
@@ -46,22 +45,14 @@ One ticket per user story (or per `TS-###` technical section). Write for a perso
 ## What done looks like
 - [ ] [Acceptance criterion, verbatim from prd.md]
 - [ ] [Another criterion, verbatim]
-
-## Progress
-[N] of [M] tasks done ([done task titles, comma-separated] — omit line when epic.md is absent)
-QA: [N] of [M] checks passed (counted from the story's qa-plan.md section — omit line when qa-plan.md is absent)
-
-## Where the full spec lives
-Branch: `[branch name]`
-Full spec: `.vorbit/` inside that branch's worktree (local working files, not in git)
-Summary last synced: [YYYY-MM-DD]
 ```
 
+The ticket holds only the goal and the criteria. No progress, branch, or date sections: Linear already shows the linked branch and PR, and QA results live in the linked QA report.
+
 **Composition rules:**
-- No task-level engineering detail, no file paths (other than the spec pointer), no tables
+- No task-level engineering detail, file paths, or tables
+- Follow the execution contract's Tracker Communication rule: no Vorbit mentions, tool attribution, local commands, or private spec/worktree locations in the posted title or description. Check the composed text before the mutation preview
 - Check a criterion's box only when `epic.md` shows every task quoting that criterion as `done`; otherwise leave it unchecked
-- A `blocked` task appears as `⚠ blocked: [task title]` under Progress
-- A QA check with a `**Fail:**` note appears as `⚠ QA fail: [check ID — short reason]` under Progress
 - This description is a full replacement on every sync — do not try to merge with manual edits; warn in the preview that manual Linear edits to these tickets are overwritten
 
 **Mutation preview (required):** show every composed ticket (create vs update, title, target team/project) and get one approval before writing. If the user asked for a preview only, stop here.
@@ -84,6 +75,6 @@ Do not create sub-issues, labels, statuses, comments, or any engineering breakdo
    Preserve every other part of `prd.md` byte-for-byte.
 2. Report:
    - Tickets created and updated, with URLs, in PRD order
-   - Progress snapshot per story (tasks done / total)
+   - Criteria checked per story (checked / total)
    - Team and project used
    - Reminder: summaries go stale as work continues — re-run `/vorbit:ticket` after finishing tasks to refresh them
