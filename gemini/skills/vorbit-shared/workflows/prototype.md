@@ -18,14 +18,6 @@ Read and follow `../references/execution-contract.md` before starting.
 
 ## Phase 0: Detect Platform & Verify Connection
 
-### Pencil Check
-Before starting, check if Pencil MCP is available and configured:
-1. Check your configured connectors for `"pencil"` — if Pencil tools exist:
-2. Check if `<rules-root>/projects/<project-slug>/pencil.md` (resolve the root via `vorbit-resolve-rules`) exists (check with a shell listing)
-3. **IF Pencil available but no pencil.md:** Use plain-text chat questions: "Pencil is connected but not configured for this project. Run `$vorbit-pencil` first to sync your design tokens and components? (Recommended)" with options: "Run pencil first (Recommended)", "Skip — continue without sync"
-4. **IF user chooses to sync:** Stop and tell them to run `$vorbit-pencil`, then come back
-5. **IF pencil.md exists:** Read it — use detected stack, tokens, and component inventory to inform prototype decisions
-
 ### Platform Discovery
 Preflight required connectors: confirm each needed connector is configured in Gemini CLI and inspect its current operation/parameter schemas; never guess tool names. Verify only the external services actually needed. Linear is the canonical PRD provider; Figma is an optional design input, not a competing requirements source.
 

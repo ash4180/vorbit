@@ -1,6 +1,6 @@
 ---
 name: prototype
-description: Use when the user asks for a working frontend prototype, or for a UI mockup with no design surface named — the deliverable is runnable code in the repo using mock data that can later be swapped for real APIs. It inspects existing patterns, changes project files, registers mocks, and verifies the result. Do not use for design-tool artifacts (Figma or Pencil skills), throwaway images, backend implementation, or production features that must connect to live APIs now.
+description: Use when the user asks for a working frontend prototype, or for a UI mockup with no design surface named — the deliverable is runnable code in the repo using mock data that can later be swapped for real APIs. It inspects existing patterns, changes project files, registers mocks, and verifies the result. Do not use for design-tool artifacts (the Figma skill), throwaway images, backend implementation, or production features that must connect to live APIs now.
 ---
 
 # Prototype Skill
@@ -20,14 +20,6 @@ Read and follow `../_shared/execution-contract.md` before starting.
 - **Use TaskCreate/TaskUpdate**: Track progress through all phases.
 
 ## Phase 0: Detect Platform & Verify Connection
-
-### Pencil Check
-Before starting, check if Pencil MCP is available and configured:
-1. Run `ToolSearch` for `"pencil"` — if Pencil tools exist:
-2. Check if `.claude/rules/pencil.md` exists (Glob for it)
-3. **IF Pencil available but no pencil.md:** Use `AskUserQuestion`: "Pencil is connected but not configured for this project. Run `/vorbit:design:pencil` first to sync your design tokens and components? (Recommended)" with options: "Run pencil first (Recommended)", "Skip — continue without sync"
-4. **IF user chooses to sync:** Stop and tell them to run `/vorbit:design:pencil`, then come back
-5. **IF pencil.md exists:** Read it — use detected stack, tokens, and component inventory to inform prototype decisions
 
 ### Platform Discovery
 Read and follow `_shared/mcp-tool-routing.md` (glob for `**/skills/_shared/mcp-tool-routing.md`). Verify only the external services actually needed. Linear is the canonical PRD provider; Figma is an optional design input, not a competing requirements source.

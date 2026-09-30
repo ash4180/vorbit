@@ -42,7 +42,6 @@ PROJECTED_SKILLS: dict[str, str] = {
     "tutorial": "tutorial",
     "teach": "teach",
     "figma": "figma",
-    "pencil": "pencil",
     "prototype": "prototype",
     "webflow": "webflow",
     "implement": "implement",
@@ -213,11 +212,6 @@ def _rules(agent: dict[str, str]) -> list[tuple[re.Pattern[str], object]]:
         lit("`/mcp`", "your connector settings"),
         # -- storage/rules paths ----------------------------------------------
         (
-            re.compile(r"`?\.claude/rules/pencil\.md`?"),
-            "`<rules-root>/projects/<project-slug>/pencil.md` "
-            "(resolve the root via `vorbit-resolve-rules`)",
-        ),
-        (
             re.compile(r"`?\.claude/review-rules\.md`?"),
             "`<rules-root>/projects/<project-slug>/review-rules.md` "
             "(resolve the root via `vorbit-resolve-rules`)",
@@ -234,10 +228,6 @@ def _rules(agent: dict[str, str]) -> list[tuple[re.Pattern[str], object]]:
         lit(
             "Never hardcode `.claude/`, `.codex/`, or `.gemini/` storage.",
             "Never hardcode agent-runtime storage paths.",
-        ),
-        lit(
-            "Writes to `.claude/rules/` and Pencil canvas only.",
-            "Writes to the resolved Vorbit rules root and Pencil canvas only.",
         ),
         # -- Linear verbs ------------------------------------------------------
         lit(

@@ -118,7 +118,6 @@ vorbit/
 - **External capabilities used by workflows:**
   - **Linear** — canonical PRDs, epic trees, tracked implementation/loops, optional verification/PR updates
   - **Figma/FigJam** — Figma design work and journey diagrams; journey must load the connector's current `figma-generate-diagram` prerequisite
-  - **Pencil** — token/component synchronization; optional input for prototypes and Webflow
   - **Webflow** — Webflow page, template, and component mutation
   - **GitHub CLI or equivalent authenticated GitHub tooling** — prepare-pr
   - **Notion or Anytype** — optional storage for exploration drafts only; they are not canonical PRD providers
