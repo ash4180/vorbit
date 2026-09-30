@@ -40,10 +40,7 @@ Runs only when the input was a branch name, or `--worktree` was passed. With `--
 
 1. Already on the target branch → skip to Step 3.
 2. Working tree dirty → stop and ask (commit, stash, or abort). Never stash or discard silently; switching branches loses uncommitted work.
-3. Resolve the base branch:
-   - A durable project rule naming the integration branch wins.
-   - Else detect the remote default: `git symbolic-ref refs/remotes/origin/HEAD`.
-   - If the repo also has a `dev`/`develop` branch, or detection fails, ask the user once — and offer to save the answer as a durable project rule so it is never asked again for this repo.
+3. Resolve the base branch per the Base Branch section of the execution contract.
 4. `git fetch`, then create from the remote-tracking base — never from a possibly stale local copy:
    - **Worktree** (`--worktree`, or chosen when asked): `git worktree add ../<repo>-<ticket-id> -b <branch> origin/<base>`, then do all subsequent work inside that worktree.
    - **In place**: `git checkout -b <branch> origin/<base>`.

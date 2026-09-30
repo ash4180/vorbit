@@ -34,7 +34,7 @@ Detailed pipeline specs live in `references/` within this skill's directory. The
 
 1. **`--pr` flag present** → PR Review Mode (strip the flag, remaining arg is base branch)
 2. **Arguments are file/directory paths** → File Review Mode
-3. **No arguments** → PR Review Mode (default base: main)
+3. **No arguments** → PR Review Mode (base resolved per the Base Branch section of the execution contract)
 
 To detect without flag: if any argument matches an existing file or directory path, use File Review Mode. Otherwise, treat arguments as a base branch name for PR Review Mode.
 
@@ -58,7 +58,7 @@ To detect without flag: if any argument matches an existing file or directory pa
    - **Complexity**: 3+ levels of indentation, "clever" one-liners that are unreadable
    - **Naming**: Vague names like `Manager`, `Processor`
    - **Mocks**: Mock services where real ones work
-4. **Tag each finding** `from this branch` or `pre-existing` per `../references/pre-existing-findings.md` Step 1 (in file mode, "this branch" means the branch diff against main; with no diff, every finding is in scope and none is pre-existing)
+4. **Tag each finding** `from this branch` or `pre-existing` per `../references/pre-existing-findings.md` Step 1 (in file mode, "this branch" means the branch diff against the base branch; with no diff, every finding is in scope and none is pre-existing)
 5. **Present findings by severity, with concrete evidence**; pre-existing ones go in their own `Pre-existing (follow-up)` section at the end
 6. **For each issue**: WHAT is wrong, WHY it matters, HOW to fix
 
@@ -91,7 +91,7 @@ End with: **"Say 'fix it' to apply changes, or tell me what you disagree with."*
 
 ### Step 1: Determine Diff Scope
 
-1. Detect base branch: `git merge-base HEAD main` (or use argument if a branch name is provided)
+1. Resolve the base branch per the Base Branch section of the execution contract (a branch-name argument counts as named), then diff from `git merge-base HEAD <base>`
 2. Get committed diff: `git diff <base>..HEAD`
 3. Get changed file list: `git diff --name-only <base>..HEAD`
 4. **If no committed changes**: fall back to uncommitted changes with `git diff` (staged + unstaged) and `git diff --name-only`

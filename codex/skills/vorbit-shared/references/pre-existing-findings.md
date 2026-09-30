@@ -12,9 +12,9 @@ A bug this branch did not cause never blocks. It becomes a follow-up, not a fail
 
 Tag each finding `from this branch` or `pre-existing`. Use the code as proof, never a guess:
 
-1. Get the branch scope: `git diff --name-only $(git merge-base HEAD main)..HEAD`. When that diff is empty, use the uncommitted diff instead.
+1. Resolve `<base>` per the Base Branch section of the execution contract. Get the branch scope: `git diff --name-only $(git merge-base HEAD <base>)..HEAD`. When that diff is empty, use the uncommitted diff instead.
 2. Find the code behind the finding: file and lines for a review finding, the screen handler or component for a QA check.
-3. Run `git blame -L <start>,<end> <file>` on those lines. Compare each blamed commit against `git rev-list $(git merge-base HEAD main)..HEAD`.
+3. Run `git blame -L <start>,<end> <file>` on those lines. Compare each blamed commit against `git rev-list $(git merge-base HEAD <base>)..HEAD`.
 4. Tag `pre-existing` only when ALL of these hold:
    - the blamed lines were not changed by any commit on this branch
    - the behavior is outside the branch's acceptance criteria and flows (spec files, or the ticket when no spec exists)

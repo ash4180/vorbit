@@ -20,7 +20,7 @@ For branches without design files, the skill still handles PR body generation an
 **Goal**: Verify the branch is ready for PR creation.
 
 1. **Get current branch and determine base:**
-   - Base branch: `dev` if it exists, otherwise `main`
+   - Base branch: resolve it per the Base Branch section of the execution contract (`--base` counts as named)
    - **Guard**: If on `main`, `dev`, or `demo` → "You're on a protected branch. Switch to a feature branch first." → **STOP**
 
 2. **Extract issue-id** from branch name — first match of `[a-zA-Z]+-\d+` (case-insensitive):
@@ -324,4 +324,4 @@ This phase runs after Phases 2 and 3, so it tests the rebased code with design f
 - **`--skip-rebase`**: Skip Phase 2. Use when the team's workflow does conflict resolution at merge time (squash-and-merge), or when you intentionally want the reviewer to see the conflicts in GitHub.
 - **`--skip-designs`**: Skip Phase 3 even if `designs/` exists. For PRs where design files should remain (e.g., the PR sets up the design file infrastructure itself).
 - **`--draft`**: Create as draft PR (`gh pr create --draft`). For early feedback before the feature is complete.
-- **`--base {branch}`**: Override base branch detection. Default: `dev` or `main`.
+- **`--base {branch}`**: Override base branch detection. Default: resolved per the Base Branch section of the execution contract.
