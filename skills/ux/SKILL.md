@@ -19,7 +19,6 @@ Read and follow `../_shared/execution-contract.md` before starting.
 Receive from calling skill:
 - **User Story ID** (`US-###`) and story text, or a task description that will later be assigned to a user story
 - **Context** (what's already known)
-- **Next available flow number** when adding flow steps to an existing PRD
 
 Do not finalize acceptance criteria without an owning user story. If the caller has not assigned `US-###`, return provisional criteria candidates and require the caller to assign and confirm the story ID before adding them to a PRD.
 
@@ -74,9 +73,9 @@ Raw evidence is immutable. User corrections create a new evidence entry and supe
 
 ### Step 6: Build Flow Coverage
 
-Using the next available document-wide flow number, write the flow as a numbered list of steps under a `Flow N: [Name]` heading. Each step names what the user did, which screen or field it happened on, and what they saw as a result. Anchor the first step with **Entry:** and the last with **Exit:**. Steps carry no IDs and no coverage tags.
+Write the flow as a numbered list of steps under a `**User Flow:**` heading inside the owning `US-###` story, one flow per story. Each step names what the user did, which screen or field it happened on, and what they saw as a result. Anchor the first step with **Entry:** and the last with **Exit:**. Steps carry no IDs and no coverage tags.
 
-Preserve branches, retries, and loops in plain English inside the step text, referencing targets as "Flow N, step M" (e.g. "User retries → back to Flow 1, step 2").
+Preserve branches, retries, and loops in plain English inside the step text, referencing a step in the same story as "step M" and a step in another story as "US-###, flow step M" (e.g. "User retries → back to step 2"). A materially different flow belongs in a separate user story; ask the caller to assign its ID.
 
 Then run a completeness check before returning: walk every confirmed acceptance criterion and verify at least one flow step satisfies it. Do not return final UX content until every confirmed criterion is covered by at least one step — if one is uncovered, add the missing step or ask the user for the missing behavior. Never drop the criterion.
 
@@ -100,15 +99,11 @@ Return structured UX content to calling skill:
 
 ### User Flow
 
-#### Flow 1: [Name] (Happy flow)
+#### US-001: [Story Title]
 1. **Entry:** [which screen, and its starting state]. [User action and what they see]
 2. [which screen or field]. [User action and what they see]
-3. **Exit:** [observable end state]
-
-#### Flow 2: [Name] (Error/retry)
-1. **Entry:** [which screen, and its starting state]. [User action and what they see]
-2. [which screen or field]. [Failure the user sees and the recovery offered]
-3. User retries → back to Flow 1, step 2
+3. [which screen or field]. [Failure the user sees and the recovery offered]. User retries → back to step 2
+4. **Exit:** [observable end state]
 
 ### Acceptance Criteria
 
@@ -141,7 +136,7 @@ Return structured UX content to calling skill:
 - [ ] [Confirmed catalog-derived behavior]. Evidence: `E-12`
 ```
 
-The numbering above is illustrative. Evidence IDs continue sequentially across the clarification; flow steps restart at 1 within each flow. Acceptance criteria are plain checkboxes grouped under their owning `US-###` story — never give them IDs of any kind.
+The numbering above is illustrative. Evidence IDs continue sequentially across the clarification; flow steps restart at 1 within each story. Acceptance criteria are plain checkboxes grouped under their owning `US-###` story — never give them IDs of any kind.
 
 ---
 

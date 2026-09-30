@@ -45,7 +45,7 @@ If step 4 gives `main` but a `dev` or `develop` branch also exists, ask the user
 
 ## Source Baseline
 
-For requirements-driven work, record the source artifact ID/URL and update timestamp or revision. Carry globally unique user-story IDs (`US-*`) forward; reference acceptance criteria by quoting their text verbatim and flow steps as `Flow N, step M`. If the source changes mid-work, stop and reconcile before continuing.
+For requirements-driven work, record the source artifact ID/URL and update timestamp or revision. Carry globally unique user-story IDs (`US-*`) forward; reference acceptance criteria by quoting their text verbatim and flow steps as `US-###, flow step M`. If the source changes mid-work, stop and reconcile before continuing.
 
 ## Policy Composition
 

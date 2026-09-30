@@ -54,7 +54,7 @@ If the PRD has stories without acceptance criteria, or flows whose steps are an 
 **Traceability requirements before planning:**
 - Every user story has at least one acceptance criterion
 - Every acceptance criterion is satisfied by at least one flow step, or has an explicit non-journey reason
-- Reference a criterion by quoting its text, and a step as `Flow N, step M`. Do not mint IDs the PRD does not have
+- Reference a criterion by quoting its text, and a step as `US-###, flow step M`. Do not mint IDs the PRD does not have
 - If any user story has no criteria, or any criterion has no flow coverage and no reason, resolve it before Step 4
 
 ### Implementation-Affecting TBD Gate (Blocking)
@@ -146,7 +146,7 @@ Examples of coupling:
 
 Create SDD (Specification-Driven Development) document:
 - Technical Overview
-- Flow Impact Matrix (`Flow N, step M` -> system/module/API/UI touchpoints)
+- Flow Impact Matrix (`US-###, flow step M` -> system/module/API/UI touchpoints)
 - PRD Compliance Check (confirm all planned changes satisfy the exact `US -> AC -> Flow` baseline)
 - Data Model Changes
 - API Changes
@@ -206,7 +206,7 @@ For each User Story, create:
 **Epic planning inputs per story (required):**
 - User story ID (`US-###`)
 - The story's acceptance criteria, quoted verbatim from the PRD
-- The flow steps from the PRD, with the screen or API each one touches (for example `Flow 1, step 3` — `API /orders`)
+- The flow steps from the PRD, with the screen or API each one touches (for example `US-001, flow step 3` — `API /orders`)
 
 **Task derivation rule:**
 - Use flow steps to identify concrete technical work:
@@ -222,7 +222,7 @@ Every task must contain every section shown in the Task Template below (Mock Dat
 ### Mapping Story AC to Tasks
 
 1. List all story Acceptance Criteria, quoted verbatim from the PRD
-2. List all related flow steps for the story, as `Flow N, step M`
+2. List all related flow steps for the story, as `US-###, flow step M`
 3. For each task, identify which story criteria and flow steps it satisfies
 4. Copy those criteria **verbatim** into "Related Story Acceptance Criteria" and the steps into "Related Flow Steps". Quoting the text is what binds a task to its requirement — do not paraphrase
 5. **Rule:** Every story AC must be covered by at least one task
@@ -347,8 +347,8 @@ Transform the user story goal into a clear, human-readable title (e.g. "As a use
 **Related PRD Flow Context:**
 | Flow Step | Surface | Why it matters |
 |-----------|---------|----------------|
-| Flow 1, step 2 | UI: `CheckoutForm` | User submits payment details |
-| Flow 1, step 3 | API: `POST /payments` | Payment processing and order creation |
+| US-001, flow step 2 | UI: `CheckoutForm` | User submits payment details |
+| US-001, flow step 3 | API: `POST /payments` | Payment processing and order creation |
 
 **Test Criteria (TDD - write tests FIRST):**
 
@@ -389,8 +389,8 @@ Phase 2 (depends on Phase 1)
 
 ## Related Flow Steps
 > Implementation context from PRD flow:
-- [ ] Flow 1, step 2 — [UI/component step covered]
-- [ ] Flow 1, step 3 — [API/service step covered]
+- [ ] US-001, flow step 2 — [UI/component step covered]
+- [ ] US-001, flow step 3 — [API/service step covered]
 
 ⚠️ **Before marking done:** Verify ALL checked items above are satisfied.
 
