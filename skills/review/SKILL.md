@@ -52,7 +52,7 @@ To detect without flag: if any argument matches an existing file or directory pa
 ### Phase 1: ANALYZE (No edits)
 
 1. **Read the files** specified in arguments
-2. **Apply CLAUDE.md standards ruthlessly**
+2. **Apply the repository's instruction files** (CLAUDE.md, AGENTS.md, rule files) as the standard
 3. **Audit for:**
    - **Over-engineering**: Factories for single classes, excessive interfaces, abstractions with single implementations, "future-proofing" (YAGNI)
    - **Dead Code**: Functions never called, commented-out code "just in case"

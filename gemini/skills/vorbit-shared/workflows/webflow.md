@@ -167,7 +167,7 @@ Variants follow the same shape:
 | Figma element has no Webflow equivalent | Block and ask user |
 | Requirements unclear | Ask clarifying questions |
 | Class name conflict | Append unique suffix, inform user |
-| Template slot limit (40 per site) | Warn user before creating |
+| Template limit (40 per site) | Warn user before creating |
 | Production site changes | Require explicit confirmation |
 
 ## Additional Resources

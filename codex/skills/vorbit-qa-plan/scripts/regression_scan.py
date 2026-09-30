@@ -27,6 +27,7 @@ MAX_CONSUMERS_LISTED = 25
 E2E_RUNNER = re.compile(r"\b(playwright\s+test|cypress\s+run|wdio|testcafe|nightwatch)\b")
 E2E_NAME = re.compile(r"(^|:)(e2e|playwright|cypress)(:|$)")
 # Script variants that open a UI, seed data, show a report, or aim at a remote env.
+E2E_QA_MODE = re.compile(r"(:qa$|\bQA_MODE\b|\bQA_VIDEO)")
 E2E_EXCLUDE = re.compile(r"(--ui\b|--headed\b|show-report|\bopen\b|seed|:ui$|:report$|:seed)")
 JS_SPECIFIER = re.compile(
     r"""(?:from\s+|import\s*\(\s*|require\s*\(\s*|import\s+)['"]([^'"]+)['"]"""
@@ -211,7 +212,17 @@ def find_e2e_suites() -> list[dict[str, Any]]:
                 # The plain name ("e2e", "test:e2e") is the default full suite;
                 # variants such as "e2e:staging" point at another environment.
                 "primary": name in {"e2e", "test:e2e", "playwright", "cypress"},
+                # A QA-mode variant (e.g. "e2e:qa") runs the same suite but keeps
+                # proof of every test, such as a video of passing tests too.
+                "qa_mode": bool(E2E_QA_MODE.search(name) or E2E_QA_MODE.search(command)),
             })
+    # A package's QA-mode variant replaces its plain suite as the one to run for QA.
+    for package in {s["package"] for s in suites if s["qa_mode"]}:
+        in_package = [s for s in suites if s["package"] == package]
+        if any(s["primary"] for s in in_package):
+            qa_suite = min((s for s in in_package if s["qa_mode"]), key=lambda s: len(s["script"]))
+            for suite in in_package:
+                suite["primary"] = suite is qa_suite
     suites.sort(key=lambda s: (not s["primary"], s["package"] != ".", s["script"]))
     return suites
 

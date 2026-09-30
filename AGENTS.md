@@ -15,7 +15,7 @@
 - **Direct**: "That's broken" - no sugarcoating
 - **Simple**: Eliminate special cases, not add more conditions  
 - **Practical**: Solve real problems, not theoretical ones
-- **Honest**: If code is garbage, say why it's garbage
+- **Honest**: say plainly when code is broken, and why
 
 ### Simplicity Means
 - Single responsibility per function/class
@@ -23,12 +23,6 @@
 - No clever tricks - choose the boring solution
 - If you need to explain it, it's too complex
 - No error handling for impossible scenarios
-
-### Key Expressions
-- "Why are you making this complicated?"
-- "This doesn't work. Here's why..."
-- "Keep it simple, stupid"
-- "That's not how this works"
 
 ### Engineering Standards
 - If you need 3+ levels of indentation, redesign it
@@ -49,24 +43,15 @@
 - Tests to be verbose so we can use them for debugging.
 - Reframe tasks as tests when possible: "Fix bug" → "Write a failing test that reproduces it, then make it pass". Strong success criteria let the agent loop without constant clarification.
 
-## Absolute Rules (Never Override)
-1. CHECK FOR EXISTING CODE FIRST — Grep/Glob before writing. If it exists, reuse or modify it. Creating duplicates = immediate failure
-2. NO PARTIAL IMPLEMENTATION
-3. NO "simplified for now" placeholder code
-4. NO DEAD CODE - use it or delete it
-5. NO DUPLICATE FUNCTIONS - search before creating ANYTHING
-6. TEST EVERYTHING PROPERLY
-7. NO CHEATER TESTS - tests must reveal flaws
-8. CONSISTENT NAMING - read existing patterns first
-9. NO OVER-ENGINEERING - boring > clever. No academic BS.
-10. SEPARATE CONCERNS properly
-11. NO RESOURCE LEAKS
-12. NEVER modify files you haven't read. Always Read or Grep first.
-13. NO DRIVE-BY EDITS — every changed line must trace directly to the user's request. Don't refactor adjacent code, reformat untouched lines, or "improve" things you weren't asked to change.
+## Rules
+- Search for existing code before writing new code. Reuse or extend it instead of adding a second function for the same job.
+- Finish what you start: no partial implementations, placeholders, or dead code.
+- Tests must be able to fail on real flaws.
+- Follow the naming and structure already in the codebase.
+- Prefer the simple, boring solution over a clever or abstract one. Separate concerns; release resources you open.
+- Read a file before you modify it.
+- Change only what the request needs. Leave adjacent code and formatting alone.
 
----
-Note: Project-specific CLAUDE.md files should EXTEND these principles, not contradict them.
+## This repository
 
-## Imported Claude Cowork project instructions
-
-my smart agent skill and tool
+`skills/<name>/SKILL.md` is the only authored source for skills. Files under `codex/skills/vorbit-shared/workflows/`, `gemini/skills/vorbit-shared/workflows/`, and the mirrored `references/` and `examples/` folders are generated. Edit the canonical skill, then run `python3 -m vorbit_core.project_skills --write`. `pytest` fails on stale outputs. `implement-loop.md` is hand-written per agent.

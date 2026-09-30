@@ -327,10 +327,10 @@ Instance the shell, then build a "bone" skeleton inside the `content` slot BEFOR
 ```
 screen=I(parent, {type: "ref", ref: "[shell-id]"})
 U(screen+"/content", {layout: "none"})
-bone=I(screen+"/content", {type: "frame", name: "bone", layout: "vertical", width: 393, height: 759, x: 0, y: 0})
+bone=I(screen+"/content", {type: "frame", name: "bone", layout: "vertical", width: 390, height: 751, x: 0, y: 0})
 header=I(bone, {type: "frame", name: "header", height: "fit_content", ...})
 scroll=I(bone, {type: "frame", name: "scroll-area", height: "fill_container", scroll: true, ...})
-nav=I(screen+"/content", {type: "frame", name: "nav-overlay", layout: "none", width: 393, height: 759, x: 0, y: 0})
+nav=I(screen+"/content", {type: "frame", name: "nav-overlay", layout: "none", width: 390, height: 751, x: 0, y: 0})
 ```
 Calculate dimensions: `width = shell_width`, `height = shell_height - status_bar - home_indicator`. `fill_container` does NOT work inside `layout: "none"` — always use explicit pixels for bone and nav-overlay.
 

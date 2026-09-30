@@ -1,6 +1,6 @@
 # E2E Test Quality
 
-Apply these rules when writing E2E test criteria for any sub-issue, regardless of stack.
+Apply these rules when writing E2E test criteria for any task, regardless of stack.
 
 1. **Use real data shapes.** Sample the real system output before creating a fixture such as an API response, seed, file, or event payload. Never simplify a fixture from assumptions.
 2. **Assert observable output.** Check what the user or downstream system sees: rendered state or navigation for UI, response and persisted state for APIs, and final files/messages/external state for scripts or services. Exit codes, logs, and intermediate variables alone are insufficient.

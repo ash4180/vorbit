@@ -10,4 +10,4 @@ Before writing requirements:
 1. Read `../vorbit-shared/references/load-rules.md`.
 2. Read `../vorbit-shared/workflows/prd.md`.
 3. Load the applicable durable Vorbit rules for the current project and Gemini agent scope.
-4. Then follow the PRD workflow to gather context, clarify requirements, and generate the document.
+4. Then follow the PRD workflow to agree on scope boundaries and deferred work before drafting each included story's flow and acceptance criteria.

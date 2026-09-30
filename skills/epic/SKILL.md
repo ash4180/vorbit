@@ -28,7 +28,7 @@ Resolve source context in this order:
 
 **IF the branch `prd.md` exists:**
 1. Read it
-2. Extract user stories (`US-###`), each story's acceptance criteria verbatim, its flow steps, constraints, success criteria, and `TBD-###` items
+2. Extract included user stories (`US-###`), each story's scope boundaries, prerequisites, acceptance criteria verbatim, flow steps, constraints, success criteria, `Later` items, and `TBD-###` items
 
 **IF explicit legacy content is provided instead (a Linear ticket URL, pasted PRD content, or a user-specified local file):**
 1. Read it as a legacy import and record its provenance (for a Linear ticket, direct the user to run `/vorbit:design:prd <ticket>` when the import needs restructuring beyond mechanical normalization)
@@ -43,6 +43,14 @@ If the PRD has stories without acceptance criteria, or flows whose steps are an 
 3. Do not invent `US-###` stories or user flows for it. Create one story section for the technical scope (or one per explicitly named workstream) headed `TS-001`, `TS-002`, ...; the TBD gate, verbatim criterion quoting, and Implementation Order apply unchanged, with the baseline section as what implement and implement-loop bind to
 
 **IF no branch PRD, no explicit legacy artifact, and no explicit technical description:** stop and direct the user to `/vorbit:design:prd`. Do not invent requirements from casual conversation inside epic planning.
+
+### Preserve the Agreed Scope
+
+- Plan only the included stories. `Later` items and explicit exclusions never become story sections or tasks.
+- Preserve each story's outcome, scope boundaries, and prerequisites. If a split, merge, new outcome, or scope change is needed, return to the PRD workflow and get that change agreed there before continuing technical planning.
+- For an older PRD without scope fields, use its explicit stories, criteria, flows, and constraints as the boundary. Missing fields alone do not block planning; clarify only actual ambiguity. Do not invent exclusions, dependencies, or deferrals to fill the new template.
+- Validate dependencies before planning: referenced stories must be included, no story may depend on itself, and dependencies must have no cycle. A required capability assigned to Later must be resolved in the PRD session, not quietly added as a task.
+- Apply the same boundary and dependency checks to explicitly supplied technical workstreams, using their baseline instead of inventing product stories.
 
 **Traceability requirements before planning:**
 - Every user story has at least one acceptance criterion
@@ -157,7 +165,7 @@ Create SDD (Specification-Driven Development) document:
 
 ## Step 6: User Review
 
-**CRITICAL: Get approval before writing the plan file.**
+Get the user's approval before writing any file.
 
 Present plan and ask:
 - "Does this approach make sense?"
@@ -166,7 +174,7 @@ Present plan and ask:
 
 Show the full proposed topology before asking: branch `prd.md` -> one story section for each `US-###` -> that section's executable tasks -> that section's implementation order. If using a legacy fallback, include writing the canonical branch `prd.md` in this approval. For a revision (Step 3), show removed/changed/added tasks.
 
-**DO NOT proceed until user confirms.**
+Also show each story's scope boundaries and prerequisites, the proposed Story Order, and which deferred items stay outside the plan.
 
 ## Step 7: Plan Story Sections from User Stories
 
@@ -184,9 +192,17 @@ prd.md (requirements source; never edited by this skill except approved canonica
 
 Story sections reference the PRD by quoting it; tasks live inside their story section so implement-loop can queue one story at a time.
 
+### Dependencies Between Stories
+
+Record `## Story Order` near the top of the plan: list every included story ID once, prerequisites before dependents, using PRD order to break ties. Keep the story sections themselves in PRD order. This list guides which story to select; it is not a loop queue across stories.
+
+Copy the PRD's `In scope`, `Out of scope`, and `Depends on` fields into each story header. Add any code-discovered prerequisite with its evidence to the review; if it changes the agreed product boundary or outcome, resolve it through the PRD workflow first. For older PRDs or technical baselines, state only boundaries and prerequisites supported by that source and code evidence.
+
+Shared implementation work has one owning task in the earliest story that needs it. Dependent stories reference that prerequisite instead of duplicating the task or borrowing its acceptance criteria. Keep task-level `Blocked by` and Implementation Order references inside their owning story; prerequisites from other stories belong in the story header. Follow the prerequisite check in `../_shared/spec-files.md` before handing a story to implementation.
+
 For each User Story, create:
 - **Section title**: `## US-###: [clear, human-readable title derived from the story goal]`
-- **Section header**: user story + related flow context + acceptance criteria + **test criteria (REQUIRED for TDD)**
+- **Section header**: user story + scope boundaries + prerequisites + related flow context + acceptance criteria + **test criteria (REQUIRED for TDD)**
 - **Tasks**: Decompose into executable tasks when the story needs more than one ordered unit of work. A story that is itself one small executable unit gets a single task carrying its Test Criteria. Apply **Parallel** per the criteria at the end of this document
 - **Slice vertically**: prefer tasks that cut one narrow but complete path through every layer the story touches (data → API → UI → test), so each finished task is demoable or verifiable on its own. Avoid tasks that build a single layer with nothing observable. Exception — a wide mechanical refactor (rename, retype) that breaks many call sites at once: sequence it as expand (add new form beside old) → migrate call sites in batches → contract (delete old form), each its own task
 
@@ -228,6 +244,8 @@ Before writing `epic.md`, validate this matrix:
 - `US-###` -> exactly one planned story section
 - Every in-scope flow step -> task(s) inside that story's section
 - Every planned task -> exactly one story section
+- Every story prerequisite -> an included story or a named existing capability; Story Order includes each story once and respects all dependencies
+- Every shared implementation task -> one owner; no task implements deferred or excluded work
 - Every remaining TBD -> explicitly non-blocking
 
 If any link is missing, stop and resolve via `AskUserQuestion` before Step 8.
@@ -238,9 +256,9 @@ Using the approved plan:
 
 1. If the source was a legacy fallback, write the approved canonical `prd.md` first (prd schema). It becomes the requirements reference for the whole plan.
 2. Run the write guards per `../_shared/spec-files.md` (branch, protected-branch check, `.gitignore` line).
-3. Write `epic.md` per the Epic Schema below: header (including the `Outcome:` gist copied from the PRD's Problem and Description), then story sections in PRD order, each with its tasks and its own `## Implementation Order` using real task IDs. Every new task starts with `**Status:** pending`.
+3. Write `epic.md` per the Epic Schema below: header (including the `Outcome:` gist copied from the PRD's Problem and Description), Story Order, then story sections in PRD order, each with its scope boundaries, prerequisites, tasks, and its own `## Implementation Order` using real task IDs. Every new task starts with `**Status:** pending`.
 4. For a revision, apply the Step 3 preservation rules (IDs, statuses, no silent removals).
-5. Re-read the written file and verify: story count matches the PRD, every task has exactly one Status line, every Implementation Order references only task IDs that exist in the same story section. Flag any mismatch instead of claiming success.
+5. Re-read the written file and verify: story count matches the included PRD stories, Story Order respects prerequisites, every task has exactly one Status line, and every Implementation Order references only task IDs that exist in the same story section. Flag any mismatch instead of claiming success.
 
 No direct Linear write happens in this skill. Ticket creation is the `/vorbit:ticket` workflow: one summary ticket per story, detail stays in the spec files. If the user asked for a ticket in this request, run `/vorbit:ticket` right after this step; otherwise offer it as the next step.
 
@@ -250,7 +268,7 @@ Present the following:
 
 1. **Spec folder path** and branch (canonical source: `prd.md` + `epic.md`)
 2. **All story sections**, in PRD user-story order, with the owning `US-###`
-3. **Per story:** task count by priority and its own Implementation Order (the same tree persisted in Step 8)
+3. **Per story:** scope, prerequisites, task count by priority, and its own Implementation Order; also show Story Order and the first story whose prerequisites are satisfied
 4. **Topology verification:** X user stories, X story sections, Y total tasks; flag any mismatch instead of claiming success
 5. Reminder: the plan lives only in this worktree and is gitignored; Linear holds only summaries until `/vorbit:ticket` runs
 
@@ -277,7 +295,7 @@ Implementation order is calculated independently for each story section:
 - Group parallel work within same phase
 - Include only tasks that belong to the story section being reported
 
-Next: run `/vorbit:ticket` to post story summaries, then start Phase 1 with `/vorbit:implement:implement T1`
+Next: run `/vorbit:ticket` to post story summaries, then select a story whose prerequisites are satisfied and start its first pending task with `/vorbit:implement:implement <task-id>`, or explicitly start its loop with `/vorbit:implement:implement <story-id> --loop`.
 
 ---
 
@@ -291,6 +309,11 @@ Next: run `/vorbit:ticket` to post story summaries, then start Phase 1 with `/vo
 Source: prd.md (this folder)
 Branch: [branch name]
 Outcome: [1-2 plain sentences copied from prd.md Problem + Description: the user-visible result this epic delivers. A copy for orientation only; prd.md stays the source of truth]
+
+## Story Order
+
+1. US-001 — [Title; prerequisites or None]
+2. US-002 — [Title; prerequisites or None]
 
 ## US-001: [Story Section Title]
 
@@ -321,6 +344,10 @@ Transform the user story goal into a clear, human-readable title (e.g. "As a use
 ## US-001: [Title]
 
 **Story:** As a [user], I want [goal]...
+
+**In scope:** [Behavior owned by this story, from the PRD]
+**Out of scope:** [Agreed exclusions or work owned elsewhere; otherwise None agreed]
+**Depends on:** [Included story IDs and needed outcomes, existing capabilities, or None; label code-discovered additions with evidence]
 
 **Acceptance Criteria (verbatim from PRD):**
 - [ ] [Criterion, copied verbatim from the PRD]

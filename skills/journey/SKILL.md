@@ -19,12 +19,10 @@ If the prerequisite or Figma connection is unavailable, draft and validate the c
 
 ## Step 2: Gather PRD Context
 
-Linear is the canonical PRD provider. Resolve context in this order:
+The branch `prd.md` is the canonical PRD. Resolve it per `../_shared/spec-files.md`. When no `prd.md` exists:
 
-1. Linear PRD URL or ID -> use `get_issue`.
-2. Feature name -> use `list_issues` with a scoped title search, ask if multiple candidates match, then use `get_issue`.
-3. Explicit pasted PRD text or user-specified local file -> use it as a legacy fallback and record the provenance.
-4. Non-Linear URL with no accessible content -> ask the user to paste/export it; do not guess.
+1. Linear ticket URL or ID, pasted PRD text, or a user-named local file -> use it as a legacy import and record the provenance.
+2. URL with no accessible content -> ask the user to paste/export it; do not guess.
 
 Extract and preserve:
 

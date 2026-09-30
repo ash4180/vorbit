@@ -40,6 +40,16 @@ Spec files live in the worktree where they were written, and they are gitignored
 - If an expected spec file is missing, run `git worktree list` and report which sibling worktree may hold it before doing anything else. Never silently regenerate a missing spec.
 - Deleting the worktree deletes its specs. The Linear summaries are the only durable copy, and they are summaries — not the full spec.
 
+## Story Scope and Prerequisites
+
+The PRD's included stories define the implementation scope. Its `Later` section is deferred context, never an executable queue. Each story records `In scope`, `Out of scope`, and `Depends on`; the epic plan preserves these boundaries and lists a `Story Order` with prerequisites first. Older specs may omit these fields: use their explicit requirements and dependency evidence without inventing missing decisions.
+
+Before starting or resuming a spec task or story loop, read the owning story's prerequisites in the epic plan and its source PRD (or the plan's technical baseline when there is no product PRD):
+
+- A prerequisite story must exist in the plan, have all its tasks `done`, and have evidence that its needed outcome works. Check named existing capabilities against the current code or verification evidence as well; a label alone is not proof.
+- If a prerequisite is missing, unfinished, cyclic, or unverified, report `needs_input` with the prerequisite and next action before changing code or task status. For an existing loop, preserve its queue and progress, set `active: false` and `status: needs_input`, and stop until the prerequisite is resolved.
+- Execute only the selected story's tasks. Do not append tasks from prerequisite stories, excluded work, or Later to its queue. `Story Order` guides selection; each story's own Implementation Order drives execution.
+
 ## Identifiers and status
 
 - Stories: `US-###`, defined in `prd.md`, document-unique.

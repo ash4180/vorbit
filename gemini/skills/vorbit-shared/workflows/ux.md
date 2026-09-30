@@ -12,15 +12,6 @@ Read and follow `../references/execution-contract.md` before starting.
 
 ---
 
-## When to Use This Skill
-
-| Calling Skill | Trigger |
-|---------------|---------|
-| **PRD** | Building each user story |
-| **Epic** | A PRD has an unresolved UX requirement that must be confirmed before planning |
-| **Implement** | Requirements unclear, edge cases undefined |
-
----
 
 ## Input
 

@@ -70,13 +70,13 @@ For Linear issues:
 
 ## Step 3.5: Parse Enhanced Issue Format
 
-**CRITICAL: If the task or issue contains these sections, use them:**
+If the task or issue contains these sections, use them:
 
 ### Check "Related Story Acceptance Criteria" (spec task) or "Related Parent Acceptance Criteria" (Linear)
 If present:
 1. Read the story or parent acceptance criteria listed in the task/issue
 2. These are your PRIMARY success criteria
-3. **Rule:** Task is NOT done until ALL listed criteria are satisfied
+3. The task is done only when every listed criterion is satisfied
 
 ### Check "Test Criteria"
 If present, this is the test contract: write these tests first (TDD) and treat the task as incomplete until each listed check passes or has an honest recorded blocker.
@@ -84,8 +84,8 @@ If present, this is the test contract: write these tests first (TDD) and treat t
 ### Check "Reuse & Patterns"
 If present:
 1. **Similar features** → Open and study these files FIRST
-2. **Utilities** → Use these, DO NOT recreate
-3. **Constants** → Use these, NO magic numbers allowed
+2. **Utilities** → use these instead of writing new ones
+3. **Constants** → use these instead of literal values
 4. **UI Patterns** → If present, invoke `$vorbit-ui-patterns`
 
 ### Check "File Changes"
@@ -109,8 +109,8 @@ Before writing code, study similar features and call sites: import style, naming
 
 Detect whether the project uses any localization system (libraries, locale files, translation-function usage). If it does:
 
-- **NO hardcoded user-facing strings** — all UI text goes through the project's translation system
-- **ALL locales updated** — new keys must be added to EVERY locale file
+- User-facing strings: all UI text goes through the project's translation system
+- Add every new key to every locale file
 - **Match existing patterns** — follow the project's key naming convention and plural/interpolation syntax
 - **Rule**: If the project has ANY localization setup, missing translations = broken UX. This is a blocker.
 
@@ -120,7 +120,7 @@ If the selected input is a story (`US-###`) with multiple pending tasks, or a Li
 
 ## Step 6: TDD Implementation
 
-**RULE: Task is NOT done until tests pass.**
+A task is done only when its tests pass.
 
 Keep the change within the selected issue. Do not add a frontend or backend counterpart unless its acceptance criteria require it.
 

@@ -15,7 +15,7 @@ Read and follow `../_shared/execution-contract.md` before starting.
 - **Analyze codebase first**: Find existing patterns before writing any code.
 - **Props-driven**: Components receive data as props. Never hardcode data inside components.
 - **One mock integration boundary**: Exactly one feature-level container/adapter imports mock data. Presentational components only receive typed props and never import mocks.
-- **Linear-first PRD context**: Linear is canonical. Pasted text and explicit local files are legacy fallbacks.
+- **Spec-first PRD context**: The branch `.vorbit/prd.md` (see `../_shared/spec-files.md`) is canonical. A Linear ticket, pasted text, or named local file is a fallback only when no `prd.md` exists.
 - **Smoke-tested**: The prototype is not complete until its route renders and navigation reaches it.
 - **Use TaskCreate/TaskUpdate**: Track progress through all phases.
 

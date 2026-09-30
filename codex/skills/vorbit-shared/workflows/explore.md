@@ -90,7 +90,7 @@ The page presents the solution. It is not a pixel-perfect mockup and not a PRD.
 1. **Local save (always).** Resolve the root per `../references/spec-files.md`, run its `.gitignore` guard, and write the approved document to `<root>/.vorbit/explore/YYYY-MM-DD-<topic>.md` — the same date and topic as the Step 5 page. Use today's local date. Never overwrite an earlier exploration; add `-2`, `-3` when the name is taken. Outside a git repository, ask the user for a folder instead.
 2. **Extra copy (optional).** If a connected destination was selected, also save via the connected platform's current content-creation tools (inspect schemas first) and pass the exploration content as markdown body.
 
-An exploration document is a decision input, not a PRD source of truth. Do not label it a PRD or create implementation issues from it directly. The PRD workflow imports the confirmed decisions and creates the canonical Linear spec ticket.
+An exploration document is a decision input, not a PRD source of truth. Do not label it a PRD or create implementation issues from it directly. The PRD workflow imports the confirmed decisions into the branch `prd.md`.
 
 ## Step 8: Report
 

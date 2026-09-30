@@ -29,8 +29,12 @@ Only when the plan has an `Automated checks` section:
 
 1. List the `QP#` commands and ask once for approval to run the whole plan — this one approval covers both the commands here and the browser checks in Step 2.5. If the user declines, the report uses the boxes as they stand, marked `not run this time`.
 2. Run each command exactly as the plan stores it. The tool does not matter — Playwright, Cypress, Maestro, or any open-source runner works the same because the plan stores the command, not the tool.
-3. Judge each run by exit status plus the runner's own summary line; quote failing test names in plain words. When a Playwright HTML/JSON results file exists, use it for the failing-test details.
-4. Copy the runner's own screenshots into the run picture folder before reporting. Playwright writes a failure shot under `test-results/.../test-failed-1.png` and wipes that folder on the next run, so a copy is the only version the report can keep. Name each copy `<QP#>-<short-label>.png`.
+   - **Playwright:** also ask it for a JSON results file. Append `--reporter=list,json` to the command, and set `PLAYWRIGHT_JSON_OUTPUT_NAME=<run picture folder>/<qp#>-playwright.json` for that command only. A QA-mode command (such as `yarn e2e:qa`) records a video of every test; keep it as the plan stores it.
+3. Judge each run by exit status plus the runner's own summary line; quote failing test names in plain words.
+4. Collect every test's proof **right after each command**, before the next command runs: Playwright wipes `test-results/` at the start of every run.
+   - **Playwright:** run `python3 scripts/collect_e2e_evidence.py --report <that JSON file> --dest <run picture folder> --check <QP#>`. It copies each test's videos, screenshots, and traces, and prints one entry per test with its ID (`QP1-1`, `QP1-2`, …), result, proof, and a note for any gap. Keep that output: Step 3 and Step 3.5 report every test from it. Entries marked `setup` are login steps, not checks.
+   - **Other runners:** copy the runner's own screenshots and videos into the run picture folder, named `<QP#>-<short-label>.<ext>`.
+   - A test that passed with no video or screenshot and whose note says it opened no page (an API-only test) uses the runner's pass line as its proof. A test that passed only on a retry is flaky: report it as needing a decision, not as a pass.
 5. Update `qa-plan.md` to match reality: tick a `QP#` box on pass and add `(passed YYYY-MM-DD)`; on fail, untick it and add the `**Fail:**` note line. Set the header's `Updated:` line to today. Touch nothing else in the plan file.
 6. A command that cannot run (missing dependency, no browser, no environment) is recorded as `blocked: [reason]` — never guessed as pass or fail.
 
@@ -59,12 +63,12 @@ Runs by default when the runtime has a browser-automation capability (for exampl
 Every failed check carries a suggested fix. This skill suggests only. It never edits code.
 
 1. Detect the stack once per run: React or Next.js when `package.json` lists `react` or `next`.
-2. **React or Next project: load the `react-best-practices` skill before writing a single suggestion.** This is required, not optional. Load `ui-patterns` alongside it whenever the fail is about a screen, a form, a list, or accessibility — `react-best-practices` asks for that pairing itself. A suggestion written without loading them does not go in the report.
+2. React or Next project: load the `react-best-practices` skill before writing suggestions, plus `ui-patterns` when the fail is about a screen, form, list, or accessibility, so each fix can name a pattern from those guides.
 3. Any other stack: follow the patterns already used in this repository. Read a nearby file that solves the same problem and match it.
 4. Never suggest a fix that adds a new dependency, and never name a library the project does not already have.
 5. Locate the code before suggesting: check `epic.md` for the task that built the failing screen, then search the repository for that screen or component name. When the file is still unclear, describe the change in plain words and mark the file `not located`. Never guess a path.
 6. Write one `**Suggested fix:**` line per fail, holding three things: what to change in plain words, the file path when located, and the named pattern it follows so a developer can check the source.
-7. Two sentences maximum. The real fix belongs to `/vorbit:implement:implement`, not to this report.
+7. The real fix belongs to `/vorbit:implement:implement`, not to this report.
 8. No suggestion for a check the agent did not actually run. A guess dressed as a fix is worse than an empty line.
 
 ## Step 3: Write the Report
@@ -126,7 +130,14 @@ Every failed check carries a suggested fix. This skill suggests only. It never e
 (omit this section when there are none)
 
 ### Automated run
-- QP1: `npx playwright test e2e/login.spec.ts` → 12 passed, 2 failed
+- QP1: `yarn e2e:qa` → 48 tests: 46 passed, 1 failed, 1 flaky. Videos: 45 of 48 (3 API-only tests have their pass line instead)
+  <details><summary>Every test, with its video</summary>
+
+  - QP1-1: dashboard loads after login: passed, [video](qa-screenshots/2026-09-16/qp1-1-dashboard-loads-after-login.webm)
+  - QP1-7: health API returns 200: passed (API only, no page)
+
+  </details>
+- QP2: `npx playwright test e2e/login.spec.ts` → 12 passed, 2 failed
 - QP2: not run this time (user skipped)
 - Full technical detail: `playwright-report/index.html` (include this line only when the runner produced a report; use the runner's actual output path)
 
