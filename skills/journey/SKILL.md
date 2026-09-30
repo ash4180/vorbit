@@ -102,24 +102,23 @@ flowchart LR
     error -->|"Retry"| submit
 ```
 
-## Step 6: Update PRD
+## Step 6: Hand Off the Diagrams
 
-If the canonical Linear PRD exists, use `get_issue` to re-read its latest description, then `save_issue` to add or replace a `## Journey Diagrams` section containing:
+Report in chat:
 
 - Every FigJam URL and diagram name
 - The covered flow-step range
 - The Mermaid source as a recovery artifact
 - The coverage ledger
 
-Preserve every existing PRD section and requirement. Do not overwrite concurrent edits. For legacy fallback input, report the URLs in chat and offer the updated section for import; do not claim a local/pasted source was updated.
+Do not edit `prd.md` (the prd skill owns it) or Linear (the ticket skill owns it).
 
 After each `generate_diagram` call, expose the returned URL as a markdown link. For a split journey, return every diagram URL, not only the overview.
 
 ## Step 7: Report
 
 - FigJam flow created: Yes (all URLs)
-- PRD source: Linear canonical ticket or named legacy fallback
-- PRD updated: Yes/No (with URL when canonical)
+- PRD source: branch `prd.md` or named legacy fallback
 - Coverage: X/X acceptance criteria and Y/Y flow steps
 - Split summary: diagram name -> covered flow steps (e.g. `Flow 1, steps 1-6`)
 - Next: `/vorbit:design:prototype` or `/vorbit:implement:epic`

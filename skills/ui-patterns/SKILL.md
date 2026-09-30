@@ -96,7 +96,7 @@ z-50  - Critical overlays only
 
 | Rule | Why |
 |------|-----|
-| **No gradients** | Unless user explicitly requests |
+| **No gradients** | Unless the user asks for one or the chosen style seed specifies one |
 | **No drop shadows on text** | Accessibility issue |
 | **Clear empty states** | Never show blank areas |
 | **Consistent iconography** | One icon set per project |

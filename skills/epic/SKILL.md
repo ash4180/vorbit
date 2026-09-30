@@ -84,13 +84,10 @@ If `epic.md` already exists in the spec folder, this run is a **revision**:
 
 ## Step 4: Learn Codebase Style & Discover Reusables
 
-After Step 2 requirement baseline is locked, analyze the codebase thoroughly:
+After the Step 2 baseline is locked, study the codebase:
 
 ### 4.1 Find Similar Features
 Search the codebase using terms from the PRD (story titles, nouns in the criteria, screens named in the flows).
-- Note file structure patterns
-- Identify naming conventions
-- Find test patterns
 
 ### 4.2 Discover Reusable Code
 Use a **pattern-first, paths-second** strategy:
@@ -100,16 +97,11 @@ Use a **pattern-first, paths-second** strategy:
    - Search exported helpers/components/hooks/services, then trace existing call sites
    - Prefer exact symbols already used in similar flows
 
-2. **Then scan common directories (optional heuristic):**
-   - Utilities candidates: `src/utils/`, `src/lib/`, `src/helpers/`, `shared/`, `packages/*`
-   - UI candidates: `src/components/ui/`, `src/components/common/`, feature-local component folders, `packages/*`
-   - If paths don't exist, continue with repo-wide search only
-
-3. **Detect UI library by actual usage (not assumptions):**
+2. **Detect UI library by actual usage (not assumptions):**
    - Infer from imports/usages (for example Radix/Base UI/shadcn/custom primitives)
    - Note which primitives and wrappers are already standard in this repo
 
-4. **Produce reusable inventory for planning:**
+3. **Produce reusable inventory for planning:**
    - List candidate utility/component, file path, current usages, and why it fits
    - Mark each as `Reuse`, `Adapt`, or `Do not use`
    - Include confidence and any search gaps (what might be missing)

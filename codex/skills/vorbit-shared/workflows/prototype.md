@@ -19,7 +19,7 @@ Read and follow `../references/execution-contract.md` before starting.
 ## Phase 0: Detect Platform & Verify Connection
 
 ### Platform Discovery
-Preflight required connectors: confirm each needed connector is configured in Codex and inspect its current operation/parameter schemas; never guess tool names. Verify only the external services actually needed. Linear is the canonical PRD provider; Figma is an optional design input, not a competing requirements source.
+Preflight required connectors: confirm each needed connector is configured in Codex and inspect its current operation/parameter schemas; never guess tool names. Verify only the external services actually needed. The branch `prd.md` is the requirements source; Figma is an optional design input, not a competing one.
 
 **IF Figma URL provided:**
 1. Use the connected Figma `get_design_context` tool resolved during connector preflight to fetch the design
@@ -35,11 +35,10 @@ Preflight required connectors: confirm each needed connector is configured in Co
 **Actions**:
 1. Create todo list with all 6 phases (0-5)
 2. Resolve PRD context in this order:
-   - **Linear URL/ID:** use `get_issue`
-   - **Feature name:** use scoped `list_issues` title search, ask if multiple match, then `get_issue`
-   - **Explicit pasted PRD or user-specified local file:** use it as a legacy fallback and record provenance
-   - **Inaccessible non-Linear URL:** ask the user to paste/export it; do not guess
-3. Extract each `US-###` with its acceptance criteria verbatim, its flow steps, constraints, and unresolved `TBD-###` items. Keep the Linear ticket URL in the handoff.
+   - **Branch `prd.md`:** resolve it per `../references/spec-files.md` and check its `Branch:` line
+   - **No `prd.md`:** a Linear ticket, pasted PRD text, or a user-named local file is a legacy fallback; record its provenance
+   - **URL with no accessible content:** ask the user to paste/export it; do not guess
+3. Extract each `US-###` with its acceptance criteria verbatim, its flow steps, constraints, and unresolved `TBD-###` items. Record the PRD source in the handoff.
 4. **IF Figma URL provided:**
    - Use design context from Phase 0
    - Extract layout, components, and styling specs
@@ -54,8 +53,6 @@ Preflight required connectors: confirm each needed connector is configured in Co
 ## Phase 2: Codebase Analysis
 
 **Goal**: Understand existing patterns before writing any code
-
-**DO THIS BEFORE WRITING ANY CODE.**
 
 **Actions**:
 1. Identify the framework from `package.json`; match the project's existing framework and conventions.
@@ -82,13 +79,13 @@ Preflight required connectors: confirm each needed connector is configured in Co
 
 **Goal**: Resolve all ambiguities before building
 
-**CRITICAL**: This is the most important phase. DO NOT SKIP.
+Resolve these before building; they define the mock contract.
 
 **IF Figma design provided:**
-- Use design specs as the visual source of truth for layout and styling; Linear remains canonical for behavior and scope
+- Use design specs as the visual source of truth for layout and styling; the PRD remains canonical for behavior and scope
 - Only ask about behavior not shown in design (actions, empty states)
 
-**IF no Figma design, MUST ask using plain-text chat questions:**
+**If there is no Figma design, ask with plain-text chat questions about:**
 - **Layout**: List, grid, table, or cards?
 - **Data fields**: What info should each item show?
 - **Actions**: What can users do? (view, edit, delete, filter, etc.)
@@ -96,7 +93,7 @@ Preflight required connectors: confirm each needed connector is configured in Co
 
 **Wait for answers before proceeding.**
 
-**Style references (optional):** If the user names a brand look ("like Linear"), check `../references/design-knowledge/design-systems/INDEX.md` and read the matching brand file for exact tokens. For a fresh visual direction with no reference, offer the closest presets from `../references/design-knowledge/style-seeds.md`. Codebase styling patterns still win on conflicts. If the prototype needs animation or micro-interactions, pick effects from `../references/design-knowledge/motion-library.md` and follow its performance principles.
+**Style references (optional):** If the user names a brand look ("like Linear"), check `../references/design-knowledge/design-systems/INDEX.md` and read the matching brand file for exact tokens. For a fresh visual direction with no reference, offer the closest presets from `../references/design-knowledge/style-seeds.md` and let the user pick. Without a named reference or chosen seed, avoid the usual model defaults: a cream or off-white background with a serif display headline, italic accent words in headlines, numbered "01/02/03" section labels, monospace eyebrow labels, pill-shaped buttons, and a purple-to-blue gradient. Use Cream Editorial only when the user chooses it. Codebase styling patterns still win on conflicts. If the prototype needs animation or micro-interactions, pick effects from `../references/design-knowledge/motion-library.md` and follow its performance principles.
 
 **Don't invent features:**
 - Adding search/filter without asking
@@ -137,11 +134,11 @@ Preflight required connectors: confirm each needed connector is configured in Co
    - Pass all data and callbacks from that boundary into child components via typed props
    - If the feature has multiple mock payloads, import them all at the same boundary; do not create per-component boundaries
 
-4. **MANDATORY**: Register every mock boundary in the Vorbit mock registry:
+4. Register every mock boundary in the Vorbit mock registry:
    - Read `../references/mock-registry.md` for the schema, field semantics, registration rules, and storage-root resolution (its legacy `.vorbit/` fallback is intentional and does not override the rule-loading contract's missing-resolver stop).
    - Prototype-specific: set `createdBy: "prototype"`; register the one boundary actually used (`type: "file"` or `type: "state"`), never both forms for the same feature.
 
-5. **MANDATORY**: The single mock boundary MUST have the replacement TODO next to its imports:
+5. Put the replacement TODO next to the single mock boundary's imports:
    ```tsx
    import mockData from './mocks/data.json';
    // TODO: Replace this mock boundary with the real API client.
@@ -191,7 +188,7 @@ Preflight required connectors: confirm each needed connector is configured in Co
    Verified: [smoke-test command] — route render + navigation passed
    Used existing components: Layout, Card, Button, Input
    Next steps:
-   - $vorbit-epic to create issues
+   - $vorbit-epic to write the epic plan
    - $vorbit-cleanup-mocks [feature] before backend handover
    ```
 

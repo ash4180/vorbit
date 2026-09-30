@@ -231,10 +231,6 @@ def _rules(agent: dict[str, str]) -> list[tuple[re.Pattern[str], object]]:
         ),
         # -- Linear verbs ------------------------------------------------------
         lit(
-            "then `save_issue` to add or replace",
-            "then the connector's issue-update operation to add or replace",
-        ),
-        lit(
             "(`save_issue` in the vorbit Claude plugin)",
             "(inspect the connector schema for the current issue-update verb)",
         ),

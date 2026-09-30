@@ -74,14 +74,14 @@ When structure or mapping is unclear, stop and ask per the Error Handling table 
 
 ### Step 5: Build in Webflow
 
-Use Webflow MCP tools (see `references/mcp-tools.md` for detailed tool reference):
+Find the connected Webflow server's tools per your connector preflight. If it offers a guide tool, call it once first. Match tools by role; names differ between server versions (for example `element_builder` or `data_element_builder`). `references/mcp-tools.md` describes each role:
 
-| Tool | Purpose |
+| Role | Purpose |
 |------|---------|
-| `element_builder` | Create page structure (sections, containers, divs) |
-| `element_tool` | Select, modify, and configure existing elements |
-| `style_tool` | Create and apply CSS classes |
-| `component_tool` | Register components and create instances |
+| element builder | Create page structure (sections, containers, divs) |
+| element tool | Select, modify, and configure existing elements |
+| style tool | Create and apply CSS classes |
+| component tool | Register components and create instances |
 
 **For Templates:**
 - Add Page Slot elements where content varies

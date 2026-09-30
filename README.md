@@ -74,7 +74,7 @@ is deterministic, but it does not let agent guidance override shared policy.
 1. **Explore** — shape the problem until the PRD-blocking unknowns are resolved (`/vorbit:design:explore`)
 2. **PRD** — write concrete user stories with acceptance criteria (`/vorbit:design:prd`)
 3. **Journey** — visualize user flows in FigJam (`/vorbit:design:journey`)
-4. **Epic** — convert PRD stories into Linear issues with dependency tree (`/vorbit:implement:epic`)
+4. **Epic** — turn the branch PRD into an ordered task plan in the branch spec file (`/vorbit:implement:epic`)
 5. **Implement** — TDD-first coding (tests before code) (`/vorbit:implement:implement`)
 6. **Review** — 3-layer code review before merge (`/vorbit:implement:code-review`)
 7. **Cleanup mocks** — approve the API contract, integrate the real backend, then remove mocks atomically (`/vorbit:implement:cleanup-mocks`)
@@ -116,11 +116,11 @@ vorbit/
 - Python >= 3.9
 - At least one supported agent CLI: Claude Code, Codex CLI, or Gemini CLI
 - **External capabilities used by workflows:**
-  - **Linear** — canonical PRDs, epic trees, tracked implementation/loops, optional verification/PR updates
+  - **Linear** — optional summary tickets (ticket skill), tracked implementation/loops, PR status updates; spec files are canonical
   - **Figma/FigJam** — Figma design work and journey diagrams; journey must load the connector's current `figma-generate-diagram` prerequisite
   - **Webflow** — Webflow page, template, and component mutation
   - **GitHub CLI or equivalent authenticated GitHub tooling** — prepare-pr
-  - **Notion or Anytype** — optional storage for exploration drafts only; they are not canonical PRD providers
+  - **Notion or Anytype** — optional copies of exploration docs, QA reports, and tutorials; they are not canonical PRD providers
 
 Every mutating workflow preflights its required capability and current schema before external writes. Missing optional storage degrades to a chat/local artifact; missing required mutation capability returns a blocked status before destructive work.
 

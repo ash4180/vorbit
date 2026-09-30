@@ -108,7 +108,7 @@ Use the environment's native subagent mechanism when available. Run independent 
 | `tests` | Coverage gaps and missing realistic edge cases | Check whether tests exercise observable behavior and each changed branch. |
 | `types-and-simplicity` | Invariants, unnecessary complexity, dead code, comments | Review modified types and abstractions; flag only comments that are stale, misleading, or restate obvious code. |
 
-Prefer four strong passes over six overlapping agents. The orchestrator must deduplicate findings, verify each one against the source, and tag it `from this branch` or `pre-existing` (per the shared `pre-existing-findings.md` rule the skill loaded) before reporting it. Only branch findings feed the TL;DR merge risk.
+The orchestrator must deduplicate findings, verify each one against the source, and tag it `from this branch` or `pre-existing` (per the shared `pre-existing-findings.md` rule the skill loaded) before reporting it. Only branch findings feed the TL;DR merge risk.
 
 ### Failure handling
 
@@ -131,29 +131,21 @@ If any pass fails or times out, note the gap and continue. Never present an unve
 [N changed + M affected = T total files in scope]
 [List affected files if M > 0]
 
-## Code Review
+## Correctness
 [Findings by severity: Critical > Important > Minor]
 [Or "No issues found"]
 
-## Error Handling
-[Silent failure findings]
+## Failure Handling
+[Silent failures, swallowed errors, missing error paths]
 [Or "No issues found"]
 
-## Test Coverage
+## Tests
 [Coverage gaps]
 [Or "Coverage looks adequate"]
 
-## Type Safety
-[Type design findings]
-[Or "No type issues found"]
-
-## Comments
-[Misleading, stale, or missing comments]
-[Or "No comment issues found"]
-
-## Simplification Opportunities
-[Over-engineered patterns, dead code, complexity reduction suggestions]
-[Or "No simplification needed"]
+## Types and Simplicity
+[Type design, stale comments, dead code, needless complexity]
+[Or "No issues found"]
 
 ## Pre-existing (follow-up)
 [Findings this branch did not cause: what, where, blame evidence, then one `Linear:` line and one `Slack:` line each]
