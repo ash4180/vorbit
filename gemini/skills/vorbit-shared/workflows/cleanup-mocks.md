@@ -16,7 +16,7 @@ When frontend development is ready for backend integration:
 
 ## Step 1: Resolve Contract Destination
 
-Use the linked Linear PRD/specification ticket when available. Otherwise use `docs/api-contracts/[feature-name].md`. Do not require an external platform to produce a local contract.
+Save the contract to `docs/api-contracts/[feature-name].md`. Linear story tickets hold only the goal and criteria, and the ticket skill rewrites them on every sync.
 
 ## Step 2: Load Mock Registry
 
@@ -91,9 +91,8 @@ Cleanup-specific reading notes:
 
 ## Step 5: Save Approved Contract
 
-1. Append the approved contract to the linked Linear PRD/specification ticket when authorized, using the current connector's verified update operation.
-2. Otherwise create `docs/api-contracts/[feature-name].md`.
-3. Record the source mock paths, approval date, and source issue revision/update timestamp.
+1. Create `docs/api-contracts/[feature-name].md`.
+2. Record the source mock paths and approval date.
 
 ## Step 6: Integrate Before Removing
 

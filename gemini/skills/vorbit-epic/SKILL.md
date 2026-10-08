@@ -5,9 +5,9 @@ description: Use when the user asks to turn an approved branch PRD spec into an 
 
 # Vorbit Epic
 
-Before creating issues:
+Before planning implementation:
 
 1. Read `../vorbit-shared/references/load-rules.md`.
 2. Read `../vorbit-shared/workflows/epic.md`.
 3. Load the applicable durable Vorbit rules for the current project and Gemini agent scope.
-4. Then follow the epic workflow: gather PRD context, analyze codebase, create technical plan, and generate Linear issues.
+4. Then follow the epic workflow to preserve the agreed story boundaries, analyze the codebase, and write the branch epic plan with prerequisites and ordered tasks per story.

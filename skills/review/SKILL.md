@@ -11,6 +11,8 @@ Findings-first code review with two modes:
 
 Read and follow `../_shared/execution-contract.md` before starting.
 
+Read `../_shared/pre-existing-findings.md` for how to tag, report, and follow up findings this branch did not cause. Pre-existing findings never count toward merge risk.
+
 ## References
 
 Detailed pipeline specs live in `references/` within this skill's directory. Glob for `**/skills/review/references/` to resolve the path.
@@ -33,7 +35,7 @@ Detailed pipeline specs live in `references/` within this skill's directory. Glo
 
 1. **`--pr` flag present** → PR Review Mode (strip the flag, remaining arg is base branch)
 2. **Arguments are file/directory paths** → File Review Mode
-3. **No arguments** → PR Review Mode (default base: main)
+3. **No arguments** → PR Review Mode (base resolved per the Base Branch section of the execution contract)
 
 To detect without flag: if any argument matches an existing file or directory path, use File Review Mode. Otherwise, treat arguments as a base branch name for PR Review Mode.
 
@@ -50,15 +52,16 @@ To detect without flag: if any argument matches an existing file or directory pa
 ### Phase 1: ANALYZE (No edits)
 
 1. **Read the files** specified in arguments
-2. **Apply CLAUDE.md standards ruthlessly**
+2. **Apply the repository's instruction files** (CLAUDE.md, AGENTS.md, rule files) as the standard
 3. **Audit for:**
    - **Over-engineering**: Factories for single classes, excessive interfaces, abstractions with single implementations, "future-proofing" (YAGNI)
    - **Dead Code**: Functions never called, commented-out code "just in case"
    - **Complexity**: 3+ levels of indentation, "clever" one-liners that are unreadable
    - **Naming**: Vague names like `Manager`, `Processor`
    - **Mocks**: Mock services where real ones work
-4. **Present findings by severity, with concrete evidence**
-5. **For each issue**: WHAT is wrong, WHY it matters, HOW to fix
+4. **Tag each finding** `from this branch` or `pre-existing` per `../_shared/pre-existing-findings.md` Step 1 (in file mode, "this branch" means the branch diff against the base branch; with no diff, every finding is in scope and none is pre-existing)
+5. **Present findings by severity, with concrete evidence**; pre-existing ones go in their own `Pre-existing (follow-up)` section at the end
+6. **For each issue**: WHAT is wrong, WHY it matters, HOW to fix
 
 **Report Format:**
 ```
@@ -72,9 +75,16 @@ HOW: Delete the factory. Instantiate directly.
 ### Line 89: Dead code
 WHAT: `legacyHandler()` is never called.
 HOW: Delete it. Git has history.
+
+## Pre-existing (follow-up)
+
+### utils.ts:12: Date parsing ignores timezone
+WHAT: `parseDate()` drops the offset.
+EVIDENCE: lines unchanged on this branch, last touched in commit a1b2c3d on main.
+Linear: nothing found. Slack: not connected.
 ```
 
-End with: **"Say 'fix it' to apply changes, or tell me what you disagree with."**
+End with: **"Say 'fix it' to apply changes, or tell me what you disagree with."** Then, when pre-existing findings exist, ask the one batched ticket question per `../_shared/pre-existing-findings.md` Step 4.
 
 ---
 
@@ -82,7 +92,7 @@ End with: **"Say 'fix it' to apply changes, or tell me what you disagree with."*
 
 ### Step 1: Determine Diff Scope
 
-1. Detect base branch: `git merge-base HEAD main` (or use argument if a branch name is provided)
+1. Resolve the base branch per the Base Branch section of the execution contract (a branch-name argument counts as named), then diff from `git merge-base HEAD <base>`
 2. Get committed diff: `git diff <base>..HEAD`
 3. Get changed file list: `git diff --name-only <base>..HEAD`
 4. **If no committed changes**: fall back to uncommitted changes with `git diff` (staged + unstaged) and `git diff --name-only`
@@ -94,23 +104,24 @@ Read the pipeline spec (glob for `**/skills/review/references/pr-pipeline.md`) a
 1. **Layer 1: Static Analysis** — run linters/type checkers for changed file types
 2. **Layer 2: Blast Radius** — find importers of changed files, read all into context
 3. **Layer 3: AI Review** — run 4 independent focus passes, parallel only up to the host's safe concurrency limit, and collect results
+4. **Tag findings** — the orchestrator tags each verified finding `from this branch` or `pre-existing` per `../_shared/pre-existing-findings.md` Step 1, then runs its Step 3 (Linear and Slack search) for the pre-existing ones
 
 Then print the consolidated report using the template from the pipeline spec.
 
-End with: **"Say 'fix it' to apply changes, or tell me what you disagree with."**
+End with: **"Say 'fix it' to apply changes, or tell me what you disagree with."** Then, when pre-existing findings exist, ask the one batched ticket question per `../_shared/pre-existing-findings.md` Step 4.
 
 ---
 
 ## Phase 2: FIX (Both modes, after user approval)
 
 Only proceed when the user says "fix it" / "approved" / "go ahead".
-Apply the approved fixes directly, re-run the relevant checks, and report what was fixed.
+Apply the approved fixes directly, re-run the relevant checks, and report what was fixed. Pre-existing findings are not fixed here unless the user names them; they stay follow-ups.
 
 **Summary Format:**
 ```
 Done. Fixed X issues across Y files.
 
-Run `/vorbit:implement:verify` when ready.
+Run `/vorbit:implement:qa-plan` when ready.
 ```
 
 ---

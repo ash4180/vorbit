@@ -9,6 +9,8 @@ A disciplined, Test-Driven Development (TDD) workflow for implementing features 
 
 Read and follow `../_shared/execution-contract.md` before starting.
 
+Read `../_shared/glossary.md`: use the project's `CONTEXT.md` glossary terms when it exists, and record newly agreed terms there.
+
 > **Requirement sources**: Branch spec tasks come from `.vorbit/epic.md` in the current worktree — read `../_shared/spec-files.md` for path resolution, the `Branch:` line check, and status fields. Linear issues remain fully supported: use the connected Linear tools shipped with Vorbit and verify the available operation and parameter schema before calling; never guess a verb or field name.
 
 ## Handle Loop Mode
@@ -41,10 +43,7 @@ Runs only when the input was a branch name, or `--worktree` was passed. With `--
 
 1. Already on the target branch → skip to Step 3.
 2. Working tree dirty → stop and ask (commit, stash, or abort). Never stash or discard silently; switching branches loses uncommitted work.
-3. Resolve the base branch:
-   - A durable project rule naming the integration branch wins.
-   - Else detect the remote default: `git symbolic-ref refs/remotes/origin/HEAD`.
-   - If the repo also has a `dev`/`develop` branch, or detection fails, ask the user once — and offer to save the answer as a durable project rule so it is never asked again for this repo.
+3. Resolve the base branch per the Base Branch section of the execution contract.
 4. `git fetch`, then create from the remote-tracking base — never from a possibly stale local copy:
    - **Worktree** (`--worktree`, or chosen when asked): `git worktree add ../<repo>-<ticket-id> -b <branch> origin/<base>`, then do all subsequent work inside that worktree.
    - **In place**: `git checkout -b <branch> origin/<base>`.
@@ -71,13 +70,13 @@ For Linear issues:
 
 ## Step 3.5: Parse Enhanced Issue Format
 
-**CRITICAL: If the task or issue contains these sections, use them:**
+If the task or issue contains these sections, use them:
 
 ### Check "Related Story Acceptance Criteria" (spec task) or "Related Parent Acceptance Criteria" (Linear)
 If present:
 1. Read the story or parent acceptance criteria listed in the task/issue
 2. These are your PRIMARY success criteria
-3. **Rule:** Task is NOT done until ALL listed criteria are satisfied
+3. The task is done only when every listed criterion is satisfied
 
 ### Check "Test Criteria"
 If present, this is the test contract: write these tests first (TDD) and treat the task as incomplete until each listed check passes or has an honest recorded blocker.
@@ -85,8 +84,8 @@ If present, this is the test contract: write these tests first (TDD) and treat t
 ### Check "Reuse & Patterns"
 If present:
 1. **Similar features** → Open and study these files FIRST
-2. **Utilities** → Use these, DO NOT recreate
-3. **Constants** → Use these, NO magic numbers allowed
+2. **Utilities** → use these instead of writing new ones
+3. **Constants** → use these instead of literal values
 4. **UI Patterns** → If present, invoke `/vorbit:design:ui-patterns`
 
 ### Check "File Changes"
@@ -110,8 +109,8 @@ Before writing code, study similar features and call sites: import style, naming
 
 Detect whether the project uses any localization system (libraries, locale files, translation-function usage). If it does:
 
-- **NO hardcoded user-facing strings** — all UI text goes through the project's translation system
-- **ALL locales updated** — new keys must be added to EVERY locale file
+- User-facing strings: all UI text goes through the project's translation system
+- Add every new key to every locale file
 - **Match existing patterns** — follow the project's key naming convention and plural/interpolation syntax
 - **Rule**: If the project has ANY localization setup, missing translations = broken UX. This is a blocker.
 
@@ -121,9 +120,11 @@ If the selected input is a story (`US-###`) with multiple pending tasks, or a Li
 
 ## Step 6: TDD Implementation
 
-**RULE: Task is NOT done until tests pass.**
+A task is done only when its tests pass.
 
 Keep the change within the selected issue. Do not add a frontend or backend counterpart unless its acceptance criteria require it.
+
+**Bug fixes — reproduce before diagnosing:** before naming a cause, build one command that fails on the reported bug and shows the user's exact symptom — a failing test at the right seam, or for UI bugs a browser run capturing the actual console error. No repro, no hypothesis. The repro becomes the Red test below; after Green, re-run it against the original scenario.
 
 For each task, follow Red/Green/Refactor:
 
@@ -141,7 +142,7 @@ Mark done only when every gate defined in Steps 3.5-6 above is satisfied.
 
 ## Step 7: On Task Completion
 
-- Spec task: set its `**Status:**` line to `done` once its ACs and tests pass. The story is complete only when all of its tasks are `done`; suggest `/vorbit:implement:linear-sync` to refresh the Linear summaries.
+- Spec task: set its `**Status:**` line to `done` once its ACs and tests pass. The story is complete only when all of its tasks are `done`; suggest `/vorbit:ticket` to refresh the Linear summaries.
 - Linear: keep the implementation parent "In Progress" until a PR exists. Implementation sub-issues may move to "Done" after their own ACs and tests pass.
 - Report changed files, verification evidence, and remaining release steps in the current session.
 
@@ -154,7 +155,7 @@ Do not create a generic `memory.md`. Record durable decisions only in an existin
 - What was implemented
 - Files changed
 - Tests added/updated
-- Next: `/vorbit:implement:verify` to verify; `/vorbit:implement:qa-plan` to build or refresh the human test plan
+- Next: `/vorbit:implement:qa-plan` to build or refresh the human test plan
 
 ## Quick Mode
 

@@ -4,7 +4,7 @@ One source of truth: `skills/<name>/SKILL.md` is authored once; this module
 generates `{codex,gemini}/skills/vorbit-shared/workflows/<name>.md` from it by
 applying a deterministic, per-agent substitution table (tool idioms, storage
 paths, slash-command syntax). It also mirrors skill-local asset directories
-(`references/`, `examples/`) into the agent skill folders and ships the
+(`references/`, `examples/`, `scripts/`) into the agent skill folders and ships the
 agent-neutral execution contract.
 
 `implement-loop` is intentionally NOT projected: its Claude implementation is
@@ -36,16 +36,15 @@ PROJECTED_SKILLS: dict[str, str] = {
     "prd": "prd",
     "journey": "journey",
     "epic": "epic",
-    "linear-sync": "linear-sync",
+    "ticket": "ticket",
     "qa-plan": "qa-plan",
     "qa-report": "qa-report",
+    "tutorial": "tutorial",
     "teach": "teach",
     "figma": "figma",
-    "pencil": "pencil",
     "prototype": "prototype",
     "webflow": "webflow",
     "implement": "implement",
-    "verify": "verify",
     "review": "review",
     "implement-cleanup-mocks": "cleanup-mocks",
     "prepare-pr": "prepare-pr",
@@ -59,24 +58,35 @@ AGENT_DIR_NAME: dict[str, str] = {
     "implement-cleanup-mocks": "vorbit-cleanup-mocks",
 }
 
-ASSET_DIRS = ("references", "examples")
+ASSET_DIRS = ("references", "examples", "scripts")
 
 AGENTS: dict[str, dict[str, str]] = {
     "codex": {
         "label": "Codex",
         "slug": "codex",
         "repo_doc": "AGENTS.md",
+        "solution_page": (
+            "Use your own `visualize` skill to build the visual, then turn it into "
+            "a full standalone page with that skill's `scripts/render.py "
+            "<fragment-path> <destination>.html`, using the path above as the "
+            "destination. There is no online publishing step."
+        ),
     },
     "gemini": {
         "label": "Gemini CLI",
         "slug": "gemini",
         "repo_doc": "GEMINI.md",
+        "solution_page": (
+            "Build the page yourself as one self-contained HTML file, drawing the "
+            "diagrams and charts with inline SVG or CSS. There is no online "
+            "publishing step."
+        ),
     },
 }
 
 # Appended verbatim to specific projected workflows for one agent.
 AGENT_NOTES: dict[tuple[str, str], str] = {
-    ("codex", "linear-sync"): (
+    ("codex", "ticket"): (
         "\n> Codex note: the current Linear creation operation is `create_issue` — "
         "after inspecting its schema, call `create_issue` with the composed summary "
         "title, description, team, and project. Never use `save_issue` as a guessed "
@@ -97,6 +107,7 @@ FORBIDDEN_OUTPUT_TOKENS = (
     "at most 15 nodes",
     "no back-loops",
     "call `save_issue`",
+    "artifact-design",
 )
 
 
@@ -124,6 +135,9 @@ def _rules(agent: dict[str, str]) -> list[tuple[re.Pattern[str], object]]:
         # -- markdown links wrapping slash commands, then slash commands ------
         (re.compile(r"\[`(/vorbit:[^`]+)`\]\([^)]*\)"), r"`\1`"),
         (re.compile(r"/vorbit:(?:design|implement):([a-z-]+)"), r"$vorbit-\1"),
+        # /vorbit:ticket has no namespace segment, so the generic rule above
+        # does not catch it.
+        (re.compile(r"/vorbit:ticket\b"), "$vorbit-ticket"),
         # -- shared file pointers --------------------------------------------
         # Generated workflows live in vorbit-shared/workflows/, so the shared
         # contract is one level up in ../references/, not ../vorbit-shared/.
@@ -138,6 +152,18 @@ def _rules(agent: dict[str, str]) -> list[tuple[re.Pattern[str], object]]:
         lit(
             "../_shared/spec-files.md",
             "../references/spec-files.md",
+        ),
+        lit(
+            "../_shared/pre-existing-findings.md",
+            "../references/pre-existing-findings.md",
+        ),
+        lit(
+            "../_shared/glossary.md",
+            "../references/glossary.md",
+        ),
+        lit(
+            "../_shared/design-knowledge/",
+            "../references/design-knowledge/",
         ),
         lit(
             'save using the "Save Content" section in `_shared/mcp-tool-routing.md` and pass',
@@ -184,11 +210,6 @@ def _rules(agent: dict[str, str]) -> list[tuple[re.Pattern[str], object]]:
         lit("`/mcp`", "your connector settings"),
         # -- storage/rules paths ----------------------------------------------
         (
-            re.compile(r"`?\.claude/rules/pencil\.md`?"),
-            "`<rules-root>/projects/<project-slug>/pencil.md` "
-            "(resolve the root via `vorbit-resolve-rules`)",
-        ),
-        (
             re.compile(r"`?\.claude/review-rules\.md`?"),
             "`<rules-root>/projects/<project-slug>/review-rules.md` "
             "(resolve the root via `vorbit-resolve-rules`)",
@@ -206,18 +227,18 @@ def _rules(agent: dict[str, str]) -> list[tuple[re.Pattern[str], object]]:
             "Never hardcode `.claude/`, `.codex/`, or `.gemini/` storage.",
             "Never hardcode agent-runtime storage paths.",
         ),
-        lit(
-            "Writes to `.claude/rules/` and Pencil canvas only.",
-            "Writes to the resolved Vorbit rules root and Pencil canvas only.",
-        ),
         # -- Linear verbs ------------------------------------------------------
-        lit(
-            "then `save_issue` to add or replace",
-            "then the connector's issue-update operation to add or replace",
-        ),
         lit(
             "(`save_issue` in the vorbit Claude plugin)",
             "(inspect the connector schema for the current issue-update verb)",
+        ),
+        # -- explore solution page: each runtime uses its own visual tool -----
+        lit(
+            "Use the `artifact-design` skill and the Artifact tool: write the HTML "
+            "to that path first, then publish that same file as an artifact, with "
+            "the saved reference pictures as supporting files, and keep its link "
+            "for Step 7.",
+            agent["solution_page"],
         ),
         # -- misc ---------------------------------------------------------------
         lit("relative to this skill", "from this skill's installed directory"),
@@ -285,9 +306,13 @@ def _workflow_path(agent_key: str, canonical_name: str) -> Path:
 
 MIRRORED_SHARED: tuple[str, ...] = (
     "execution-contract.md",
+    "glossary.md",
     "mock-registry.md",
+    "pre-existing-findings.md",
     "spec-files.md",
 )
+
+MIRRORED_SHARED_DIRS: tuple[str, ...] = ("design-knowledge",)
 
 
 def _shared_target(agent_key: str, filename: str) -> Path:
@@ -334,10 +359,18 @@ def write_all() -> None:
         for filename in MIRRORED_SHARED:
             source = CANONICAL_SKILLS / "_shared" / filename
             _shared_target(agent_key, filename).write_text(source.read_text())
-        for source, target in _iter_asset_pairs(agent_key):
+        for dirname in MIRRORED_SHARED_DIRS:
+            source = CANONICAL_SKILLS / "_shared" / dirname
+            target = _shared_target(agent_key, dirname)
             if target.exists():
                 shutil.rmtree(target)
             shutil.copytree(source, target)
+        for source, target in _iter_asset_pairs(agent_key):
+            if target.exists():
+                shutil.rmtree(target)
+            shutil.copytree(
+                source, target, ignore=shutil.ignore_patterns("__pycache__")
+            )
 
 
 def check_all() -> list[str]:
@@ -353,6 +386,11 @@ def check_all() -> list[str]:
             target = _shared_target(agent_key, filename)
             if not target.is_file() or target.read_text() != source.read_text():
                 stale.append(str(target.relative_to(REPO_ROOT)))
+        for dirname in MIRRORED_SHARED_DIRS:
+            source = CANONICAL_SKILLS / "_shared" / dirname
+            dir_target = _shared_target(agent_key, dirname)
+            if not _dirs_equal(source, dir_target):
+                stale.append(str(dir_target.relative_to(REPO_ROOT)))
         for source, asset_target in _iter_asset_pairs(agent_key):
             if not _dirs_equal(source, asset_target):
                 stale.append(str(asset_target.relative_to(REPO_ROOT)))

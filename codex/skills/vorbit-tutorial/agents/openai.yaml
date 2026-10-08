@@ -1,0 +1,7 @@
+interface:
+  display_name: "Vorbit Tutorial"
+  short_description: "Write a user tutorial doc with step screenshots and a GIF"
+  default_prompt: "Use $vorbit-tutorial to write the user tutorial for the current branch feature."
+
+policy:
+  allow_implicit_invocation: true

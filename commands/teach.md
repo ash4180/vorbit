@@ -1,7 +1,7 @@
 ---
-description: Turn the last technical explanation into a plain-language decision card, or teach one word
-argument-hint: [empty = last answer | a word | pasted text]
-allowed-tools: Read, Grep, Glob
+description: Turn the last technical explanation into a plain-language decision card, teach one word, or explain a topic with a picture page
+argument-hint: [empty = last answer | a word | a topic | pasted text]
+allowed-tools: Read, Grep, Glob, Write, Artifact
 ---
 
 Use the **teach** skill.

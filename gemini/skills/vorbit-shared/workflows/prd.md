@@ -8,6 +8,8 @@ Read and follow `../references/execution-contract.md` before starting.
 
 Read `../references/spec-files.md` for spec path resolution, write guards, and file ownership before any spec read or write.
 
+Read `../references/glossary.md`: use the project's `CONTEXT.md` glossary terms when it exists, and record newly agreed terms there.
+
 ## Step 1: Gather Context (Draft First)
 
 The goal is a drafted PRD before touching the filesystem. Connection problems must never block drafting.
@@ -54,21 +56,38 @@ For anything still unknown:
 
 Every `TBD` must have a matching question attempt.
 
+## Step 2.5: Agree on the Scope Breakdown
+
+Before writing detailed flows and acceptance criteria, propose the separate user outcomes from the user's actual request and source material. Use short bullets in the project's own terms; do not introduce unrelated example features.
+
+For each proposed outcome, show:
+- **Finished result:** what the user can do when this piece is complete
+- **In scope / Out of scope:** what belongs here, what belongs to another outcome, and any confirmed exclusions
+- **Depends on:** another proposed outcome or an existing capability that must work first; explain what is needed, or say `None`
+- **Now / Later:** propose whether it belongs in this PRD or is deferred, with a reason
+
+Split by complete user outcomes, not screens, frontend/backend layers, or arbitrary task counts. Keep validation, errors, and recovery with the outcome they make usable. One outcome is enough for a small feature; do not force several stories. Each included requirement needs one owning story; shared product constraints stay in Constraints.
+
+Review the breakdown with the user before expanding it. Reuse scope decisions already agreed in this session or an approved source; ask only about gaps or proposed changes. Resolve overlaps, missing outcomes, and dependencies on deferred work. If two proposed outcomes require each other to deliver any usable result, propose combining them or redrawing their boundaries. If scope remains unresolved, show the proposed breakdown and questions and report `needs_input`; do not invent a settled PRD.
+
+Turn each agreed **Now** outcome into one `US-###` story. Keep deferred work in `## Later`, without story headings, flows, or acceptance-criteria checkboxes. Reference included dependencies by story ID and needed outcome, and existing capabilities in plain words. On revisions, preserve existing story IDs, give new stories fresh IDs, and show any split, merge, removal, or deferral explicitly; never silently renumber stories.
+
 ## Step 3: Generate Draft
 
-Use the template below. Match VIB-2978's prose style — no big tables.
+Use the template below. Write short prose; avoid big tables.
 
 **Required content:**
-- Feature name (3-8 words, no jargon) — this becomes the document **H1** and, after linear-sync, the Linear summary ticket title prefix
+- Feature name (3-8 words, no jargon) — this becomes the document **H1** and, after the ticket skill runs, the Linear summary ticket title prefix
 - Description: one short paragraph under the H1
 - Problem: 1-2 short paragraphs, no tech detail
-- User Stories: `US-001`, `US-002`, ... each representing one end-to-end user outcome with exactly one colocated user flow followed by acceptance-criteria checkboxes
+- User Stories: `US-001`, `US-002`, ... for the agreed Now outcomes only, each with its scope boundaries, prerequisites, and exactly one colocated user flow followed by acceptance-criteria checkboxes
+- Later: agreed deferred work and why it is deferred, or `None agreed`
 - Constraints
 - Success Criteria with confirmed, sourced numbers; use `TBD-###` when a target is unknown
 
 Do not fill required sections by invention. Put unresolved assumptions in `## Open Questions` with their provenance and impact classification. A structurally complete review draft may contain permitted TBDs.
 
-Before showing the draft, run the coverage gate: every acceptance criterion is satisfied by at least one step in its own story's flow. This is a check, not a section — verify it, state the result in chat, and keep the mapping out of the spec body.
+Before showing the draft, run the coverage gate: every agreed Now outcome has exactly one story, every acceptance criterion is satisfied by at least one step in its own story's flow, and deferred work has no executable story. Check that dependencies reference included stories or existing capabilities, with no self-dependency or cycle. This is a check, not a section — verify it, state the result in chat, and keep the mapping out of the spec body.
 
 If the user requested a draft or review only, stop after showing it; do not ask to save and do not write any file. Report `needs_input` when an implementation-affecting TBD remains, otherwise `completed`. For creation requests, ask after the draft: **"Does this look good? Ready to save the PRD to the branch spec file?"**
 
@@ -93,6 +112,10 @@ Branch: [current branch name]
 
 As a [user], I want [goal], so [benefit].
 
+**In scope:** [Behavior owned by this story]
+**Out of scope:** [Agreed exclusions or work owned elsewhere; otherwise None agreed]
+**Depends on:** [Included story IDs and needed outcomes, existing capabilities, or None]
+
 **User Flow:**
 
 1. **Entry:** [which screen, and its starting state]. [User action and what they see]
@@ -108,6 +131,10 @@ As a [user], I want [goal], so [benefit].
 
 As a [user], I want [goal], so [benefit].
 
+**In scope:** [Behavior owned by this story]
+**Out of scope:** [Agreed exclusions or work owned elsewhere; otherwise None agreed]
+**Depends on:** [Included story IDs and needed outcomes, existing capabilities, or None]
+
 **User Flow:**
 
 1. **Entry:** [which screen, and its starting state]. [User action and what they see]
@@ -118,6 +145,10 @@ As a [user], I want [goal], so [benefit].
 
 - [ ] ...
 - [ ] ...
+
+## Later
+
+* [Agreed deferred outcome and reason, or None agreed]
 
 ## Constraints
 
@@ -137,7 +168,7 @@ As a [user], I want [goal], so [benefit].
 ### Flow rules
 
 - Every user story represents one end-to-end user outcome and contains exactly one `**User Flow:**`
-- Place the user flow after the story statement and before its acceptance criteria
+- Place the user flow after the story statement and scope fields, before its acceptance criteria
 - Number the flow steps `1.`, `2.`, `3.`
 - Each step names three things: what the user did, which screen or field it happened on, and what they saw as a result
 - Mark the first step `Entry` and an observable terminal step `Exit`; write a retry or loop in plain English when it is part of the same outcome
@@ -170,10 +201,10 @@ Only proceed after the user confirms the draft and any implementation-affecting 
 1. Resolve the spec folder and run the write guards per `../references/spec-files.md`: worktree root, current branch, protected-branch check, `.gitignore` line.
 2. Create `.vorbit/` when missing.
 3. Write the full approved document to `prd.md`, starting at the H1, with the `Branch:` line filled in.
-4. When revising an existing `prd.md`, preserve any `## Linear Sync` section verbatim at the end of the file — it belongs to the linear-sync skill.
+4. When revising an existing `prd.md`, preserve any `## Linear Sync` section verbatim at the end of the file — it belongs to the ticket skill.
 5. Re-read the written file and confirm it matches the schema (story count, one flow per story, required sections).
 
-No Linear write happens in this skill. Posting human-readable summaries is a separate explicit step: `$vorbit-linear-sync`.
+No direct Linear write happens in this skill. Ticket creation is the `$vorbit-ticket` workflow: one summary ticket per story, detail stays in the spec files. If the user asked for a ticket in this request, run `$vorbit-ticket` right after the PRD is written; otherwise offer it as the next step.
 
 ## Step 6: Report
 
@@ -184,7 +215,7 @@ No Linear write happens in this skill. Posting human-readable summaries is a sep
 - Source note: the spec file is now canonical; include legacy import provenance when applicable
 - Suggested next steps:
   - `$vorbit-epic` to break the PRD into an ordered task plan
-  - `$vorbit-linear-sync` to post short human-readable Linear summaries
+  - `$vorbit-ticket` to post short human-readable Linear summaries
   - `$vorbit-journey` to draw a flow diagram in FigJam
 
 ---
@@ -195,7 +226,7 @@ When asked to review whether the epic plan fulfills the branch PRD:
 
 1. Resolve the spec folder per `../references/spec-files.md` and read both `prd.md` and `epic.md`. If either is missing, report which one and stop — check `git worktree list` for a sibling worktree that may hold them.
 2. Verify one `## US-###` story section in `epic.md` per PRD story, and map every acceptance criterion to task(s) inside that story's section.
-3. Flag missing or duplicate story sections, tasks that quote criteria from a different story, and work that **cannot be bundled** into an existing task as gaps; bundle-able housekeeping is not a gap.
+3. Flag missing or duplicate story sections, tasks that quote criteria from a different story, deferred or excluded work turned into tasks, lost prerequisites, duplicate shared work, and work that **cannot be bundled** into an existing task as gaps; bundle-able housekeeping is not a gap.
 4. Report: topology check, coverage matrix (story → tasks), gaps, verdict (covered / has gaps).
 
 ---
@@ -206,10 +237,11 @@ All sections below are required.
 
 | Section | Rules |
 |---------|-------|
-| Title (H1) | 3-8 words, no jargon. Becomes the spec title and the linear-sync ticket title prefix |
+| Title (H1) | 3-8 words, no jargon. Becomes the spec title and the ticket title prefix |
 | Description | 1-2 short sentences, plain English, no tech detail |
 | Problem | 1-2 short paragraphs of user pain, not the technical fix |
-| User Stories | `As a [user], I want [goal], so [benefit]`; one end-to-end outcome, exactly one colocated flow before at least one plain-checkbox criterion |
+| User Stories | One per agreed Now outcome; story statement, In scope, Out of scope, Depends on, exactly one colocated flow, then testable acceptance-criteria checkboxes |
+| Later | Deferred outcomes and reasons, or None agreed; no executable stories or criteria |
 | Constraints | Plain-language product limits — what must stay true; no file paths or component names |
 | Success Criteria | Sourced numbers (percentages, times, counts), or classified `TBD-###` placeholders |
 
