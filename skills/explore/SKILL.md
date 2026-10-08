@@ -1,6 +1,6 @@
 ---
 name: explore
-description: Use when the user asks to brainstorm, research options, or explore an early feature idea before committing to requirements. It asks targeted questions until the PRD-blocking unknowns are resolved, compares approaches, recommends one, and saves the approved exploration as a dated file in the worktree's .vorbit/explore/ folder, plus Notion or Anytype when connected. For UI/UX asks it first asks whether the target is existing code or a fresh idea, researches real products via both Mobbin and web search (other asks use web search), and builds a visual HTML solution page with diagrams and live animation demos, saved next to the research file. Do not use for writing a final PRD, decomposing tickets, or implementing code.
+description: Use when the user asks to brainstorm, research options, or explore an early feature idea before committing to requirements. It asks targeted questions until the PRD-blocking unknowns are resolved, compares approaches, recommends one, and saves the approved exploration as a dated file in the worktree's .vorbit/explore/ folder, plus Notion or Anytype when connected. For UI/UX, layout, and front-end asks it researches real products first via both Mobbin and web search, then asks whether the target is existing code or a fresh idea (other asks use web search after the questions), and builds a visual HTML solution page with diagrams and live animation demos, saved next to the research file. Do not use for writing a final PRD, decomposing tickets, or implementing code.
 ---
 
 # Explore Skill
@@ -17,11 +17,13 @@ Read and follow `_shared/mcp-tool-routing.md` (glob for `**/skills/_shared/mcp-t
 
 ## Step 2: Resolve the PRD-Blocking Unknowns
 
+**UI/UX asks research first.** A UI/UX ask is anything a user sees or does: screens, layout, flows, steps, wording, empty, error, or loading states, visual design, interactions, or other front-end behavior. When unsure, treat the ask as UI/UX. For these asks, do Step 3 before asking any product question: search with the words of the request, then come back here. Never open with questions. Write the question options from what the research found.
+
 Ask questions via AskUserQuestion until every unknown that would block a PRD is either answered or explicitly parked as unresolved. Depth is set by the information need, not a count: a well-specified idea may need 4 targeted questions; a vague one may need 15. Size each batch to what the user can answer comfortably.
 
 Work in rounds. Each round asks every question that is answerable now; a question whose answer depends on another question still open in the same round waits for a later round. Mark a recommended option on every question. Facts are your job, never the user's: anything discoverable from the codebase, connected tools, or the web gets looked up between rounds — ask the user only for decisions. After each round of answers, recompute what became askable.
 
-**UI/UX asks:** anything a user sees or does: screens, flows, steps, wording, empty, error, or loading states, visual design, or interactions. When unsure, treat the ask as UI/UX. For these asks the FIRST question batch must ask: "Is this for existing code or a fresh idea?" Existing code: read the relevant screens and components before analyzing, and ground every proposal in them. Fresh idea: skip the codebase and ground proposals in reference research only.
+**UI/UX asks, first question batch:** it must ask "Is this for existing code or a fresh idea?" Existing code: read the relevant screens and components before analyzing, and ground every proposal in them. Fresh idea: skip the codebase and ground proposals in reference research only.
 
 Cover these categories, skipping any the user's request already settles:
 - Core functionality decisions
@@ -31,21 +33,27 @@ Cover these categories, skipping any the user's request already settles:
 - Constraints (budget, time, compliance)
 - Existing solutions / competitors and real user scenarios
 
-Before proceeding to Step 3, list each question asked with the user's answer (one line each), then list the unknowns that remain open. Open unknowns go to the PRD Handoff's unresolved decisions — never silently fill them with assumptions.
+Before leaving this step, list each question asked with the user's answer (one line each), then list the unknowns that remain open. Open unknowns go to the PRD Handoff's unresolved decisions — never silently fill them with assumptions.
 
 ## Step 3: Research References (required)
 
-Every exploration gathers real evidence before analyzing. Research is never skipped, and never replaced by what you remember about products.
+Every exploration gathers real evidence before analyzing. Research is never skipped, and never replaced by what you remember about products. UI/UX asks run this step before the Step 2 questions. Other asks run it after them.
 
 **UI/UX asks run both Mobbin and web search.** Neither one replaces the other:
 1. Named-brand asks ("like Linear", "like Stripe"): check `../_shared/design-knowledge/design-systems/INDEX.md` first. When a brand file exists, read it for exact colors, fonts, and guardrails instead of guessing from screenshots.
 2. Mobbin: search screens, flows, and sections for the pattern. Flows also show steps, transitions, and motion worth borrowing. Mobbin tools may need loading first and their server name varies: look them up by the name "mobbin" (ToolSearch) before deciding Mobbin is not connected.
 3. Web search: search how real products solve the same problem, including products Mobbin lacks, their help docs, and UX write-ups.
-4. For "existing code" asks, also read the current screens and components so proposals reuse what exists.
+4. Once the user says the ask is for existing code, also read the current screens and components so proposals reuse what exists.
+
+**Mobbin not found or failing: stop and ask.** When the lookup finds no Mobbin tools, or a Mobbin call fails, never go on with web search alone on your own. Tell the user what failed and ask them to pick one:
+- Reconnect Mobbin now (the reconnect step is in the execution contract's Connector Login Failures section). After they confirm, look Mobbin up again and run the Mobbin searches.
+- Go on with web search only for this exploration.
+
+Wait for the answer before going on. Unattended run: go on with web search, and put the Mobbin failure and its reconnect step at the top of the final result.
 
 **Other asks run web search** for how real products, docs, or write-ups handle the same problem.
 
-**Record every search.** Keep a list of each search actually run: the tool and the search words. It goes in the document's `Sources:` line. A tool that is missing or fails is written down, for example `Mobbin: not connected`, never skipped without a word.
+**Record every search.** Keep a list of each search actually run: the tool and the search words. It goes in the document's `Sources:` line. A tool that is missing or fails is written down with the user's choice, for example `Mobbin: not connected, user chose web only`, never skipped without a word.
 
 Fresh-idea asks with no style reference: offer the closest presets from `../_shared/design-knowledge/style-seeds.md` as style-direction options.
 
@@ -116,7 +124,8 @@ An exploration document is a decision input, not a PRD source of truth. Do not l
 - No option obviously superior (otherwise why explore?)
 - Recommendation addresses constraints from context
 - PRD Handoff separates confirmed decisions from unresolved questions
-- Sources lists the real searches run: UI/UX asks need at least one Mobbin search and one web search; other asks need at least one web search. A missing tool counts only when its line says why
+- Sources lists the real searches run: UI/UX asks need at least one Mobbin search and one web search; other asks need at least one web search. Mobbin may be missing only when the user chose web only, or the run is unattended, and its line says so
+- UI/UX asks: the first searches ran before the first product question
 - Every reference pattern has a source link. Every Mobbin pattern has a saved picture or a `_no picture:` reason. Picture paths are relative to the document
 - UI/UX asks only: Reference Patterns present with at least 2 real products found by those searches, and the solution page is saved in `.vorbit/explore/` and linked from the document
 - The approved document is saved in `.vorbit/explore/` with the date and branch in its header
@@ -128,7 +137,7 @@ An exploration document is a decision input, not a PRD source of truth. Do not l
 
 Date: [YYYY-MM-DD] | Branch: [branch name]
 Solution page: [YYYY-MM-DD-topic.html] ([published link, if any]) (UI/UX asks only)
-Sources: [each search actually run, e.g. Mobbin flows "team switcher"; web "PagerDuty all teams label"; or Mobbin: not connected]
+Sources: [each search actually run, e.g. Mobbin flows "team switcher"; web "PagerDuty all teams label"; or Mobbin: not connected, user chose web only]
 
 ## Context Summary
 Key insights from conversation:
