@@ -26,8 +26,8 @@ JS_INDEX_NAMES = {"index"}
 MAX_CONSUMERS_LISTED = 25
 E2E_RUNNER = re.compile(r"\b(playwright\s+test|cypress\s+run|wdio|testcafe|nightwatch)\b")
 E2E_NAME = re.compile(r"(^|:)(e2e|playwright|cypress)(:|$)")
-# Script variants that open a UI, seed data, show a report, or aim at a remote env.
 E2E_QA_MODE = re.compile(r"(:qa$|\bQA_MODE\b|\bQA_VIDEO)")
+# Script variants that open a UI or a visible browser, seed data, or show a report: not unattended test runs.
 E2E_EXCLUDE = re.compile(r"(--ui\b|--headed\b|show-report|\bopen\b|seed|:ui$|:report$|:seed)")
 JS_SPECIFIER = re.compile(
     r"""(?:from\s+|import\s*\(\s*|require\s*\(\s*|import\s+)['"]([^'"]+)['"]"""

@@ -14,7 +14,7 @@ Prints JSON: {"workflows": [...], "steps": [...], "tool_versions": [...]}. Each 
                           check: run it locally
                           setup: dependency install; run only when the tools are missing
                           gate:  a summary job reading other jobs' results; nothing to run
-                          skip:  prints only, or needs CI secrets or services
+                          skip:  prints only, needs CI secrets, or only passes values between CI steps
   command               the command to run locally (shard flags removed, branch names filled in)
   working_directory     run it from here (relative to the repo root)
   notes                 why a step was skipped or changed

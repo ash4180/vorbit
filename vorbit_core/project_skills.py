@@ -65,7 +65,6 @@ AGENTS: dict[str, dict[str, str]] = {
         "label": "Codex",
         "slug": "codex",
         "repo_doc": "AGENTS.md",
-        # explore Step 5: how this runtime builds the visual solution page.
         "solution_page": (
             "Use your own `visualize` skill to build the visual, then turn it into "
             "a full standalone page with that skill's `scripts/render.py "
@@ -77,7 +76,6 @@ AGENTS: dict[str, dict[str, str]] = {
         "label": "Gemini CLI",
         "slug": "gemini",
         "repo_doc": "GEMINI.md",
-        # explore Step 5: how this runtime builds the visual solution page.
         "solution_page": (
             "Build the page yourself as one self-contained HTML file, drawing the "
             "diagrams and charts with inline SVG or CSS. There is no online "
@@ -314,8 +312,6 @@ MIRRORED_SHARED: tuple[str, ...] = (
     "spec-files.md",
 )
 
-# Whole directories under skills/_shared/ mirrored into each agent's
-# vorbit-shared/references/ (vendored design reference content).
 MIRRORED_SHARED_DIRS: tuple[str, ...] = ("design-knowledge",)
 
 

@@ -14,7 +14,7 @@ Prints JSON: {"check", "summary", "tests": [...]}. Each test entry has:
   status        passed | failed | timedOut | skipped | interrupted
   flaky         true when it passed only on a retry
   setup         true for setup steps (a "setup" project or a *.setup.* file); not a check
-  evidence      copied files: {"kind": video | screenshot | trace | other, "file": relative path}
+  evidence      copied files: {"kind": video | screenshot | trace | other, "file": path under --dest, as given}
   proof         video | screenshot | pass line | none
   note          why a proof is missing (no page, video lost), or the first error line
 Exit codes: 0 when the report was read, 1 when it could not be read.
