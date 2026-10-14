@@ -1,6 +1,6 @@
 ---
 name: vorbit-prepare-pr
-description: Use only when the user explicitly asks to finalize the current feature branch, strip design files for merge, or open a GitHub pull request. It checks and may rebase the branch, can remove and commit design files, pushes commits, creates the approved PR, and may update Linear. Requires a clean non-protected branch plus GitHub access; do not use for code review, commit-only requests, or generic Git advice.
+description: Use only when the user explicitly asks to finalize the current feature branch, strip design files for merge, or open a GitHub pull request. It checks and may rebase the branch, can remove and commit design files, runs the repository's pull-request CI checks locally and fixes failures before pushing, pushes commits, creates the approved PR, and may update Linear. Requires a clean non-protected branch plus GitHub access; do not use for code review, commit-only requests, or generic Git advice.
 ---
 
 # Vorbit Prepare PR

@@ -2,6 +2,8 @@
 
 Guide for which MCP tools to call when building in Webflow. Tools are exposed by the official Webflow MCP server.
 
+Tool names below are roles. The connected server may name them differently (for example `data_element_builder`, `data_sites_tool`). Match each by what it does.
+
 ## Tool Categories
 
 The Webflow MCP server exposes two categories of tools:

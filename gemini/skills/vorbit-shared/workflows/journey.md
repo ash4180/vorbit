@@ -16,18 +16,16 @@ If the prerequisite or Figma connection is unavailable, draft and validate the c
 
 ## Step 2: Gather PRD Context
 
-Linear is the canonical PRD provider. Resolve context in this order:
+The branch `prd.md` is the canonical PRD. Resolve it per `../references/spec-files.md`. When no `prd.md` exists:
 
-1. Linear PRD URL or ID -> use `get_issue`.
-2. Feature name -> use `list_issues` with a scoped title search, ask if multiple candidates match, then use `get_issue`.
-3. Explicit pasted PRD text or user-specified local file -> use it as a legacy fallback and record the provenance.
-4. Non-Linear URL with no accessible content -> ask the user to paste/export it; do not guess.
+1. Linear ticket URL or ID, pasted PRD text, or a user-named local file -> use it as a legacy import and record the provenance.
+2. URL with no accessible content -> ask the user to paste/export it; do not guess.
 
 Extract and preserve:
 
 - User stories (`US-###`)
 - Story-scoped acceptance criteria (the checkbox items under each `US-###` heading) — quote them verbatim; they have no IDs
-- Flow steps (the numbered list under each `### Flow N:` heading), including Entry/Exit markers, branches, retries, and loops — address them as `Flow N, step M`
+- Flow steps (the numbered `**User Flow:**` list inside each `US-###` story), including Entry/Exit markers, branches, retries, and loops — address them as `US-###, flow step M`
 - Constraints and implementation-affecting `TBD-###` items
 
 For a legacy PRD without stable IDs, assign draft `US-###` IDs and number its flows and steps without changing meaning. Show the normalization to the user before updating any source.
@@ -47,7 +45,7 @@ Show the complete flow and coverage ledger for review:
 ```
 User Flow: [Feature Name]
 
-Flow 1: [Flow name from the PRD]
+US-001: [Story title from the PRD]
 1. [Entry] User lands on...
    ↓
 2. [Action] User clicks...
@@ -60,8 +58,8 @@ Flow 1: [Flow name from the PRD]
 6. [Exit] User sees confirmation
 
 Coverage:
-- "User can submit the form from the entry screen" → Flow 1, step 1; Flow 1, step 2
-- "Invalid input shows an error and preserves entered values" → Flow 1, step 3; Flow 1, step 5
+- "User can submit the form from the entry screen" → US-001, flow step 1; US-001, flow step 2
+- "Invalid input shows an error and preserves entered values" → US-001, flow step 3; US-001, flow step 5
 ```
 
 **After showing draft, ask:** "Does this flow look correct? Ready to create in FigJam?"
@@ -77,7 +75,7 @@ Before asking, verify:
 
 **Only proceed after user confirms the draft.**
 
-Use `generate_diagram` with the parameters and syntax required by the prerequisite loaded in Step 1. Label every node with the user-facing action from its flow step, for example `Submit order`, and keep node order matching the PRD flow so each node is addressable as `Flow N, step M` in the coverage ledger.
+Use `generate_diagram` with the parameters and syntax required by the prerequisite loaded in Step 1. Label every node with the user-facing action from its flow step, for example `Submit order`, and keep node order matching the PRD flow so each node is addressable as `US-###, flow step M` in the coverage ledger.
 
 ### Split Complex Flows Without Dropping Behavior
 
@@ -85,10 +83,10 @@ Use the current prerequisite's density guidance. When the complete journey is to
 
 1. Split at cohesive sub-flow boundaries, not by deleting alternate/error paths.
 2. Generate a small overview plus every required detail diagram.
-3. Add explicit continuation nodes such as `Continue: Flow 2, step 1` and `Return: Flow 1, step 2` so cross-diagram loops remain traceable.
+3. Add explicit continuation nodes such as `Continue: US-002, flow step 1` and `Return: US-001, flow step 2` so cross-diagram loops remain traceable.
 4. Preserve real retry/re-entry loops. A loop is not an error in the model; simplify its routing only if the prerequisite says the rendered graph is unreadable.
 5. Reuse the first returned FigJam `fileKey` for related diagrams so the set stays in one file.
-6. Keep a coverage ledger: acceptance criterion (quoted, abbreviated if long) -> `Flow N, step M` -> diagram name/node. Generation is incomplete until every acceptance criterion and flow step is represented.
+6. Keep a coverage ledger: acceptance criterion (quoted, abbreviated if long) -> `US-###, flow step M` -> diagram name/node. Generation is incomplete until every acceptance criterion and flow step is represented.
 
 Illustrative flowchart only; the loaded prerequisite wins if syntax guidance changes:
 
@@ -101,26 +99,25 @@ flowchart LR
     error -->|"Retry"| submit
 ```
 
-## Step 6: Update PRD
+## Step 6: Hand Off the Diagrams
 
-If the canonical Linear PRD exists, use `get_issue` to re-read its latest description, then the connector's issue-update operation to add or replace a `## Journey Diagrams` section containing:
+Report in chat:
 
 - Every FigJam URL and diagram name
 - The covered flow-step range
 - The Mermaid source as a recovery artifact
 - The coverage ledger
 
-Preserve every existing PRD section and requirement. Do not overwrite concurrent edits. For legacy fallback input, report the URLs in chat and offer the updated section for import; do not claim a local/pasted source was updated.
+Do not edit `prd.md` (the prd skill owns it) or Linear (the ticket skill owns it).
 
 After each `generate_diagram` call, expose the returned URL as a markdown link. For a split journey, return every diagram URL, not only the overview.
 
 ## Step 7: Report
 
 - FigJam flow created: Yes (all URLs)
-- PRD source: Linear canonical ticket or named legacy fallback
-- PRD updated: Yes/No (with URL when canonical)
+- PRD source: branch `prd.md` or named legacy fallback
 - Coverage: X/X acceptance criteria and Y/Y flow steps
-- Split summary: diagram name -> covered flow steps (e.g. `Flow 1, steps 1-6`)
+- Split summary: diagram name -> covered flow steps (e.g. `US-001, flow steps 1-6`)
 - Next: `$vorbit-prototype` or `$vorbit-epic`
 
 ---
@@ -158,8 +155,8 @@ Name: [Feature] User Flow
 Mermaid: [flowchart source — syntax per the loaded prerequisite; see the Step 5 example]
 
 Coverage:
-- "[Acceptance criterion text, abbreviated if long]" -> Flow 1, step 1; Flow 1, step 2 -> [Feature] User Flow
-- "[Acceptance criterion text, abbreviated if long]" -> Flow 1, step 3; Flow 1, step 5 -> [Feature] User Flow
+- "[Acceptance criterion text, abbreviated if long]" -> US-001, flow step 1; US-001, flow step 2 -> [Feature] User Flow
+- "[Acceptance criterion text, abbreviated if long]" -> US-001, flow step 3; US-001, flow step 5 -> [Feature] User Flow
 
 ## FigJam URL
 [Generated URL from tool]
@@ -171,6 +168,6 @@ Coverage:
 |-------|-------|-----|
 | Delete retry/alternate branches to reduce density | Split into overview + complete detail flows | Readability cannot erase requirements |
 | `POST /api/users` | `["User submits form"]` | Labels describe user actions |
-| Ship a diagram with no coverage ledger | Map every acceptance criterion to the `Flow N, step M` nodes that satisfy it | Diagram stays traceable to the PRD |
+| Ship a diagram with no coverage ledger | Map every acceptance criterion to the `US-###, flow step M` nodes that satisfy it | Diagram stays traceable to the PRD |
 | Regenerate each split into a new file | Reuse the returned `fileKey` | Related diagrams stay together |
 | Copy old Mermaid limits here | Load `figma-generate-diagram` before every call | Current prerequisite stays authoritative |

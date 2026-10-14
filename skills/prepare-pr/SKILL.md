@@ -1,11 +1,11 @@
 ---
 name: prepare-pr
-description: Use only when the user explicitly asks to finalize the current feature branch, strip design files for merge, or open a GitHub pull request. It checks and may rebase the branch, can remove and commit design files, pushes commits, creates the approved PR, and may update Linear. Requires a clean non-protected branch plus GitHub access; do not use for code review, commit-only requests, or generic Git advice.
+description: Use only when the user explicitly asks to finalize the current feature branch, strip design files for merge, or open a GitHub pull request. It checks and may rebase the branch, can remove and commit design files, runs the repository's pull-request CI checks locally and fixes failures before pushing, pushes commits, creates the approved PR, and may update Linear. Requires a clean non-protected branch plus GitHub access; do not use for code review, commit-only requests, or generic Git advice.
 ---
 
 # Prepare PR Skill
 
-Finalize a feature branch for merge: run pre-flight checks, strip design files per the management standard, generate a PR body from Linear context and commit history, create the pull request, and return design file recovery references in the session.
+Finalize a feature branch for merge: run pre-flight checks, strip design files per the management standard, run the pull-request CI checks locally, generate a PR body from Linear context and commit history, create the pull request, and return design file recovery references in the session.
 
 Read and follow `../_shared/execution-contract.md` before starting.
 
@@ -20,7 +20,7 @@ For branches without design files, the skill still handles PR body generation an
 **Goal**: Verify the branch is ready for PR creation.
 
 1. **Get current branch and determine base:**
-   - Base branch: `dev` if it exists, otherwise `main`
+   - Base branch: resolve it per the Base Branch section of the execution contract (`--base` counts as named)
    - **Guard**: If on `main`, `dev`, or `demo` → "You're on a protected branch. Switch to a feature branch first." → **STOP**
 
 2. **Extract issue-id** from branch name — first match of `[a-zA-Z]+-\d+` (case-insensitive):
@@ -33,7 +33,7 @@ For branches without design files, the skill still handles PR body generation an
    - Verify `origin` and the selected base exist.
    - Verify `gh` is installed and authenticated (`gh auth status`). If not, stop before rebase, deletion, or commit.
    - If Linear integration is selected, verify its read/update operations now. A missing optional Linear connection may be skipped only with user approval.
-   - Note whether the branch has an upstream; Phase 5 performs the push.
+   - Note whether the branch has an upstream; Phase 6 performs the push.
 
 4. **Detect design files:**
    - Does `designs/` directory exist with `.pen` files?
@@ -42,7 +42,7 @@ For branches without design files, the skill still handles PR body generation an
 
 5. **Check mock data (informational):**
    - Does the resolved project mock registry (fallback `.vorbit/mock-registry.json`) contain entries?
-   - If yes → Warn: "Mock data detected. Consider running `/cleanup-mocks` first."
+   - If yes → Warn: "Mock data detected. Consider running `/vorbit:implement:cleanup-mocks` first."
    - Don't block — just inform
 
 6. **Redundant comment gate (hard block):**
@@ -73,18 +73,19 @@ For branches without design files, the skill still handles PR body generation an
    - **Option 3** → Print the full report, then re-ask.
 
 7. **Release evidence gate:**
-   - Run the repository's focused checks and smallest relevant regression suite, or verify equivalent successful evidence from the current task.
-   - If checks fail or blocking review findings remain, stop. Preparing a PR is not a way to bypass verification.
+   - If blocking review findings remain, stop. Preparing a PR is not a way to bypass verification.
+   - Do not run tests here. Phase 4 runs the full CI checks after the rebase, on the code that will be pushed.
 
 8. **Show one mutation preview and get approval:**
    - Base and rebase strategy
    - Whether a force-with-lease push may be needed
    - Exact design files/directories proposed for removal
    - Planned mechanical commits
+   - The local CI checks Phase 4 will run (from `scripts/local_ci_plan.py`) and a rough time
    - GitHub PR and optional Linear mutations
    - Do not begin Phase 2 until the user approves this plan.
 
-**Output**: Capabilities verified, branch clean, checks passing, and mutation plan approved
+**Output**: Capabilities verified, branch clean, and mutation plan approved
 
 ## Phase 2: Sync with Base
 
@@ -117,7 +118,7 @@ For branches without design files, the skill still handles PR body generation an
 
 6. **Abort path.** At any point during step 5, if the user says "abort", "stop", or "cancel", run `git rebase --abort` — the branch returns to its pre-rebase state. Stop the entire skill: "Rebase aborted. Branch unchanged. PR not created."
 
-7. **Record whether history changed.** Do not push yet; Phase 5 pushes only after the PR title/body are approved. If a previously pushed branch was rebased, Phase 5 must use `--force-with-lease`, never plain `--force`. Never auto-squash commits without user consent.
+7. **Record whether history changed.** Do not push yet; Phase 6 pushes only after the PR title/body are approved. If a previously pushed branch was rebased, Phase 6 must use `--force-with-lease`, never plain `--force`. Never auto-squash commits without user consent.
 
 8. **Report:**
    ```
@@ -176,7 +177,32 @@ For branches without design files, the skill still handles PR body generation an
 
 **Output**: Design files stripped, recovery reference prepared
 
-## Phase 4: PR Body Generation
+## Phase 4: Local CI
+
+**Goal**: Run the same checks as the pull-request CI, on the final code, before anything is pushed. The PR opens only after every check CI will run has passed here.
+
+This phase runs after Phases 2 and 3, so it tests the rebased code with design files stripped. Never skip it because checks passed earlier in the session: the rebase may have changed the code.
+
+1. **Build the plan:** run `python3 scripts/local_ci_plan.py --repo {repo-root} --base {base-branch}` (the script path is relative to this skill's folder). It lists every `run:` step of the pull-request workflows as `check`, `setup`, `gate`, or `skip`, with shard flags removed and branch names filled in.
+   - Exit 2 (PyYAML missing) → read `.github/workflows/*.yml` directly and build the same list.
+   - No pull-request workflows → run the repo's own lint, typecheck, test, and build scripts (`package.json`, `Makefile`, `pyproject.toml`), and say in the report that no CI file was found.
+2. **Compare tool versions.** Check each `tool_versions` entry against the local version (for example `node --version`). A different major version → warn: a check can pass here and still fail in CI.
+3. **Run `setup` steps only when the tools are missing** (for example no `node_modules`). Do not reinstall on every run.
+4. **Run every `check` step** in the listed order, from its `working_directory`. Keep going after a failure, so one run shows every problem, like CI.
+   - Replace any CI expression a step's notes name before running it.
+   - A step that cannot run locally (needs a secret, a service, or a Linux-only tool) is `not run locally` with the reason, never `passed`.
+   - Stop any background process a step started (for example a preview server) when the step ends.
+   - Record each step as passed, failed (with its first error lines), or not run locally.
+5. **All passed → continue to Phase 5.**
+6. **Any failed → fix before the PR; never push a branch that fails locally.** Show the failed steps, one line each with the first error, then ask:
+   1. Fix now: fix the cause in code, never by disabling, skipping, or loosening the check. Show the diff, commit after approval as `fix: {what failed}` without AI attribution, then re-run every `check` step. Repeat until all pass.
+   2. Stop: "PR not created. Fix the failing checks and run again."
+   A failure this branch did not cause (the same step also fails on `origin/{base-branch}`) still turns CI red. Say so, and ask whether to fix it here or stop. Open the PR over it only when the user explicitly says to.
+7. **Report** one line per step: name, result, time.
+
+**Output**: Every CI check passed locally, or the user chose to stop.
+
+## Phase 5: PR Body Generation
 
 **Goal**: Generate a complete PR body from Linear context and commit history.
 
@@ -239,7 +265,7 @@ For branches without design files, the skill still handles PR body generation an
 
 **Output**: Approved PR title and body
 
-## Phase 5: Create PR and Report
+## Phase 6: Create PR and Report
 
 **Goal**: Push, create the PR, and report the result.
 
@@ -257,18 +283,39 @@ For branches without design files, the skill still handles PR body generation an
    )"
    ```
 
-3. **Return the design recovery reference in the current session** when design files were stripped. Keep the same recovery block in the PR body. A commit hash is not a permanent backup; if permanent retention is required, archive the design in the team's approved design storage before stripping.
+3. **Watch CI.** Run `gh pr checks {pr-number} --watch` until every check finishes.
+   - All pass → continue.
+   - No checks start within 5 minutes → record "no CI checks ran" and continue.
+   - Any fail → read the failed step's log (`gh run view {run-id} --log-failed`) and show the first error. If Phase 4 passed that step, name the difference (tool version, secret, service, flaky test). Ask: fix now (fix, commit after approval, push, watch again) or stop and report the red CI. Never call the PR ready while CI is red.
 
-4. **Update Linear issue status** only when Linear integration was selected, resolved, and approved:
+4. **Return the design recovery reference in the current session** when design files were stripped. Keep the same recovery block in the PR body. A commit hash is not a permanent backup; if permanent retention is required, archive the design in the team's approved design storage before stripping.
+
+5. **Update Linear issue status** only when Linear integration was selected, resolved, and approved:
    - Call the Linear connector's issue-update operation (`save_issue` in the vorbit Claude plugin) with `state: "In Review"`
 
-5. **Report:**
+6. **Send a Slack DM to the user** (skip silently when no Slack connection exists):
+   - A request such as "DM me" means this short PR notification. It does not approve publication. If no PR exists yet, defer the notification until it does. Keep approval questions in the current session; send a PR preview to Slack only when explicitly requested.
+   - Resolve the Slack connector per `_shared/mcp-tool-routing.md` and send a direct message to the current logged-in user.
+   - Message has exactly two non-empty lines with one newline between them:
+     ```
+     [{branch-name}]({pr-url})
+     {one-sentence summary}
+     ```
+   - Link the full branch name to the confirmed GitHub PR URL.
+   - The summary is ONE sentence in plain, everyday language stating the user-visible outcome — include a bug-fix count when bugs were fixed. Example: "All settings forms now share one narrow, readable layout, and four small save bugs are fixed." No file names, code identifiers, or technical jargon: the user forwards this line to non-technical stakeholders as-is.
+   - Do not include headings, the PR body, approval steps, test output, or a footer.
+   - A Slack failure never rolls back or blocks anything — record it for the report.
+
+7. **Report:**
    ```
    PR created: {pr-url}
 
      Branch:        {branch} → {base}
      Design files:  {count} stripped, recovery hash recorded
+     Local CI:      {passed}/{total} checks passed | {n} not run locally ({reasons})
+     CI:            green | red ({failed step}) | no checks ran
      Linear:        {issue-id} → "In Review" | skipped with reason
+     Slack DM:      sent | skipped (no Slack connection) | failed ({reason})
      Recovery:      returned in the current session | not applicable
    ```
 
@@ -277,4 +324,4 @@ For branches without design files, the skill still handles PR body generation an
 - **`--skip-rebase`**: Skip Phase 2. Use when the team's workflow does conflict resolution at merge time (squash-and-merge), or when you intentionally want the reviewer to see the conflicts in GitHub.
 - **`--skip-designs`**: Skip Phase 3 even if `designs/` exists. For PRs where design files should remain (e.g., the PR sets up the design file infrastructure itself).
 - **`--draft`**: Create as draft PR (`gh pr create --draft`). For early feedback before the feature is complete.
-- **`--base {branch}`**: Override base branch detection. Default: `dev` or `main`.
+- **`--base {branch}`**: Override base branch detection. Default: resolved per the Base Branch section of the execution contract.

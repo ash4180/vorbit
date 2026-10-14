@@ -27,15 +27,6 @@ Three distinct output types, each serving different purposes:
 
 ## Workflow
 
-### Step 0: Pencil Check
-
-Before starting, check if Pencil MCP is available and configured:
-1. Run `ToolSearch` for `"pencil"` — if Pencil tools exist:
-2. Check if `.claude/rules/pencil.md` exists (Glob for it)
-3. **IF Pencil available but no pencil.md:** Use `AskUserQuestion`: "Pencil is connected but not configured for this project. Run `/vorbit:design:pencil` first to sync your design tokens and components? (Recommended)" with options: "Run pencil first (Recommended)", "Skip — continue without sync"
-4. **IF user chooses to sync:** Stop and tell them to run `/vorbit:design:pencil`, then come back
-5. **IF pencil.md exists:** Read it — use detected stack, tokens, and component inventory to inform Webflow development decisions
-
 ### Step 1: Gather Inputs
 
 Collect required information:
@@ -84,14 +75,14 @@ When structure or mapping is unclear, stop and ask per the Error Handling table 
 
 ### Step 5: Build in Webflow
 
-Use Webflow MCP tools (see `references/mcp-tools.md` for detailed tool reference):
+Find the connected Webflow server's tools per `_shared/mcp-tool-routing.md`. If it offers a guide tool, call it once first. Match tools by role; names differ between server versions (for example `element_builder` or `data_element_builder`). `references/mcp-tools.md` describes each role:
 
-| Tool | Purpose |
+| Role | Purpose |
 |------|---------|
-| `element_builder` | Create page structure (sections, containers, divs) |
-| `element_tool` | Select, modify, and configure existing elements |
-| `style_tool` | Create and apply CSS classes |
-| `component_tool` | Register components and create instances |
+| element builder | Create page structure (sections, containers, divs) |
+| element tool | Select, modify, and configure existing elements |
+| style tool | Create and apply CSS classes |
+| component tool | Register components and create instances |
 
 **For Templates:**
 - Add Page Slot elements where content varies
@@ -168,7 +159,7 @@ Variants follow the same shape:
 | Figma element has no Webflow equivalent | Block and ask user |
 | Requirements unclear | Ask clarifying questions |
 | Class name conflict | Append unique suffix, inform user |
-| Template slot limit (40 per site) | Warn user before creating |
+| Template limit (40 per site) | Warn user before creating |
 | Production site changes | Require explicit confirmation |
 
 ## Additional Resources

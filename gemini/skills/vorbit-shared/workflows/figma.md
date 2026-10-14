@@ -60,7 +60,7 @@ Before drawing, produce a page inventory:
 | Data needed | API/model data shown on the page |
 | States | Default, loading, empty, error, disabled, permission denied, success |
 
-Use standard shadcn components as implementation boundaries where applicable.
+Use the project's existing UI components as implementation boundaries.
 
 Present the inventory and **use plain-text chat questions** to confirm before mapping design-system assets.
 

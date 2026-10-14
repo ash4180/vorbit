@@ -1,7 +1,7 @@
 {
   "name": "vorbit",
   "version": "0.0.1-dev",
-  "description": "Traceable product workflows for Claude Code with deterministic requirements, implementation, verification, and release gates.",
+  "description": "Traceable product workflows for Claude Code: research, requirements, epic plans, TDD implementation, review, QA, and PR preparation.",
   "author": {
     "name": "Ash"
   }

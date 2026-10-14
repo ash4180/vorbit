@@ -1,6 +1,6 @@
 ---
 name: vorbit-teach
-description: Use when the user asks to be taught or says an explanation is too technical — "teach me", "explain simply", "too tech", "I don't understand" — or invokes the teach command with a word, topic, or nothing. It re-explains the assistant's last long answer (or the given topic) as a plain-language decision card or tiny lesson in A2 English, keeping every trade-off and risk while simplifying only the wording. It never edits files, runs commands, creates tickets, or does the work it explains.
+description: Use when the user asks to be taught or says an explanation is too technical — "teach me", "explain simply", "too tech", "I don't understand" — or invokes the teach command with a word, topic, or nothing. It re-explains the assistant's last long answer (or the given topic) as a plain-language decision card or tiny lesson in A2 English, keeping every trade-off and risk while simplifying only the wording. A whole topic or "how does X work" question becomes a picture lesson: one simple visual page with big drawings and few words. It never edits project files, runs commands, creates tickets, or does the work it explains.
 ---
 
 # Vorbit Teach

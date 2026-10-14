@@ -15,7 +15,10 @@ from typing import Sequence
 SUPPORTED_AGENTS = ("codex", "gemini")
 MANIFEST_NAME = ".vorbit-managed-links.json"
 MANIFEST_SCHEMA_VERSION = 1
-RESOURCE_NAME = "vorbit-resolve-rules"
+AGENT_RESOURCES = {
+    "codex": ("vorbit-resolve-rules", "vorbit-github-mcp"),
+    "gemini": ("vorbit-resolve-rules",),
+}
 
 
 class SyncError(RuntimeError):
@@ -128,10 +131,11 @@ def _expected_links(repo_root: Path, agent: str) -> tuple[dict[str, Path], Path]
             continue
         links[f"skills/{source.name}"] = _normalized_absolute(source)
 
-    resolver = repo_root / "scripts" / RESOURCE_NAME
-    if not resolver.is_file():
-        raise SyncError(f"missing rule resolver resource: {resolver}")
-    links[f"bin/{RESOURCE_NAME}"] = _normalized_absolute(resolver)
+    for resource_name in AGENT_RESOURCES[agent]:
+        resource = repo_root / "scripts" / resource_name
+        if not resource.is_file():
+            raise SyncError(f"missing {agent} resource: {resource}")
+        links[f"bin/{resource_name}"] = _normalized_absolute(resource)
     return links, _normalized_absolute(source_skills)
 
 

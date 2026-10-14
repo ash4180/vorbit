@@ -1,6 +1,6 @@
 ---
 name: ui-patterns
-description: Apply when implementing or reviewing user-facing frontend components, forms, interactions, layout, accessibility, animation, or UI performance. It supplies implementation constraints and should accompany the relevant build, prototype, or review workflow; for React or Next.js performance work load react-best-practices alongside it. It does not by itself authorize edits. Do not use for backend work, Figma or Pencil design-only tasks, Webflow authoring, or generic UX research.
+description: Apply when implementing or reviewing user-facing frontend components, forms, interactions, layout, accessibility, animation, or UI performance. It supplies implementation constraints and should accompany the relevant build, prototype, or review workflow; for React or Next.js performance work load react-best-practices alongside it. It does not by itself authorize edits. Do not use for backend work, Figma design-only tasks, Webflow authoring, or generic UX research.
 ---
 
 # UI Patterns Skill
@@ -96,7 +96,7 @@ z-50  - Critical overlays only
 
 | Rule | Why |
 |------|-----|
-| **No gradients** | Unless user explicitly requests |
+| **No gradients** | Unless the user asks for one or the chosen style seed specifies one |
 | **No drop shadows on text** | Accessibility issue |
 | **Clear empty states** | Never show blank areas |
 | **Consistent iconography** | One icon set per project |

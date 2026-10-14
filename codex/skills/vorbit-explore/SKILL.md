@@ -1,6 +1,6 @@
 ---
 name: vorbit-explore
-description: Use when the user asks to brainstorm, research options, or explore an early feature idea before committing to requirements. It asks targeted questions until the PRD-blocking unknowns are resolved, compares approaches, recommends one, and saves the approved exploration to Notion or Anytype when connected. Do not use for writing a final PRD, decomposing tickets, or implementing code.
+description: Use when the user asks to brainstorm, research options, or explore an early feature idea before committing to requirements. It asks targeted questions until the PRD-blocking unknowns are resolved, compares approaches, recommends one, and saves the approved exploration as a dated file in the worktree's .vorbit/explore/ folder, plus Notion or Anytype when connected. For UI/UX, layout, and front-end asks it researches real products first via both Mobbin and web search, then asks whether the target is existing code or a fresh idea (other asks use web search after the questions), and builds a visual HTML solution page with diagrams and live animation demos, saved next to the research file. Do not use for writing a final PRD, decomposing tickets, or implementing code.
 ---
 
 # Vorbit Explore
