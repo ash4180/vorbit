@@ -13,6 +13,8 @@ Spec mode reads the queue from `.vorbit/epic.md` in the current worktree — rea
 
 ## Inputs and Preconditions
 
+The parent owns this state machine. For each selected item, follow `../implement/references/task-worker.md`: one fresh native Sonnet/Luna worker per task, prepare then resume, and parent review before completion. Workers never initialize a loop, change statuses, or advance the queue.
+
 Require:
 
 - a queue source: a story ID (`US-###`) from the branch epic plan — or that plan's only story when unambiguous — or a Linear issue ID or URL;
@@ -43,6 +45,7 @@ Store runtime state at `.claude/.loop-state.json`. It is local runtime state and
     {"id": "VIB-103", "phase": 2, "priority": "High"}
   ],
   "currentIndex": 0,
+  "workerSessionFile": null,
   "completedIssueIds": [],
   "lastFailureFingerprint": null,
   "repeatedFailureCount": 0,
@@ -58,18 +61,21 @@ Store runtime state at `.claude/.loop-state.json`. It is local runtime state and
 
 For `--cancel`:
 
-1. Read the state before deleting it.
-2. Report the current issue, completed items, and worktree state.
-3. Report cancellation in the current session; do not claim the code was reverted.
-4. Delete the state file and stop.
+1. Read the state and immediately persist `active: false`, `status: "canceled"`, retaining `workerSessionFile`. Mark its session canceled as well; the Stop hook must not resume a canceled queue.
+2. If `workerSessionFile` identifies a worker, stop it and its owned processes through native controls and verify they stopped. If stopping cannot be verified, preserve the handle/state, report the reason, and do not launch another writer.
+3. Report the current issue, completed items, and worktree state.
+4. Report cancellation in the current session; do not claim the code was reverted.
+5. Delete the state file and stop only after the worker is stopped.
 
 Never discard or reset code during cancellation.
 
 ### 2. Resume or Build the Queue
 
-If an active `running` state exists, resume it. Re-read the source first (the story section in `epic.md`, or the Linear parent); if it changed since `sourceUpdatedAt`, set `active: false`, `status: "needs_input"`, and a precise `blockReason`, then preserve state and stop to reconcile the queue.
+Before dispatch on resume, inspect `workerSessionFile` (absent means null for older state). Await a running worker. For a finished worker, inspect its saved phase: finished Prepare requires readiness validation then Execute; only finished Execute reaches review. Resume the same worker for corrections, saving phase before each dispatch. A missing/unusable handle requires checking native running agents and partial edits before replacement. Never start a duplicate writer. Compare requirement content separately from parent-owned status changes and refresh `sourceUpdatedAt` after each authorized status-only update so the loop does not reject its own progress.
 
-If an inactive `needs_input`, `blocked`, or `failed` state exists, report its reason and resume point instead of replacing it. Resume only after the user supplies or confirms the missing resolution: reconcile the source/queue as needed, update the baseline, clear failure tracking, reset `iteration` to 1, then set `active: true` and `status: "running"`. Resetting `iteration` matters: a state blocked at `maxIterations` would otherwise re-block after a single cycle. A completed state is left for the stop hook to delete.
+If an active `running` state exists, resume it. Re-read the source first (the story section in `epic.md`, or the Linear parent); if requirements changed since `sourceUpdatedAt`, stop any surviving worker and verify shutdown (retain the handle if unverified), then set `active: false`, `status: "needs_input"`, and a precise `blockReason`, then preserve state and stop to reconcile the queue.
+
+If an inactive `needs_input`, `blocked`, `failed`, or retained `canceled` state exists, report its reason and resume point instead of replacing it. Resume only after the user supplies or confirms the missing resolution: reconcile the source/queue as needed, update the baseline, clear failure tracking, reset `iteration` to 1, then set `active: true` and `status: "running"`. Resetting `iteration` matters: a state blocked at `maxIterations` would otherwise re-block after a single cycle. A completed state is left for the stop hook to delete.
 
 For a new run:
 
@@ -99,21 +105,21 @@ For the current `queue[currentIndex]` item, or the parent when the queue is empt
 
 1. Re-read the current item (its task section in `epic.md`, or the Linear issue) and compare its baseline (file modification time, or issue update timestamp) with the one used for the current cycle.
 2. Mark it started — spec task: set its `**Status:**` line to `in-progress`; Linear issue: move it to the team's exact In Progress state — and report the start in the current session.
-3. Apply the normal implement workflow without re-entering loop initialization:
+3. Apply the normal implement workflow without re-entering loop initialization. The parent resolves the single-item scope, then delegates Steps 4, 4.5, and 6 via its task-worker reference:
    - search for existing code and tests first;
    - map the issue's acceptance criteria and flow steps;
    - write or update an honest focused test when a harness exists;
    - implement only the current issue;
    - run focused and relevant regression checks.
-4. Record AC-by-AC evidence and test commands.
+4. The parent performs implement Step 6.5: review the actual diff, verify AC-by-AC evidence, and independently run decisive focused checks. Persist the worker session path/ID and review outcome. No next task starts while the current worker is active or review is incomplete.
 
 ### Complete Current Item
 
-Only when every current-item AC passes and relevant tests pass:
+Only after the parent accepts the worker's result, every current-item AC passes, and relevant tests pass:
 
 1. Report completion, changed files, and verification evidence in the current session.
 2. Spec task: set its `**Status:**` line to `done`. Linear sub-issue: move it to the team's Done/Completed state.
-3. Add its ID to `completedIssueIds`, increment `currentIndex`, clear failure tracking, and write state atomically.
+3. Add its ID to `completedIssueIds`, increment `currentIndex`, clear failure tracking and `workerSessionFile`, refresh the baseline after the status-only update, and write state atomically. Preserve worker evidence.
 4. Continue with the next item.
 
 ### Incomplete or Failed Current Item
@@ -146,7 +152,7 @@ The stop hook deletes a completed state and lets the session end. Report complet
 - `needs_input` — a requirement, queue, or source revision needs a user decision.
 - `blocked` — the same failure repeated three times or iteration limit reached.
 - `failed` — a non-recoverable tool or state error.
-- `canceled` — user canceled; state deleted, code left untouched.
+- `canceled` — user canceled; state is inactive and retained until worker shutdown is verified, then deleted; code is left untouched.
 
 At `maxIterations`, preserve state as blocked and report the current issue and reason. Never delete evidence silently.
 

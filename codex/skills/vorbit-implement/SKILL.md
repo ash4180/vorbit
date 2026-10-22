@@ -10,5 +10,5 @@ Before changing code:
 1. Read `../vorbit-shared/references/load-rules.md`.
 2. Read `../vorbit-shared/workflows/implement.md`.
 3. Load the applicable durable Vorbit rules for the current project and Codex agent scope.
-4. Then implement using the repo's native patterns and verification flow.
+4. Resolve one task, delegate implementation to a native Sonnet/Luna worker using the workflow's task-worker reference, then review the diff and evidence before updating task status. The parent owns loop progress; report unavailable delegation instead of silently running locally.
 

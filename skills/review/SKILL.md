@@ -29,6 +29,8 @@ Detailed pipeline specs live in `references/` within this skill's directory. Glo
 2. Read `.claude/review-rules.md` if it exists — learnable rules from previous reviews
 3. Determine mode from input (see Mode Detection)
 
+When QA is requested alongside code review, use the qa-report workflow for execution and evidence. Review findings and a green static/test run never mark manual QA checks passed. Report code-review findings separately from QA readiness; keep human-only checks pending and link the QA report's screen recordings.
+
 ---
 
 ## Mode Detection

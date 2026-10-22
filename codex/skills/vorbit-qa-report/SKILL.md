@@ -1,6 +1,6 @@
 ---
 name: vorbit-qa-report
-description: Use when the user asks to run the QA checks or produce a QA report for the current branch. It executes the plan's automated E2E commands (Playwright or any runner the plan lists), can click through the unticked manual checks itself when a browser-automation capability is available, records honest results in qa-plan.md, takes a screenshot of every check it runs, and writes a dated human-readable qa-report.md with those pictures embedded — newest run first, with a ready or not-ready verdict. Fails this branch did not cause become follow-ups, not blockers; it checks Linear and Slack for prior discussion and asks before creating a ticket. When the caller names a Notion report hub, it also publishes the run as a page from the hub's template, one row and picture per check, and links that page on the Linear tickets. Otherwise it never writes to Linear. Requires an existing qa-plan.md; do not use to author the plan (qa-plan), check acceptance criteria (the implement skill does that), or fix code.
+description: Run the branch QA plan flow by flow and write a short, dated report a non-technical reader can act on. One table, flow first, each problem in its flow's row, with a narrated recording per flow. Three results only (Passed, Failed, Not done); developer detail stays in a folded section. Checks test data before running, creates missing records on the local app or DEV and deletes them after, never fakes the server unless asked, and never re-runs the suite on the base code. When requested, publishes the report to a named Notion hub. Requires qa-plan.md; use qa-plan to author it and implement to fix code.
 ---
 
 # Vorbit QA Report
@@ -10,4 +10,4 @@ Before reporting:
 1. Read `../vorbit-shared/references/load-rules.md`.
 2. Read `../vorbit-shared/workflows/qa-report.md`.
 3. Load the applicable durable Vorbit rules for the current project and Codex agent scope.
-4. Then follow the qa-report workflow: collect manual results, run the plan's automated commands with approval, and write the dated report with an honest verdict.
+4. Then follow the qa-report workflow: check the plan's needs and authorization, run its automated commands, prepare and resume one native subagent for browser flows, review its evidence, and write the dated report with an honest verdict.

@@ -1,6 +1,6 @@
 ---
 name: vorbit-qa-plan
-description: Use when the user asks to build or update a QA test plan for the current branch — a human-runnable checklist covering story flows, test data, edge cases and error paths, list and table reliability, device and browser coverage, regression risks, performance checks, and automated Playwright runs when the project has them. It drafts from the branch prd.md and epic.md when they exist, or from the user's answers (or the PR and diff in an unattended run) when they do not, always builds regression checks (from epic.md, else from the git diff), and writes the plan to the branch spec folder. Do not use for agent-run acceptance checks (the implement skill does those), writing requirements, or implementing fixes.
+description: Use when the user asks to build or update a QA test plan for the current branch. One check is one complete user flow a person can click through, start to end result, with its steps, expected result, and the data it needs. The plan covers story flows, failure paths, list and table reliability, device and browser coverage, regression flows for touched features, and the automated test files for the changed screens (the full suite only for a release). It drafts from the branch prd.md and epic.md when they exist, or from the user's answers (or the PR and diff in an unattended run), and writes the plan to the branch spec folder. Do not use for agent-run acceptance checks (the implement skill does those), writing requirements, or implementing fixes.
 ---
 
 # Vorbit QA Plan

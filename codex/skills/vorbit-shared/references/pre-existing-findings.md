@@ -19,15 +19,18 @@ Tag each finding `from this branch` or `pre-existing`. Use the code as proof, ne
    - the blamed lines were not changed by any commit on this branch
    - the behavior is outside the branch's acceptance criteria and flows (spec files, or the ticket when no spec exists)
    - the agent can name the base-branch commit or file that already carries the bug
-5. When any point is unsure, tag `from this branch`. A wrong block is safer than a wrong pass.
+5. For a failing automated test whose spec and screen are outside the branch diff, the proof may also be the project's scheduled suite result (for example the latest nightly run) showing the same test failing on the base branch.
+6. When any point is unsure, tag `from this branch`. A wrong block is safer than a wrong pass.
+
+Never re-run the test suite on the base-branch code to prove a finding is pre-existing. That costs a full run and still proves nothing about flaky tests. Use blame, the base-branch file, or the scheduled suite result; what stays unsure stays `from this branch` or `unresolved`.
 
 Never re-tag a finding as pre-existing to make a verdict pass.
 
 ## Step 2: Keep it out of the verdict
 
 - Pre-existing findings never change the verdict, the status, or the merge-risk line.
-- They go in their own section named `Pre-existing (follow-up)`, after the branch findings.
-- Each entry has three parts: what is wrong, where (file:line or QA check ID), and the evidence it predates the branch (blame commit or base-branch file).
+- `review`: they go in their own section named `Pre-existing (follow-up)`, after the branch findings. `qa-report`: one line with the count in the human part, and the table under For developers.
+- Each entry has three parts: what is wrong, where (file:line or QA flow ID), and the evidence it predates the branch (blame commit, base-branch file, or scheduled suite result).
 
 ## Step 3: Look for existing discussion
 

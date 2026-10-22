@@ -199,6 +199,24 @@ def test_canonical_skills_load_the_execution_contract():
         assert "../_shared/execution-contract.md" in (skill_dir / "SKILL.md").read_text()
 
 
+@pytest.mark.parametrize("agent_name,command_name", [("qa-runner", "qa-report"), ("implement-worker", "implement")])
+def test_claude_worker_can_be_dispatched_and_resumed_in_the_same_worktree(agent_name, command_name):
+    agent = REPO_ROOT / "agents" / f"{agent_name}.md"
+    metadata = _frontmatter(agent)
+    command = _frontmatter(REPO_ROOT / "commands" / "implement" / f"{command_name}.md")
+    allowed = {tool.strip() for tool in command["allowed-tools"].split(",")}
+
+    assert metadata["name"] == agent_name
+    assert metadata["description"]
+    assert metadata["model"] == "sonnet", "Worker must not inherit the planner's model"
+    assert metadata.get("isolation") != "worktree", "Local plans must stay visible"
+    assert {"Agent", "SendMessage"} <= allowed, "Both launch and continuation are needed"
+    assert "Agent" in metadata["disallowedTools"].split(","), "Runner must not delegate"
+    # Omitting a restrictive tools list preserves the installed browser tools.
+    assert "tools" not in metadata
+    assert "skills" not in metadata, "Preloading the parent skill would restart orchestration"
+
+
 def test_static_canonical_skill_references_resolve():
     for skill_dir in _skill_directories(CANONICAL_SKILLS):
         references = re.findall(

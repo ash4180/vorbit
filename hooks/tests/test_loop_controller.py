@@ -62,7 +62,10 @@ def test_no_state_file(test_project, run_hook):
 
 def test_running_loop_blocks_and_reinjects_command(test_project, run_hook):
     """A running loop increments atomically and continues via a block decision."""
-    state_file = _write_state(test_project["path"], _running_state(iteration=3))
+    worker_session = str(test_project["path"] / "implement-runs" / "worker-session.json")
+    state_file = _write_state(
+        test_project["path"], _running_state(iteration=3, workerSessionFile=worker_session)
+    )
 
     exit_code, stdout, _ = run_hook(HOOK, stdin=_stop_payload(), cwd=test_project["path"])
 
@@ -70,7 +73,9 @@ def test_running_loop_blocks_and_reinjects_command(test_project, run_hook):
     decision = json.loads(stdout)
     assert decision["decision"] == "block"
     assert COMMAND in decision["reason"]
-    assert json.loads(state_file.read_text())["iteration"] == 4
+    state = json.loads(state_file.read_text())
+    assert state["iteration"] == 4
+    assert state["workerSessionFile"] == worker_session
 
 
 def test_completed_status_deletes_state(test_project, run_hook):
@@ -89,8 +94,13 @@ def test_completed_status_deletes_state(test_project, run_hook):
 def test_non_running_status_preserves_state_and_allows_stop(test_project, run_hook):
     """Terminal statuses wait for the user: no continuation, state untouched."""
     for status in ("blocked", "needs_input", "failed", "canceled"):
+        state = _running_state(
+            active=False,
+            status=status,
+            workerSessionFile=str(test_project["path"] / "worker-session.json"),
+        )
         state_file = _write_state(
-            test_project["path"], _running_state(active=False, status=status)
+            test_project["path"], state
         )
 
         exit_code, stdout, _ = run_hook(HOOK, stdin=_stop_payload(), cwd=test_project["path"])
@@ -98,6 +108,7 @@ def test_non_running_status_preserves_state_and_allows_stop(test_project, run_ho
         assert exit_code == 0, status
         assert stdout == "", status
         assert state_file.exists(), status
+        assert json.loads(state_file.read_text()) == state, status
 
 
 def test_completion_marker_in_message_does_not_stop_a_running_loop(test_project, run_hook):

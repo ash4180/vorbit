@@ -4,152 +4,143 @@
 
 # QA Report Skill
 
-Run the QA plan and turn the results into a dated, forwardable report: what passed, what failed, and whether the feature is ready. Testing and reporting happen in one run — the skill executes the automated commands, can click through manual checks in a real browser, and then writes the report. Every check the agent runs also gets a picture, saved next to the report and shown inside it. Every fail also gets a suggested modern fix, written against the project's current framework patterns, never against habit. The report is a plain-language file a stakeholder can read without opening the app or the plan.
+Run the plan's flows and show what works, what is broken, and what no one could test yet. Readers are not developers: the report reads top to bottom, with no jumping between tables. A pass needs a recording of the whole flow. Code review, unit tests, and a screenshot do not prove a flow.
 
 Read and follow `../references/execution-contract.md` before starting.
 
 Read `../references/spec-files.md` for spec path resolution, write guards, and file ownership before any spec read or write.
 
-Read `../references/pre-existing-findings.md` for how to tag, report, and follow up fails this branch did not cause.
+Read `../references/pre-existing-findings.md` for how to tag, report, and follow up problems this branch did not cause.
 
 This skill writes to Linear only for a follow-up ticket the user approves per `pre-existing-findings.md`, and for the `QA report` link Step 3.5 adds. QA results never go into ticket descriptions.
 
-## Step 1: Read the Plan and Its Results
+**Browser execution belongs to a subagent.** For an authorized test run, read `references/flow-runner.md` before browser work. Step 1 may inspect test prerequisites; Step 2 runs automated commands. Step 2.5 requires a native Sonnet/Luna subagent, a returned agent ID, and the prepare/resume handoff before any flow starts. Saying "delegated" is not proof of a launch. Do not silently run flows in the parent or start a separate CLI session. Report-only runs do not launch a runner; an explicit caller override is recorded.
+
+## Step 1: Read the Plan and Check What It Needs
 
 1. Resolve the spec folder per `../references/spec-files.md`.
 2. Require `qa-plan.md`. If missing, run `git worktree list`, report any sibling worktree that may hold it, direct the user to `$vorbit-qa-plan`, and stop.
-3. Collect manual results: ticked boxes, unticked boxes, and `**Fail:**` notes, per section.
-4. Set the run picture folder: `<spec folder>/qa-screenshots/<YYYY-MM-DD>/`, one folder per run date, so an earlier run's pictures are never overwritten. Create it the first time this run saves a picture.
-5. If unticked manual checks remain and a browser-automation capability exists, the agent runs them itself by default (Step 2.5) — the single Step 2 approval covers it; no extra question. Hand-testing is only for what the agent honestly cannot do: those checks come back marked `needs human`. Ask the user to choose (test by hand now, or `not tested` in the report) only when no browser capability exists or the app is unreachable.
+3. Read earlier results and their dates. An old result is not a pass for this run. Keep earlier reports intact and rerun every flow in scope.
+4. After the spec write guards, create a unique run evidence folder: `<spec folder>/qa-screenshots/<YYYY-MM-DD>/<HHMMSS>/`. If it exists, add a numeric suffix; never reuse it. Clips, screenshots, JSON results, and manifests live here.
+5. **Check every `Needs:` line before running anything.** Sign in with each account per `references/sign-in.md`, open each workspace, and confirm each record exists. On the local app or DEV, create missing records per `references/test-data.md`. A need that still cannot be met is `Not done: need [X]`, in one line. Do not fake server answers or build a harness to work around a missing need. Attended run: ask once, batched, for every remaining missing need before the first flow. Unattended run: record the gap and run the flows that can run.
+   - A `UI-only run` is allowed only when the user asks for it by that name. Faked server answers then keep the flow `Not done: server faked, page looked right`, never Passed.
+6. Separate flows the agent can run from flows marked `Needs human` (judgment, real device, camera, print, sign-off). Those stay `Not done: needs a person`. Missing access is `Not done: need [access]`.
+7. A request to run QA, including QA alongside review, authorizes the plan's commands and browser flows; do not ask again. If only a report was requested, ask once before running. An unattended report-only run uses existing results and records gaps. Honor `--skip-automated` without inferring that skipped commands passed.
 
-## Step 2: Run the Automated Checks (optional, approved once)
+## Step 2: Run the Automated Checks
 
 Only when the plan has an `Automated checks` section:
 
-1. List the `QP#` commands and ask once for approval to run the whole plan — this one approval covers both the commands here and the browser checks in Step 2.5. If the user declines, the report uses the boxes as they stand, marked `not run this time`.
-2. Run each command exactly as the plan stores it. The tool does not matter — Playwright, Cypress, Maestro, or any open-source runner works the same because the plan stores the command, not the tool.
-   - **Playwright:** also ask it for a JSON results file. Append `--reporter=list,json` to the command, and set `PLAYWRIGHT_JSON_OUTPUT_NAME=<run picture folder>/<qp#>-playwright.json` for that command only. A QA-mode command (such as `yarn e2e:qa`) records a video of every test; keep it as the plan stores it.
-3. Judge each run by exit status plus the runner's own summary line; quote failing test names in plain words.
-4. Collect every test's proof **right after each command**, before the next command runs: Playwright wipes `test-results/` at the start of every run.
-   - **Playwright:** run `python3 scripts/collect_e2e_evidence.py --report <that JSON file> --dest <run picture folder> --check <QP#>`. It copies each test's videos, screenshots, and traces, and prints one entry per test with its ID (`QP1-1`, `QP1-2`, …), result, proof, and a note for any gap. Keep that output: Step 3 and Step 3.5 report every test from it. Entries marked `setup` are login steps, not checks.
-   - **Other runners:** copy the runner's own screenshots and videos into the run picture folder, named `<QP#>-<short-label>.<ext>`.
-   - A test that passed with no video or screenshot and whose note says it opened no page (an API-only test) uses the runner's pass line as its proof. A test that passed only on a retry is flaky: report it as needing a decision, not as a pass.
-5. Update `qa-plan.md` to match reality: tick a `QP#` box on pass and add `(passed YYYY-MM-DD)`; on fail, untick it and add the `**Fail:**` note line. Set the header's `Updated:` line to today. Touch nothing else in the plan file.
-6. A command that cannot run (missing dependency, no browser, no environment) is recorded as `blocked: [reason]` — never guessed as pass or fail.
+1. Run the `QP#` commands in plan order. Each is a spec file for a changed screen, or the full suite when the plan is a release plan. Never add the full suite yourself.
+2. Read `references/recording.md` before any run. Reuse the project's QA video mode when it keeps a video of every test, passed or failed; `retain-on-failure` does not.
+3. A temporary config is allowed on DEV when a command needs one, for example to stop error reports from reaching the on-call. It must not change what the tests see: reuse the project's own helper (one that answers the blocked call with an empty OK). Never point a host at a dead address; that logs console errors and fails every test that must stay clean. Remove the config after the run and record it under For developers.
+4. Capture exit status and the runner's summary. A zero exit code alone is not a pass: skipped tests, an empty suite, retries, and runner errors stay visible.
+5. Collect every test's proof **right after each command**, before the next one runs: Playwright wipes `test-results/` at the start of every run.
+   - **Playwright:** run `python3 scripts/collect_e2e_evidence.py --report <JSON file> --dest <run evidence folder> --check <QP#>`. It copies all attempts and writes a manifest with one entry per test (`QP1-1`, `QP1-2`, …). Use `qa_status`, not `status`, for results: `passed` → Passed; `failed` → Failed; `flaky`, `not_tested`, `needs_evidence` → Not done with that reason. Exclude `setup` entries from counts, but keep setup failures as run blockers.
+   - A test without video is not automatically API-only. Inspect that test and its fixtures; only if it opens no page, rerun the collector with `--api-only <test-id>` and note the inspected assertion under For developers.
+   - **Other runners:** copy every test's videos and screenshots to the run folder and apply the same rules.
+6. Tick a `QP#` only when the command succeeded, at least one non-setup test ran, every test has `qa_status: passed`, and no setup or runner error remains. Otherwise leave it unchecked with the reason. A `Covers:` mapping never ticks a flow by itself: the flow needs its own recording.
+7. A command that cannot run is `Not done: [reason]`, never guessed.
+8. **Never run the suite on the base-branch code** to sort out failures. Tag unrelated failures per `pre-existing-findings.md` (blame, base-branch file, or the project's scheduled suite result). Failures that stay unsure are listed under For developers as `unresolved`, and the command stays Failed.
 
-## Step 2.5: Agent-Run Manual Checks (default when possible)
+## Step 2.5: Run the Flows in the Browser
 
-Runs by default when the runtime has a browser-automation capability (for example Playwright MCP tools or a connected browser) and the Step 2 approval was given — no second question:
+Run every eligible flow when Step 1 authorizes testing, even when the plan has no automated commands. Follow `references/flow-runner.md`: prepare one native Claude Sonnet or Codex Luna (`gpt-6-luna`) subagent in the same worktree, save its returned ID and model selection in `runner-session.json`, then resume that same agent to execute. If launch, model selection, or resume is unavailable, affected flows are `Not done` with the reason. The subagent follows the flow rules below and returns evidence; the parent reviews it before Steps 2.6–4 and alone updates the plan and report. An assigned runner never delegates again. Report-only runs do not launch a runner.
 
-1. Confirm the test environment from the plan header (URL, test account) and that the app is reachable. If not, ask or fall back to `not tested`.
-2. Sign in with the test account from the plan header only, never the user's real account.
-3. For each unticked manual check, in plan order: perform the action exactly as written, then compare what actually appears against the check's `You should see:` text.
-4. **Take a screenshot of every check, pass or fail**, right after the action and before moving to the next check. Save it in the run picture folder as `<check-id>-<short-label>.png`, lowercase with dashes, for example `qa3-empty-email.png`.
-   - On a fail, frame the shot so the wrong result is visible, not just the page.
-   - When a console error is what fails the check, save the console panel too as `<check-id>-console.png`.
-   - Scroll past or hide test data that looks private before the shot.
-5. After each check, read the browser console (the browser's hidden error list). Any new error there fails the check even when the screen looks right — quote the error in the `**Fail:**` note.
-6. Record honestly, using the same rules a human tester follows:
-   - matches → tick the box and add `(passed YYYY-MM-DD)`, the same as a human tester
-   - differs → leave unchecked and add `**Fail:** [what actually appeared] ([date])`
-   - cannot truly perform it (real phone in hand, camera, printed output, a browser the tool cannot open) → add `needs human: [reason]` under the check and leave it unchecked
-7. Device-matrix rows may be run with an emulated screen size; then note `(emulated)` on that check — an emulated phone is not a real phone.
-8. **Never tick a check the agent did not actually observe.** No screenshot or page state seen = not tested.
-9. **Never write an image line for a picture that was not taken.** A check with no picture gets `_no picture: [reason]_` in the report instead. Checks a human ran by hand, and every check in a run with no browser capability, always use that line.
+### Flow rules (also apply inside the child)
 
-## Step 2.7: Suggest a Modern Fix for Every Fail
+1. Confirm the environment from the plan header and that the app is reachable. If not, every browser flow is `Not done: need [X]`.
+2. Sign in per `references/sign-in.md`, with the plan's test accounts only, never the user's real account.
+3. For each flow, in plan order: start the recording **before** the first step, per `references/recording.md` (title card, labelled actions, slow motion, one clip per flow). Do every step with the stated data. Compare each `You should see:` line with what appears.
+4. Save the clip as `<check-id>-<flow-name>.webm` and a screenshot of the end result as `<check-id>-<flow-name>.png`. On a fail, frame the wrong result. When a console error is the fail, also save `<check-id>-console.png`. Use safe test data from the start; a hidden value in the screenshot is still in the clip.
+5. After each flow, read the browser console. A new error fails the flow even when the screen looks right; quote it under For developers.
+6. One result per flow, one of three:
+   - `Passed`: every `You should see:` matched and the clip is saved.
+   - `Failed`: a step differed. Note the step and what appeared, in the words a user would use. A flow with several wrong things is one Failed flow listing each problem.
+   - `Not done`: with a short reason: `need [X]`, `needs a person`, `no recording` (keep the observation, rerun with recording), or `not reached` (an earlier step failed).
+7. An emulated viewport is labelled `(emulated)`. It does not clear a real-device need or another browser's matrix cell.
+8. Never replace a run with reading code, an idle screenshot, or an unrelated green suite. A safe result that differs from the plan is Failed with the note `plan may need rewording`.
+9. A human result is `Passed (person: name, date, where)`; never claim the agent saw it. Never invent a recording, tester, or confirmation.
 
-Every failed check carries a suggested fix. This skill suggests only. It never edits code.
+## Step 2.6: API Speed
+
+Only when the plan has an API speed check with a limit and a PROD address. Then read `references/api-performance.md` and follow it. Otherwise skip this step; the plan's Open items line already says what is missing. Keep measurements in the evidence folder and show the DEV vs PROD table only under For developers.
+
+## Step 2.7: Suggest a Fix for Every Failed Flow
+
+Every problem from this branch gets a suggested fix. This skill suggests only; it never edits code. Suggestions appear only under For developers.
 
 1. Detect the stack once per run: React or Next.js when `package.json` lists `react` or `next`.
-2. React or Next project: load the `react-best-practices` skill before writing suggestions, plus `ui-patterns` when the fail is about a screen, form, list, or accessibility, so each fix can name a pattern from those guides.
-3. Any other stack: follow the patterns already used in this repository. Read a nearby file that solves the same problem and match it.
-4. Never suggest a fix that adds a new dependency, and never name a library the project does not already have.
-5. Locate the code before suggesting: check `epic.md` for the task that built the failing screen, then search the repository for that screen or component name. When the file is still unclear, describe the change in plain words and mark the file `not located`. Never guess a path.
-6. Write one `**Suggested fix:**` line per fail, holding three things: what to change in plain words, the file path when located, and the named pattern it follows so a developer can check the source.
-7. The real fix belongs to `$vorbit-implement`, not to this report.
-8. No suggestion for a check the agent did not actually run. A guess dressed as a fix is worse than an empty line.
+2. React or Next project: load the `react-best-practices` skill, plus `ui-patterns` when the problem is a screen, form, list, or accessibility, so each fix names a pattern from those guides.
+3. Other stacks: match a nearby file in this repository that solves the same problem.
+4. Never suggest a new dependency or a library the project does not have.
+5. Locate the code first: `epic.md` task, then a repository search for the screen or component. When unclear, describe the change in plain words and mark the file `not located`. Never guess a path.
+6. One `Suggested fix:` line per problem: what to change, the file when located, and the pattern it follows.
+7. The real fix belongs to `$vorbit-implement`. No suggestion for a flow the agent did not run.
+
+## Step 2.8: Delete Test Data
+
+When this run created records, delete them per `references/test-data.md` before writing the report. Leftovers go under For developers and in Step 4.
 
 ## Step 3: Write the Report
 
-1. Run the write guards per `../references/spec-files.md`. Tag every fail `from this branch` or `pre-existing` per `../references/pre-existing-findings.md` Step 1. A pre-existing fail keeps its `**Fail:**` note in `qa-plan.md` with the prefix `pre-existing:`.
-2. Write `qa-report.md` in the spec folder. Newest run goes **on top**; earlier run sections stay untouched below. Never rewrite an old run.
-3. Every line is plain language for a non-technical reader. Name checks by ID plus a short human phrase, not by test-file paths.
-4. Put each check's picture directly under its line, as a relative path from the report file: `![QA3](qa-screenshots/2026-09-16/qa3-empty-email.png)`. Never use an absolute path — the picture stops showing the moment the folder moves.
-5. Fails show their pictures open. Passed checks keep theirs inside one collapsed block, so the reader sees the problems first and the proof stays one click away.
-6. Every fail line carries its `**Suggested fix:**` line from Step 2.7, directly under the picture.
+1. Run the write guards per `../references/spec-files.md`. Tag every problem `from this branch` or `pre-existing` per `../references/pre-existing-findings.md` Step 1.
+2. Write `qa-report.md` in the spec folder. Newest run on top; earlier runs stay untouched below.
+3. **One table, flow first.** Every plan flow gets one row, in plan order: flow name, result, and its problems or reason in the same row. The reader never jumps between tables to match a problem to its flow.
+4. **Three results only** in the human part: `Passed`, `Failed`, `Not done`. Every other label (flaky, blocked, needs decision, missing recording, PROD verified) becomes a short reason inside the row or goes under For developers.
+5. **No code words in the human part.** No file paths, test file names, ports, localhost, commit hashes, console error text, API or function names, load averages, or tool names. Say what the user saw.
+6. Each problem appears once in the human part, in its flow's row, with a `Watch` link. Suggested fixes, commands, raw runner totals, per-test inventories, old-bug tables, timing tables, and manifests go under `For developers`.
+7. Pre-existing problems: one line in the human part (count and flow names). The table with evidence and the Linear and Slack lines goes under For developers.
+8. Flows that are Not done for the same reason are summarised in the verdict line; their rows stay in the table.
+9. Count flows once. Each `QP#` command is one row; its tests are listed under For developers.
 
 ### Report schema (one run section)
 
 ```markdown
-# QA Report: [Feature Name]
+# QA Report: [Feature], PR #[number]
 
-## Run [YYYY-MM-DD]
+## Run [YYYY-MM-DD HH:MM], took [h min]
 
-**Branch:** [branch] | **Environment:** [where tested] | **Devices:** [what was actually used]
-**Run by:** [human | agent (browser) | mixed]
-**Verdict: READY** — all checks passed
-(or) **Verdict: NOT READY** — [N] checks failed, [M] not tested
+**Not ready.** [N] problems found. [M] flows could not be tested: [one reason].
+(or) **Ready.** Every flow passed.
 
-### Per story
-- US-001 [Story title]: 5 of 6 passed — 1 fail
-- US-002 [Story title]: all 4 passed
+| Flow | Result | Problems or reason |
+|---|---|---|
+| Who can see the Billing page | Passed | real accounts, [Watch](qa-screenshots/2026-10-16/172402/qa1-who-can-see.webm) |
+| Upgrade from Free, saved card | Failed | After "Pay": a normal card shows "Confirm with your bank" for a few seconds. [Watch](qa-screenshots/2026-10-16/172402/qa4-upgrade-saved-card.webm) |
+| Parts that could not be read | Failed | 1. Page says "No card on file" while the card lookup failed. [Watch](...) 2. Dialog still offers "Add a card". [Watch](...) |
+| Buy extra gems | Not done | need a workspace billed in gems |
+| Korean wording | Not done | needs a person who reads Korean |
+| Other screens still work | Passed | 8 of 8, [Watch](qa-screenshots/2026-10-16/172402/qr1-other-screens.webm) |
+| Automated tests, changed screens | Passed | 14 of 14 |
 
-### Needs your decision
-- QA6: plan expected a greyed Save button; the app hides the button instead. Safe, but the check needs rewording.
-  ![QA6](qa-screenshots/2026-09-16/qa6-save-hidden.png)
-(omit this section when there are none)
+Old problems not caused by this branch: [count], in [flow names]. See For developers.
 
-### Failed checks
-- QA3: Submit with empty email — expected "Email required", the form submitted with no error
-  ![QA3](qa-screenshots/2026-09-16/qa3-empty-email.png)
-  **Suggested fix:** Block the submit until the email field is filled, and show the error text from the form's own state, in `app/signup/SignupForm.tsx`. Pattern: ui-patterns, form validation and error text.
-- QP1: login E2E run — 2 of 14 tests failed (wrong redirect after login, missing error text)
-  ![QP1](qa-screenshots/2026-09-16/qp1-login-redirect.png)
-  **Suggested fix:** Start the session request and the profile request together instead of one after the other, in `app/login/actions.ts`. Pattern: react-best-practices, Eliminating Waterfalls.
+### What a person must do next
 
-### Passed checks
+1. Developer: fix the [N] problems. Details under For developers.
+2. Tester: [provide X], then re-run the [M] Not done flows.
+3. [Designer or product]: [the human-only checks].
 
 <details>
-<summary>12 passed. Open this to see the pictures.</summary>
+<summary>For developers</summary>
 
-- QA1: Log in with a good email and password
-  ![QA1](qa-screenshots/2026-09-16/qa1-login-ok.png)
-- QA2: Log out from the account menu
-  ![QA2](qa-screenshots/2026-09-16/qa2-logout.png)
-- QA4: Tested by hand
-  _no picture: run by hand_
+- Tested: [branch], [revision, local changes yes or no], [environment], [browser, emulation label], [accounts], [run by]
+- One block per problem: expected, actual, screenshot, tag, console text when relevant, `Suggested fix:` (Step 2.7)
+- Automated runs: command, exit code, raw totals, manifest link, one line per test with its recording, unresolved failures
+- Pre-existing table: what, where, evidence it predates the branch, Linear and Slack lines
+- API speed table when measured, temporary configs used, data created and deleted
 
 </details>
-
-### Pre-existing (follow-up)
-- QA5: Profile photo upload shows no progress bar. Evidence: `ProfilePhoto.tsx` untouched on this branch, last changed in commit a1b2c3d on main. Linear: nothing found. Slack: #design, 2 Sep, "photo upload feels frozen".
-  ![QA5](qa-screenshots/2026-09-16/qa5-photo-upload.png)
-  **Suggested fix:** Show upload progress from the upload's own state, in `ProfilePhoto.tsx`. Pattern: ui-patterns, loading and progress feedback.
-(omit this section when there are none)
-
-### Automated run
-- QP1: `yarn e2e:qa` → 48 tests: 46 passed, 1 failed, 1 flaky. Videos: 45 of 48 (3 API-only tests have their pass line instead)
-  <details><summary>Every test, with its video</summary>
-
-  - QP1-1: dashboard loads after login: passed, [video](qa-screenshots/2026-09-16/qp1-1-dashboard-loads-after-login.webm)
-  - QP1-7: health API returns 200: passed (API only, no page)
-
-  </details>
-- QP2: `npx playwright test e2e/login.spec.ts` → 12 passed, 2 failed
-- QP2: not run this time (user skipped)
-- Full technical detail: `playwright-report/index.html` (include this line only when the runner produced a report; use the runner's actual output path)
-
-### Not tested
-- QA7, QA8 (device matrix rows for Safari — no Safari available this run)
-- QA9 (needs human: real phone in hand)
 
 ---
 ```
 
-**Verdict rule:** `READY` only when every check in the plan is ticked or tagged pre-existing. Any branch-caused fail, block, untested check, or check that needs a human decision = `NOT READY`, with the reason listed. Never soften a fail, and never re-tag a fail as pre-existing to reach `READY`.
+**Verdict rule:** `Ready` only when every flow is `Passed` with a current recording or a named human result, except flows whose only problems are confirmed pre-existing. Any `Failed` or `Not done` flow means `Not ready`. Never re-tag a problem as pre-existing to reach Ready. A report-only run states whether its old results cover the current revision.
 
-A check where the app is safe but differs from the plan, or that needs a human decision, goes under `### Needs your decision` (between Per story and Failed checks), never under Passed.
+### Write results back to the plan
+
+Under each check in `qa-plan.md`, add or replace one line: `Result: Passed | Failed | Not done (reason), YYYY-MM-DD, [agent | person name], [Watch](link)`. Nothing else goes into the plan; detail lives in the report. Do not change check wording or IDs. Update the header's `Updated:` line.
 
 ## Step 3.5: Publish to Notion (only when the caller names a hub)
 
@@ -159,10 +150,12 @@ When the caller names a Notion report hub, read `references/notion-report.md` an
 
 - Verdict, one line
 - File path, and the Notion page URL when Step 3.5 ran
-- Fails in plain words (max 5; if more, count them and name the worst), each with its suggested fix in one short line
-- Pre-existing fails, each with its Linear and Slack line, then the one batched ticket question per `../references/pre-existing-findings.md` Step 4
-- Picture folder path, so the user can open the shots directly
-- Reminder: the report is local and gitignored — copy the run section out to share it, and copy the `qa-screenshots/` folder with it or the pictures stop showing
+- Problems in plain words (max 5; if more, count them and name the worst)
+- Flows Not done, grouped by reason, with who can unblock each
+- Pre-existing problems, each with its Linear and Slack line, then the one batched ticket question per `../references/pre-existing-findings.md` Step 4
+- Evidence folder path and links to the recordings of failed flows
+- Test data created, and any record that could not be deleted
+- Reminder: the report is local and gitignored. Share it with its `qa-screenshots/` folder, or publish to the named Notion hub.
 - Next steps:
-  - fix fails via `$vorbit-implement`, then re-run this skill
+  - fix problems via `$vorbit-implement`, then re-run this skill
   - report details never go into Linear ticket descriptions; publish to a Notion hub to share them

@@ -13,6 +13,10 @@ Read `../_shared/glossary.md`: use the project's `CONTEXT.md` glossary terms whe
 
 > **Requirement sources**: Branch spec tasks come from `.vorbit/epic.md` in the current worktree — read `../_shared/spec-files.md` for path resolution, the `Branch:` line check, and status fields. Linear issues remain fully supported: use the connected Linear tools shipped with Vorbit and verify the available operation and parameter schema before calling; never guess a verb or field name.
 
+**Model roles:** prefer Claude Fable or Codex Astra for planning and parent review. Delegate implementation to one fresh native Sonnet or Luna (`gpt-6-luna`) worker per selected task using `references/task-worker.md`. The parent alone resolves requirements, updates task/issue status, reviews evidence, and advances loop state. A skill cannot switch the parent's model; record an explicit caller override. Missing native delegation or model selection is a reported blocker, never a silent fallback to the parent or a CLI worker. Quick mode keeps this handoff.
+
+**Worker entry:** an agent assigned a `worker-task.md` follows only the worker reference and Steps 4, 4.5, and 6 below. It skips loop routing, task selection, status updates, and parent completion steps, even when an active loop exists.
+
 ## Handle Loop Mode
 
 **If `--loop` or `--cancel` is present, or `.claude/.loop-state.json` contains an active loop:**
@@ -36,6 +40,8 @@ Read and follow `_shared/mcp-tool-routing.md` (glob for `**/skills/_shared/mcp-t
 6. **IF description only**: Work directly on what user describes (no spec or Linear tracking)
 
 For a spec task, the requirement baseline is the task section plus its story header in `epic.md`, and the quoted criteria's source story in `prd.md`; note the file state at read time. For a Linear issue, record the issue ID and description update timestamp. If the baseline changes during implementation, stop and reconcile the new requirements.
+
+Resolve multi-task inputs using Step 5 before changing any task status or starting a worker. Normal implementation must select one item; only explicit loop mode owns the queue.
 
 ## Step 2.7: Branch Setup
 
@@ -103,6 +109,8 @@ If issue involves UI components:
 
 ## Step 4: Learn Codebase Style
 
+The parent first prepares the handoff in `references/task-worker.md`. The worker performs Steps 4 and 4.5 during Prepare, returns readiness without source edits, then executes Step 6 only after the parent records its native agent ID and resumes it. The parent does not implement concurrently.
+
 Before writing code, study similar features and call sites: import style, naming conventions, file structure, test patterns. **Consistency > Novelty** — match the team's existing style.
 
 ## Step 4.5: i18n/Localization Rules
@@ -138,11 +146,15 @@ For each task, follow Red/Green/Refactor:
 Register every temporary application mock in the project registry before the task is done (test fixtures are excluded) — this enables cleanup before backend handover. Read `../_shared/mock-registry.md` for the path resolution, schema, and field semantics; entries created here use `"createdBy": "implement"`.
 
 ### Task Complete Criteria
-Mark done only when every gate defined in Steps 3.5-6 above is satisfied.
+The worker returns `ready_for_review` only when every gate defined in Steps 3.5-6 above is satisfied. This is a claim for the parent to verify, not permission to mark the task done.
+
+## Step 6.5: Parent Review
+
+Follow the parent review in `references/task-worker.md`: inspect the actual diff against the saved starting state, check every acceptance criterion, and independently run the decisive focused checks. Verify existing user changes remain intact and the requirement baseline has not changed. Request corrections from the same worker for the same task. Unresolved scope, failing checks, missing evidence, or a running worker prevent completion. Only an accepted review reaches Step 7.
 
 ## Step 7: On Task Completion
 
-- Spec task: set its `**Status:**` line to `done` once its ACs and tests pass. The story is complete only when all of its tasks are `done`; suggest `/vorbit:ticket` to refresh the Linear summaries.
+- Parent only: for a spec task, set its `**Status:**` line to `done` after Step 6.5 accepts its ACs and tests. The story is complete only when all of its tasks are `done`; suggest `/vorbit:ticket` to refresh the Linear summaries.
 - Linear: keep the implementation parent "In Progress" until a PR exists. Implementation sub-issues may move to "Done" after their own ACs and tests pass.
 - Report changed files, verification evidence, and remaining release steps in the current session.
 
@@ -155,6 +167,7 @@ Do not create a generic `memory.md`. Record durable decisions only in an existin
 - What was implemented
 - Files changed
 - Tests added/updated
+- Worker ID, requested model and verified model when available, parent review result, and evidence folder
 - Next: `/vorbit:implement:qa-plan` to build or refresh the human test plan
 
 ## Quick Mode
