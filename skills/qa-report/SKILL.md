@@ -26,7 +26,7 @@ This skill writes to Linear only for a follow-up ticket the user approves per `p
 5. **Check every `Needs:` line before running anything.** Sign in with each account per `references/sign-in.md`, open each workspace, and confirm each record exists. On the local app or DEV, create missing records per `references/test-data.md`. A need that still cannot be met is `Not done: need [X]`, in one line. Do not fake server answers or build a harness to work around a missing need. Attended run: ask once, batched, for every remaining missing need before the first flow. Unattended run: record the gap and run the flows that can run.
    - A `UI-only run` is allowed only when the user asks for it by that name. Faked server answers then keep the flow `Not done: server faked, page looked right`, never Passed.
 6. Separate flows the agent can run from flows marked `Needs human` (judgment, real device, camera, print, sign-off). Those stay `Not done: needs a person`. Missing access is `Not done: need [access]`.
-7. A request to run QA, including QA alongside review, authorizes the plan's commands and browser flows; do not ask again. If only a report was requested, ask once before running. An unattended report-only run uses existing results and records gaps. Honor `--skip-automated` without inferring that skipped commands passed.
+7. A request to run QA, including QA alongside review, authorizes the plan's commands and browser flows; do not ask again. One exception: flows that create data outside the local app or DEV need approval per `references/test-data.md`. If only a report was requested, ask once before running. An unattended report-only run uses existing results and records gaps. Honor `--skip-automated` without inferring that skipped commands passed.
 
 ## Step 2: Run the Automated Checks
 
@@ -40,7 +40,7 @@ Only when the plan has an `Automated checks` section:
    - **Playwright:** run `python3 scripts/collect_e2e_evidence.py --report <JSON file> --dest <run evidence folder> --check <QP#>`. It copies all attempts and writes a manifest with one entry per test (`QP1-1`, `QP1-2`, …). Use `qa_status`, not `status`, for results: `passed` → Passed; `failed` → Failed; `flaky`, `not_tested`, `needs_evidence` → Not done with that reason. Exclude `setup` entries from counts, but keep setup failures as run blockers.
    - A test without video is not automatically API-only. Inspect that test and its fixtures; only if it opens no page, rerun the collector with `--api-only <test-id>` and note the inspected assertion under For developers.
    - **Other runners:** copy every test's videos and screenshots to the run folder and apply the same rules.
-6. Tick a `QP#` only when the command succeeded, at least one non-setup test ran, every test has `qa_status: passed`, and no setup or runner error remains. Otherwise leave it unchecked with the reason. A `Covers:` mapping never ticks a flow by itself: the flow needs its own recording.
+6. Tick a `QP#` only when the command succeeded, at least one non-setup test ran, every test has `qa_status: passed`, and no setup or runner error remains. Otherwise untick it and give the reason. A `Covers:` mapping never ticks a flow by itself: the flow needs its own recording.
 7. A command that cannot run is `Not done: [reason]`, never guessed.
 8. **Never run the suite on the base-branch code** to sort out failures. Tag unrelated failures per `pre-existing-findings.md` (blame, base-branch file, or the project's scheduled suite result). Failures that stay unsure are listed under For developers as `unresolved`, and the command stays Failed.
 
@@ -141,7 +141,12 @@ Old problems not caused by this branch: [count], in [flow names]. See For develo
 
 ### Write results back to the plan
 
-Under each check in `qa-plan.md`, add or replace one line: `Result: Passed | Failed | Not done (reason), YYYY-MM-DD, [agent | person name], [Watch](link)`. Nothing else goes into the plan; detail lives in the report. Do not change check wording or IDs. Update the header's `Updated:` line.
+For each check this run covered, flows and `QP#` commands alike, update two things in `qa-plan.md`:
+
+1. **The box:** `- [x]` when the result is Passed. `- [ ]` when it is Failed or Not done, even when an earlier run ticked it.
+2. **The result line:** add or replace one line under the check: `Result: Passed | Failed | Not done (reason), YYYY-MM-DD, [agent | person name], [Watch](link)`.
+
+Change nothing else: keep check wording and IDs, and leave checks this run did not cover as they are. Detail lives in the report. Update the header's `Updated:` line.
 
 ## Step 3.5: Publish to Notion (only when the caller names a hub)
 

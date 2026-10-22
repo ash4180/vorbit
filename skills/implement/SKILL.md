@@ -32,14 +32,14 @@ Read and follow `_shared/mcp-tool-routing.md` (glob for `**/skills/_shared/mcp-t
 
 **Priority order for finding work:**
 
-1. **IF args = a spec task or story ID** (`T3`, `US-002`) — or args are empty while the branch spec plan `.vorbit/epic.md` exists (its `Branch:` line matching the current branch): use the spec chain. Read `prd.md` and `epic.md`; no Linear connection is needed. For empty args, list that plan's `pending` tasks in implementation order and ask which one to take
+1. **IF args = a spec task or story ID** (`T3`, `US-002`, `TS-001`) — or args are empty while the branch spec plan `.vorbit/epic.md` exists (its `Branch:` line matching the current branch): use the spec chain. Read `prd.md` (when it exists) and `epic.md`; no Linear connection is needed. For empty args, list that plan's `pending` tasks in implementation order and ask which one to take
 2. **IF args = Linear issue ID** (e.g., `ABC-123`): Fetch issue details from Linear
 3. **IF args = Linear URL**: Extract issue ID from URL, fetch details
 4. **IF args = a git branch name containing a ticket ID** (e.g. `feature/vib-3814-signup-ux-...`, as copied from Linear's branch button): extract the ticket ID (`vib-3814` → `VIB-3814`), fetch the issue, and treat the pasted name as the target branch for Step 2.7
 5. **IF nothing found**: Ask what to implement. Do not select assigned work without the user's request
 6. **IF description only**: Work directly on what user describes (no spec or Linear tracking)
 
-For a spec task, the requirement baseline is the task section plus its story header in `epic.md`, and the quoted criteria's source story in `prd.md`; note the file state at read time. For a Linear issue, record the issue ID and description update timestamp. If the baseline changes during implementation, stop and reconcile the new requirements.
+For a spec task, the requirement baseline is the task section plus its story header in `epic.md`, and the quoted criteria's source story in `prd.md` (or the plan's baseline section when it has no `prd.md`, such as a plan made from a ticket); note the file state at read time. For a Linear issue, record the issue ID and description update timestamp. If the baseline changes during implementation, stop and reconcile the new requirements.
 
 Resolve multi-task inputs using Step 5 before changing any task status or starting a worker. Normal implementation must select one item; only explicit loop mode owns the queue.
 
@@ -61,7 +61,7 @@ Branch setup completes before Step 3 moves the issue to In Progress, so an abort
 ## Step 3: Before Starting
 
 For spec tasks:
-- Read the task section and its story header in `epic.md`, and the owning story in `prd.md`
+- Read the task section and its story header in `epic.md`, and the owning story in `prd.md` (or the plan's baseline section when there is no `prd.md`)
 - Map the task to its story (`US-*`), its acceptance criteria, and its flow steps
 - Confirm no implementation-affecting `TBD` remains
 - Only after those gates pass, set the task's `**Status:**` line to `in-progress` — edit exactly that line and nothing else in the file

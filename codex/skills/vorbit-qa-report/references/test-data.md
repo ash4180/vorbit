@@ -4,7 +4,7 @@ Read before Step 1 checks the plan's needs. On the local app or DEV, a missing r
 
 ## When to create
 
-1. Setup records are created only on the local app or the DEV environment. On staging, production, or an unknown environment, a missing record stays `Not done: need [X]`. A flow whose own steps create a record (for example "Create a schedule") runs as the plan says on any environment. Log and delete those records the same way.
+1. Setup records are created only on the local app or the DEV environment. On staging, production, or an unknown environment, a missing record stays `Not done: need [X]`. A flow whose own steps create a record (for example "Create a schedule") runs freely on the local app or DEV. On any other environment, an attended run asks once, batched with Step 1's other questions, before the first flow. An unattended run marks those flows `Not done: creates data on [environment], needs approval`. Log and delete every created record the same way.
 2. The parent creates setup records in Step 1, before the runner starts. Prefer the project's API or test helpers; the app's screens are allowed too. The runner creates only what its flow steps create.
 3. Create the records the plan marks `Agent creates:`, and any other record a flow needs that the test accounts can make. Use the app's screens or the project's own API or test helpers (seed scripts, fixtures). Never write to the database directly.
 4. Create only what the flows need, in the starting state the plan names (for example two rotations with the same start time, or enough rows to cross a page).

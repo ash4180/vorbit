@@ -23,7 +23,7 @@ A run is unattended when the caller says no one is watching (for example "do not
 
 1. Resolve the spec folder per `../_shared/spec-files.md`.
 2. Read `prd.md` when it exists; it is the best source (stories, flows, criteria). If missing, run `git worktree list` first and report any sibling worktree that may hold it before building from scratch.
-3. **No PRD is not a blocker.** When no `prd.md` exists anywhere, ask the user, batched: what the feature does, the main user paths (happy path first), and what must never break. Record `Source: conversation` in the header and group flows under one `## Feature flows` section. Mention once that `/vorbit:design:prd` would give the plan a firmer base, then continue.
+3. **No PRD is not a blocker.** When `epic.md` has no `prd.md` behind it (a plan made from a ticket, or a technical epic), its baseline section is the source: record `Source: epic.md baseline` (with the ticket ID when there is one), write one flow section per `TS-###` section, and apply the coverage gate to its criteria. Ask only what it leaves open. When neither file exists, ask the user, batched: what the feature does, the main user paths (happy path first), and what must never break. Record `Source: conversation` in the header and group flows under one `## Feature flows` section. Mention once that `/vorbit:design:prd` would give the plan a firmer base, then continue.
    - Unattended: do not ask. Read the PR title and description (`gh pr view`), the commits since the base branch, and the diff. Record `Source: PR + diff` (or `Source: commits + diff`).
 4. Read `epic.md` when present; it is the first choice for the regression list (its File Changes tables).
 5. **Always run the regression scan**: `python3 scripts/regression_scan.py` from this skill's folder, inside the repository. Add `--base <ref>` when the caller names the comparison branch, or when the Base Branch section of the execution contract resolves one the script would miss. It prints the modified shared files with the files that use them, and the project's E2E suites. With `epic.md`, use the scan only to add shared files the epic missed and to find the test runner. Without `epic.md`, the scan is the regression source.
@@ -77,7 +77,7 @@ Show the full draft in chat and ask: **"Ready to save the QA plan?"** Do not wri
 
 1. Run the write guards per `../_shared/spec-files.md`.
 2. Write `qa-plan.md` in the spec folder per the schema below.
-3. **Revision rules:** preserve the `Result:` line of every unchanged check; never renumber existing IDs; new checks get fresh IDs continuing each sequence; list removed checks explicitly and ask before dropping any check whose last result is Failed (unattended: keep that check instead of asking).
+3. **Revision rules:** preserve the box and the `Result:` line of every unchanged check; untick a check whose steps or `You should see:` changed, and end its `Result:` line with `(steps changed since)`; never renumber existing IDs; new checks get fresh IDs continuing each sequence; list removed checks explicitly and ask before dropping any check whose last result is Failed (unattended: keep that check instead of asking).
 4. Re-read the written file: every flow has steps, one `You should see:`, and a `Needs:` line; one section per PRD story; all IDs unique; every applicable list or table story has its reliability flow; the Regression section names its source and has at least one flow or the "no shared files changed" line.
 
 ## Step 5: Report
@@ -95,14 +95,16 @@ Show the full draft in chat and ask: **"Ready to save the QA plan?"** Do not wri
 
 ## How the Tester Records Results
 
-Whoever runs a flow (a person in the app, or the agent) adds or replaces one line under the check:
+Whoever runs a check (a person in the app, or the agent) updates two things on it:
 
-`Result: Passed | Failed | Not done (reason), YYYY-MM-DD, [name or agent], [Watch](link)`
+1. **The box:** `- [x]` when the result is Passed. `- [ ]` when it is Failed or Not done, even when an earlier run ticked it.
+2. **The result line:** add or replace one line under the check:
+   `Result: Passed | Failed | Not done (reason), YYYY-MM-DD, [name or agent], [Watch](link)`
 
 - **Passed**: only after doing every step and seeing every `You should see:` result. An agent pass needs the recording link.
 - **Failed**: add the step and what appeared, in 12 words or fewer.
 - **Not done**: give the reason: `need [X]`, `needs a person`, `no recording`, `not reached`.
-- Nothing else goes into the plan; detail and evidence live in the report. Never delete or rewrite a flow while recording results.
+- Only the box and the result line change; detail and evidence live in the report. Never delete or rewrite a flow while recording results.
 - Update the `Updated:` line in the header to the test date.
 
 ---
@@ -194,9 +196,13 @@ Regression source: [epic.md | git diff against origin/dev]
 
 Include the Automated checks section only when the project has a runner, and the `Assumed:` line only in unattended runs; `QP#` IDs follow the same never-renumber rule. In conversation mode (no `prd.md`), the header carries `Source: conversation` and story sections are replaced by one `## Feature flows` section. Include `### List & table reliability` only for stories with reachable list or table behavior.
 
-Result line example:
+Result line examples:
 
 ```markdown
+- [x] QA1: Upgrade from Free with a new card
+  ...
+  Result: Passed, 2026-10-16, agent, [Watch](qa-screenshots/2026-10-16/172402/qa1-upgrade-new-card.webm)
+
 - [ ] QA2: Card declined on the first charge
   ...
   Result: Failed (step 1: the plan started anyway), 2026-10-16, agent, [Watch](qa-screenshots/2026-10-16/172402/qa2-card-declined.webm)

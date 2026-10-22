@@ -17,7 +17,7 @@ Read `../references/glossary.md`: use the project's `CONTEXT.md` glossary terms 
 PRDs live as branch spec files written by `$vorbit-prd`. Resolve the spec folder per `../references/spec-files.md`:
 
 - **IF `prd.md` exists** in the branch spec folder: it is the requirements source.
-- **IF it is missing**: run `git worktree list` and report any sibling worktree that may hold it. If none does, and no legacy artifact or technical description was supplied (Step 2), direct the user to `$vorbit-prd` and stop.
+- **IF it is missing**: run `git worktree list` and report any sibling worktree that may hold it. If none does, use the ticket, legacy artifact, or technical description supplied per Step 2. When none was supplied and the current branch name contains a ticket ID (for example `feature/vib-5155-...` → `VIB-5155`), treat that ticket as supplied. Only when no source exists, direct the user to `$vorbit-prd` and stop.
 
 ## Step 2: Gather Context
 
@@ -29,8 +29,13 @@ Resolve source context in this order:
 1. Read it
 2. Extract included user stories (`US-###`), each story's scope boundaries, prerequisites, acceptance criteria verbatim, flow steps, constraints, success criteria, `Later` items, and `TBD-###` items
 
-**IF explicit legacy content is provided instead (a Linear ticket URL, pasted PRD content, or a user-specified local file):**
-1. Read it as a legacy import and record its provenance (for a Linear ticket, direct the user to run `$vorbit-prd <ticket>` when the import needs restructuring beyond mechanical normalization)
+**IF a Linear ticket is supplied instead** (an ID, a URL, or a branch name containing its ID, including the current branch per Step 1), the ticket is the requirement source and this skill writes no `prd.md`:
+1. Fetch it. If Linear cannot be read, ask the user to paste the ticket text; never guess its content.
+2. Judge whether it is plannable. Clear: it states one outcome, and each acceptance criterion can be checked by a test or a person. Small gaps (missing or untestable criteria for a stated outcome): draft the missing criteria from the stated outcome and confirm them with the user, batched. Not plannable (no stated outcome, several separate user outcomes, or conflicting scope): direct the user to `$vorbit-prd <ticket>` and stop.
+3. Plan it as one `TS-001` section per technical-baseline rules 2 and 3 below. Its baseline, labelled `Requirements from [ticket ID]`, is a `Goal:` line (the ticket's stated outcome, from its title and problem text) and its acceptance criteria as checkboxes, wording unchanged, plus the confirmed additions. Record the ticket in the plan header (`Ticket:` and `Ticket updated:` lines). The ticket's file paths and code names are Step 4 starting points.
+
+**IF explicit legacy content is provided instead (pasted PRD content, or a user-specified local file):**
+1. Read it as a legacy import and record its provenance
 2. Normalize it to `US-###` stories, each with plain acceptance-criteria checkboxes and numbered flow steps, without changing meaning
 3. Mark the plan as `canonicalization required`: after user approval, write the normalized PRD to the branch `prd.md` (per the prd skill's schema) before writing any epic plan
 
@@ -39,9 +44,9 @@ If the PRD has stories without acceptance criteria, or flows whose steps are an 
 **IF no product PRD but the user explicitly provides a technical work description** (pasted spec, a named file, or explicit scope in the command arguments — e.g. a migration, upgrade, or refactor with no user-facing stories):
 1. Write that description verbatim into the epic plan's baseline section under a `Technical epic — no product PRD` label
 2. The baseline must contain explicit acceptance-criteria checkboxes; if the description lacks them, draft them from its stated outcomes and confirm with the user before writing the plan. Tasks quote these verbatim as usual
-3. Do not invent `US-###` stories or user flows for it. Create one story section for the technical scope (or one per explicitly named workstream) headed `TS-001`, `TS-002`, ...; the TBD gate, verbatim criterion quoting, and Implementation Order apply unchanged, with the baseline section as what implement and implement-loop bind to
+3. Do not invent `US-###` stories or user flows for it. Create one story section for the technical scope (or one per explicitly named workstream) headed `TS-001`, `TS-002`, ...; the TBD gate, verbatim criterion quoting, and Implementation Order apply unchanged, with the baseline section as what implement and implement-loop bind to. Keep `In scope`, `Out of scope`, and `Depends on` from what the source states (otherwise `None stated`). With no flow in the source, flow fields read `None (no flow in the source)`, which is the non-journey reason for traceability
 
-**IF no branch PRD, no explicit legacy artifact, and no explicit technical description:** stop and direct the user to `$vorbit-prd`. Do not invent requirements from casual conversation inside epic planning.
+**IF no branch PRD, no ticket, no explicit legacy artifact, and no explicit technical description:** stop and direct the user to `$vorbit-prd`. Do not invent requirements from casual conversation inside epic planning.
 
 ### Preserve the Agreed Scope
 
@@ -163,7 +168,7 @@ Present plan and ask:
 - "Any concerns?"
 - "Ready to write the epic plan?"
 
-Show the full proposed topology before asking: branch `prd.md` -> one story section for each `US-###` -> that section's executable tasks -> that section's implementation order. If using a legacy fallback, include writing the canonical branch `prd.md` in this approval. For a revision (Step 3), show removed/changed/added tasks.
+Show the full proposed topology before asking: branch `prd.md` -> one story section for each `US-###` -> that section's executable tasks -> that section's implementation order. If using a legacy fallback, include writing the canonical branch `prd.md` in this approval. For a ticket, show its baseline criteria. For a revision (Step 3), show removed/changed/added tasks.
 
 Also show each story's scope boundaries and prerequisites, the proposed Story Order, and which deferred items stay outside the plan.
 
@@ -251,7 +256,7 @@ Using the approved plan:
 4. For a revision, apply the Step 3 preservation rules (IDs, statuses, no silent removals).
 5. Re-read the written file and verify: story count matches the included PRD stories, Story Order respects prerequisites, every task has exactly one Status line, and every Implementation Order references only task IDs that exist in the same story section. Flag any mismatch instead of claiming success.
 
-No direct Linear write happens in this skill. Ticket creation is the `$vorbit-ticket` workflow: one summary ticket per story, detail stays in the spec files. If the user asked for a ticket in this request, run `$vorbit-ticket` right after this step; otherwise offer it as the next step.
+No direct Linear write happens in this skill. Ticket creation is the `$vorbit-ticket` workflow: one summary ticket per story, detail stays in the spec files. For a plan made from a ticket, that workflow edits the changed lines of that ticket instead of creating one. If the user asked for a ticket in this request, run `$vorbit-ticket` right after this step; otherwise offer it as the next step.
 
 ## Step 9: Report
 
@@ -295,11 +300,13 @@ Next: run `$vorbit-ticket` to post story summaries, then select a story whose pr
 ## epic.md Layout
 
 ```markdown
-# Epic: [Feature Name from prd.md H1]
+# Epic: [Feature Name from prd.md H1, or the ticket title]
 
-Source: prd.md (this folder)
+Source: [prd.md (this folder) | ticket | technical description]
 Branch: [branch name]
-Outcome: [1-2 plain sentences copied from prd.md Problem + Description: the user-visible result this epic delivers. A copy for orientation only; prd.md stays the source of truth]
+Ticket: [ID](URL) (plan made from a ticket only)
+Ticket updated: [the ticket's Linear update time when read] (plan made from a ticket only)
+Outcome: [1-2 plain sentences copied from prd.md Problem + Description, or from the ticket's goal: the user-visible result this epic delivers. A copy for orientation only; prd.md stays the source of truth]
 
 ## Story Order
 
@@ -323,7 +330,7 @@ Outcome: [1-2 plain sentences copied from prd.md Problem + Description: the user
 ...
 ```
 
-Task IDs are globally unique across the file (`T1`...`Tn`, no per-story restart). A technical epic uses `TS-###` section headings with the baseline description in place of the story fields.
+Task IDs are globally unique across the file (`T1`...`Tn`, no per-story restart). A technical epic, or a plan made from a ticket, uses `TS-###` section headings with the baseline in place of the story fields.
 
 ## Story Section Title Format
 
