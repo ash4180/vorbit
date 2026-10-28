@@ -47,7 +47,7 @@ Slack is always a draft. See `comment-style.md`.
 ## Start the loop
 
 1. Run `set-status <N> watching`.
-2. In Claude Code, start the `loop` skill in self-paced mode. Its prompt is the pr-watch entry line. Add the PR number and the worktree's full path. Each wake-up moves to that folder first. Wake up about every 15 minutes with `ScheduleWakeup`.
+2. In Claude Code, start the `loop` skill in self-paced mode. Its prompt is the pr-watch entry line. Add the PR number and the worktree's full path. Each wake-up moves to that folder first. Wake up about every 60 minutes with `ScheduleWakeup`. That is 3600 seconds, the longest delay the scheduler allows.
 3. In another agent with no scheduler, report `blocked_missing_capability` for this step. Tell the user to run pr-watch with the PR number. Each run is one check. The monitor file keeps everything.
 
 ## Each wake-up
