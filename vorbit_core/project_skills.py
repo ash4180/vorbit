@@ -46,6 +46,7 @@ PROJECTED_SKILLS: dict[str, str] = {
     "webflow": "webflow",
     "implement": "implement",
     "review": "review",
+    "pr-watch": "pr-watch",
     "implement-cleanup-mocks": "cleanup-mocks",
     "prepare-pr": "prepare-pr",
     "ux": "ux",
