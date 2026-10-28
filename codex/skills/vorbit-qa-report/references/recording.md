@@ -30,7 +30,7 @@ Read before running automated browser tests or agent browser checks. Every brows
 A clip must be readable by a person who was not there. A fast, unlabelled clip proves nothing to them.
 
 - Inspect the browser tool's actual recording capability before starting. Browser access or screenshot support does not imply video support. If it cannot record, use an available Playwright runner with the existing test setup for the same flow. If neither can record, the flow is `Not done: no recording`; keep the observation. An observed failure stays Failed even if recording fails.
-- **One clip per flow**, named `<check-id>-<flow-name>.webm`. Never one long clip for several flows with time ranges. A popup or new tab that holds the tested result gets its own clip named `<check-id>-popup.webm`.
+- **One clip per flow**, named `<check-id>-<flow-name>.webm`. Never one long clip for several flows with time ranges. The review recording is joined from these clips after the run. See `review-recording.md`. It never replaces them. A popup or new tab that holds the tested result gets its own clip named `<check-id>-popup.webm`.
 - **Make the clip readable:**
   1. Reuse the project's narrated QA video mode when it has one (the regression scan reports a QA-mode suite; look for a title-card and action-label helper in its fixtures). It already does the next three items.
   2. Else open with a title card for 2 seconds: the check ID, the flow name, and the `You should see:` text.

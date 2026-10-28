@@ -1,6 +1,6 @@
 ---
 name: qa-report
-description: Run the branch QA plan flow by flow and write a short, dated report a non-technical reader can act on. One table, flow first, each problem in its flow's row, with a narrated recording per flow. Three results only (Passed, Failed, Not done); developer detail stays in a folded section. Checks test data before running, creates missing records on the local app or DEV and deletes them after, never fakes the server unless asked, and never re-runs the suite on the base code. When requested, publishes the report to a named Notion hub. Requires qa-plan.md; use qa-plan to author it and implement to fix code.
+description: Run the branch QA plan flow by flow and write a short, dated report a non-technical reader can act on. One table, flow first, each problem in its flow's row, with a narrated recording per flow and one review video that joins them. Three results only (Passed, Failed, Not done); developer detail stays in a folded section. Checks test data before running, creates missing records on the local app or DEV and deletes them after, never fakes the server unless asked, and never re-runs the suite on the base code. When requested, publishes the report to a named Notion hub. Requires qa-plan.md; use qa-plan to author it and implement to fix code.
 ---
 
 # QA Report Skill
@@ -94,6 +94,7 @@ When this run created records, delete them per `references/test-data.md` before 
 7. Pre-existing problems: one line in the human part (count and flow names). The table with evidence and the Linear and Slack lines goes under For developers.
 8. Flows that are Not done for the same reason are summarised in the verdict line; their rows stay in the table.
 9. Count flows once. Each `QP#` command is one row; its tests are listed under For developers.
+10. Once the table is final, make the review recording. Read `references/review-recording.md`. It joins the run's clips into one video. A person can watch the whole run at once. Skip it when this run recorded no browser flow. Add the `Watch the whole run` line under the table.
 
 ### Report schema (one run section)
 
@@ -114,6 +115,8 @@ When this run created records, delete them per `references/test-data.md` before 
 | Korean wording | Not done | needs a person who reads Korean |
 | Other screens still work | Passed | 8 of 8, [Watch](qa-screenshots/2026-10-16/172402/qr1-other-screens.webm) |
 | Automated tests, changed screens | Passed | 14 of 14 |
+
+Watch the whole run: [Watch](qa-screenshots/2026-10-16/172402/review.mp4)
 
 Old problems not caused by this branch: [count], in [flow names]. See For developers.
 
@@ -160,6 +163,7 @@ When the caller names a Notion report hub, read `references/notion-report.md` an
 - Flows Not done, grouped by reason, with who can unblock each
 - Pre-existing problems, each with its Linear and Slack line, then the one batched ticket question per `../_shared/pre-existing-findings.md` Step 4
 - Evidence folder path and links to the recordings of failed flows
+- The review recording path and its length. Or the missing tool, when it could not be made
 - Test data created, and any record that could not be deleted
 - Reminder: the report is local and gitignored. Share it with its `qa-screenshots/` folder, or publish to the named Notion hub.
 - Next steps:

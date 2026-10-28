@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
-"""Join a PR's QA clips into one recording a person can watch before approving.
+"""Join a QA run's clips into one recording a person can watch in one go.
 
 Usage: review_recording.py MANIFEST.json --out review.mp4
 
 The pr-watch skill writes the manifest from the final QA report:
-  {"title": "PR #7: ...", "commit": "abc1234", "ticket": "VIB-1", "verdict": "Ready" or "Not ready",
+  {"title": "Billing page, PR #7", "commit": "abc1234", "ticket": "VIB-1", "verdict": "Ready" or "Not ready",
    "flows": [{"id": "QA1", "name": "...", "result": "Passed" or "Failed" or "Not done",
               "reason": "...", "clip": "QA1-x.webm" or null, "commit": "optional, if tested earlier",
-              "kind": "optional, 'command' for an automated test run that has no video"}]}
+              "kind": "optional: 'command' (automated test run) or 'person' (checked by a person), both without video"}]}
 
 A clip path is absolute, or relative to the manifest. The video starts with a summary card.
 Each flow then gets a result card, followed by its clip when it has one.
-Nothing is invented: a flow without a clip gets a card only, and a Passed browser flow must have a clip.
+Nothing is invented: a flow without a clip gets a card only. A Passed flow must have a clip, unless it is a command or a person's check.
 The original clips stay the evidence. This file is for watching.
 
 Exit: 0 ok, 2 bad manifest, 4 ffmpeg or Pillow missing, 6 ffmpeg failed.
@@ -34,6 +34,7 @@ OPENING_SECONDS, CARD_SECONDS = 4, 3
 RESULTS = ("Passed", "Failed", "Not done")
 COLORS = {"Passed": (74, 222, 128), "Failed": (248, 113, 113), "Not done": (156, 163, 175)}
 BACKGROUND, WHITE, GRAY = (17, 24, 39), (243, 244, 246), (156, 163, 175)
+NO_CLIP_NOTES = {"command": "Automated check, no video.", "person": "Checked by a person. No video."}
 SEGMENT_FLAGS = ["-c:v", "libx264", "-crf", "28", "-preset", "veryfast", "-pix_fmt", "yuv420p", "-r", str(FPS), "-video_track_timescale", "12800", "-an"]
 
 
@@ -66,7 +67,9 @@ def load_manifest(path: Path) -> dict:
             raise Fail(EXIT_MANIFEST, f"flow {name}: needs a name")
         if flow["result"] == "Not done" and not flow.get("reason"):
             raise Fail(EXIT_MANIFEST, f"flow {name}: Not done needs a reason")
-        if flow["result"] == "Passed" and not flow.get("clip") and flow.get("kind") != "command":
+        if flow.get("kind") not in (None, *NO_CLIP_NOTES):
+            raise Fail(EXIT_MANIFEST, f"flow {name}: kind must be 'command' or 'person'")
+        if flow["result"] == "Passed" and not flow.get("clip") and flow.get("kind") not in NO_CLIP_NOTES:
             raise Fail(EXIT_MANIFEST, f"flow {name}: Passed without a clip. A pass needs a recording.")
         if flow.get("clip"):
             clip = path.parent / flow["clip"]
@@ -100,7 +103,7 @@ def card_lines(manifest: dict, index: int | None) -> list[tuple[str, int, tuple]
     if flow.get("commit") and flow["commit"] != manifest["commit"]:
         lines.append((f"Tested earlier, on commit {flow['commit']}", 28, GRAY))
     if not flow.get("clip"):
-        lines.append(("Automated check, no video." if flow.get("kind") == "command" else "No recording for this flow.", 28, GRAY))
+        lines.append((NO_CLIP_NOTES.get(flow.get("kind"), "No recording for this flow."), 28, GRAY))
     return lines
 
 

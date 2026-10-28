@@ -71,7 +71,7 @@ Does `new_comments` have entries on any event? Tell the user about them too. The
 2. If `needs_pull` is true, run `git pull --ff-only`. Then run `tick` again to get `changed_files`. If the pull fails, tell the user once. Run `set-status <N> waiting_for_user "pull failed"`.
 3. Run Step 2 (review) on the new changes. Run Step 3 (QA) on two groups of flows. One group uses a changed file. The other did not pass last time. A flow whose files did not change keeps its earlier pass. Name that commit in the approval text.
 4. Run `mark <N> reviewed <commit you tested>`. Use the commit you tested, not a newer one.
-5. A problem: Step 4, then Step 5. No problem: Step 7. Say that the earlier recording is out of date. Make a new one.
+5. A problem: Step 4, then Step 5. No problem: Step 7. Say that the earlier recording is out of date. qa-report makes a new one.
 6. If checks are `pending`, wait for the next wake-up before Step 7. If checks are `failing`, tell the user once. That is the author's build, not yours to fix.
 
 ## Order of writes

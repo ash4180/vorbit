@@ -1,6 +1,6 @@
 ---
 name: pr-watch
-description: Use when the user gives a teammate's pull request and asks to review it, QA it, comment on it, watch it for new pushes, and approve it. It reviews the PR diff, runs the QA flows in a browser, explains each problem as a short story, posts one plain comment with screenshots, and watches the PR every 15 minutes, re-testing each new push. After each QA run it makes one review recording that covers every flow. When the PR is clean it hands the PR to the user to approve (it approves itself only when told to), then saves a Slack draft reply. It never pushes to the author's branch. Requires the GitHub CLI and a PR URL, plus the Orca CLI for screenshots and ffmpeg for the recording; do not use for your own PR (use prepare-pr), a review only (use review), QA only (use qa-report), or fixing the code.
+description: Use when the user gives a teammate's pull request and asks to review it, QA it, comment on it, watch it for new pushes, and approve it. It reviews the PR diff, runs the QA flows in a browser, explains each problem as a short story, posts one plain comment with screenshots, and watches the PR every 15 minutes, re-testing each new push. When the PR is clean it hands the PR to the user to approve, with the QA review recording (it approves itself only when told to), then saves a Slack draft reply. It never pushes to the author's branch. Requires the GitHub CLI and a PR URL, plus the Orca CLI for screenshots; do not use for your own PR (use prepare-pr), a review only (use review), QA only (use qa-report), or fixing the code.
 ---
 
 # PR Watch Skill
@@ -58,19 +58,19 @@ A stopped monitor file is history. Ask before you start a new watch on the same 
 1. Run the `qa-plan` skill in its unattended mode. It asks no questions and writes `Assumed:` lines. Tell it the source: the ticket's acceptance criteria and the PR diff. Each flow is something a person can click. Use plain words and name the data each flow needs. Missing data is a TBD with an owner.
 2. Find a free port with `python3 scripts/dev_port.py free`. Read the project's dev script and README. Find the start command and the base port. Pass `--first <base> --last <base+10>`. Start the app from the PR worktree on the free port. Use the project's own port option.
 3. No port free? Run `python3 scripts/dev_port.py owners`. List each port's folder, branch, and PR state. Stop a server only with `python3 scripts/dev_port.py stop <port>`. It refuses unless that PR is merged. Never stop any other server. Ask the user.
-4. Run the `qa-report` skill. It signs in with the test account. It re-seeds an old saved login. It uses one browser runner subagent: prepare, save the session file, then resume that same agent. It records one video and one screenshot per flow. It checks the console after each flow. Do not run the flows in this session.
+4. Run the `qa-report` skill. It signs in with the test account. It re-seeds an old saved login. It uses one browser runner subagent: prepare, save the session file, then resume that same agent. It records one video and one screenshot per flow. It checks the console after each flow. It also makes one review recording of the whole run. Do not run the flows in this session.
 5. Check the evidence yourself. Open the screenshots of every failed flow. Open one passed flow too. Do not trust the runner's labels alone.
 6. Flows that could not run for lack of data stay "Not done". The user's request authorizes this QA run. Make test data only on local or DEV. Name it `QA <date> <what>`. Log it. Delete it at the end.
 7. Tag QA problems the same way as review findings. Search Linear and Slack for each pre-existing one.
-8. Make the review recording. Read `references/review-recording.md`. Write the manifest from the final report. Run `python3 scripts/review_recording.py <manifest> --out .vorbit/pr<N>-review/<commit>/review.mp4`. Exit code 4 means a tool is missing. Say which one. Point the user to the per-flow clips instead.
-9. Run `python3 scripts/pr_state.py mark <N> reviewed <commit you tested>`. Review, QA, and the recording are then all done for that commit.
+8. Find the review recording in the report's `Watch the whole run` line. If qa-report could not make it, note why. The per-flow clips still work.
+9. Run `python3 scripts/pr_state.py mark <N> reviewed <commit you tested>`. Review and QA are then both done for that commit.
 
 ## Step 4: Explain to the user
 
 Do this before any question about the findings.
 
 1. Give the result first. Say how many problems you found. Say how many flows passed and how many were not done.
-2. Give the path of the review recording and how long it is. The user can watch it to decide.
+2. Give the path of the review recording and how long it is. The user can watch it to decide. With no recording, give the report path.
 3. Tell each problem as a numbered story. Say who does what and what they see. Say which step is the bug. Say when it does not happen.
 4. Say how big it is and what the fix is.
 5. List pre-existing findings with their Linear and Slack lines. Ask the one batched ticket question from the pre-existing rule. Create no ticket without a yes.

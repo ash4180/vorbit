@@ -1,6 +1,6 @@
 interface:
   display_name: "Vorbit PR Watch"
-  short_description: "Review, QA, and record a teammate's PR for approval"
+  short_description: "Review, QA, and watch a teammate's PR to approval"
   default_prompt: "Use $vorbit-pr-watch to review, QA, and watch this teammate's pull request."
 
 policy:

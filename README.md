@@ -109,7 +109,7 @@ Every step reads and writes the `.vorbit/` folder of the repo you work in (see "
 - `/vorbit:design:prototype`: a working front-end prototype with mock data
 - `/vorbit:design:ui-patterns`: constraints for accessible, fast interfaces
 - `/vorbit:design:webflow`: Webflow pages, templates, CMS structure, and components
-- `/vorbit:implement:pr-watch`: review, QA, comment on, and watch a teammate's PR. It chains review, qa-plan, and qa-report, makes one review recording of the whole QA run, hands the PR over for your approval, then saves a Slack draft
+- `/vorbit:implement:pr-watch`: review, QA, comment on, and watch a teammate's PR. It chains review, qa-plan, and qa-report, hands the PR over for your approval with the QA review recording, then saves a Slack draft
 - `/vorbit:teach`: turn the last technical answer into plain language, or teach one word
 - Skills with no command, loaded by intent: `adhd` (plain-language output mode), `ux` (deep UX questioning), `react-best-practices`, `implement-loop`
 
@@ -125,9 +125,8 @@ Skills write their documents into `<repo>/.vorbit/`, inside the worktree you wor
 | `epic.md` | epic | one section per story, ordered tasks with IDs and status |
 | `qa-plan.md` | qa-plan | human-runnable checklist. The tester ticks each check |
 | `qa-report.md` | qa-report | dated run history, newest first, with a verdict |
-| `qa-screenshots/<date>/` | qa-report | one picture per check it ran |
+| `qa-screenshots/<date>/` | qa-report | one picture per check it ran, and one review video of the whole run |
 | `pr<N>-monitor.md` | pr-watch | watch state for one teammate's PR: what was reviewed, the permissions given, the Slack thread, a tick log |
-| `pr<N>-review/<commit>/` | pr-watch | one review recording of the whole QA run, joined from the qa-report clips |
 | `explore/<date>-<topic>.md` and `.html` | explore | dated research, its visual solution page, and a `-refs/` folder of reference pictures |
 
 Rules:
@@ -183,7 +182,7 @@ vorbit/
   - **Playwright or a browser-automation MCP**: qa-report runs the automated checks and clicks through manual ones
   - **Slack**: optional. qa-report searches prior discussion before it suggests a follow-up ticket. pr-watch reads the thread and saves a draft reply
   - **Orca CLI**: pr-watch only. It uploads screenshots into a PR comment through the Orca browser
-  - **ffmpeg and Pillow**: pr-watch only. They join the QA clips into the review recording
+  - **ffmpeg and Pillow**: qa-report only. They join the QA clips into the review recording
   - **Notion or Anytype**: optional copies of exploration docs, QA reports, and tutorials. They are not canonical PRD providers
 
 Every mutating workflow preflights its required capability and current schema before external writes. Missing optional storage degrades to a chat/local artifact; missing required mutation capability returns a blocked status before destructive work.
