@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import re
 import shutil
 import socket
 import subprocess
@@ -379,3 +380,10 @@ def test_terminate_stops_the_process_and_frees_the_port(server):
     assert process.wait(timeout=5) is not None
     assert dev_port.can_bind(port)
 
+
+
+def test_the_wake_up_interval_is_set_in_one_place():
+    minutes = re.compile(r"\b\d+\s*(?:minutes?|min)\b", re.IGNORECASE)
+    for name in ("skills/pr-watch/SKILL.md", "commands/implement/pr-watch.md"):
+        assert not minutes.findall((ROOT / name).read_text()), f"{name} must point to watch-loop.md, not repeat the interval"
+    assert len(minutes.findall((ROOT / "skills/pr-watch/references/watch-loop.md").read_text())) == 1

@@ -44,10 +44,18 @@ Did the user say "from now on"? Run `permit <N> comment` or `permit <N> approve`
 
 Slack is always a draft. See `comment-style.md`.
 
+## Wake-up interval
+
+Check every **60 minutes**.
+
+This line is the only place that sets the interval. Change the number here and nowhere else.
+
+`ScheduleWakeup` takes seconds. Convert the minutes. The scheduler allows 60 to 3600 seconds.
+
 ## Start the loop
 
 1. Run `set-status <N> watching`.
-2. In Claude Code, start the `loop` skill in self-paced mode. Its prompt is the pr-watch entry line. Add the PR number and the worktree's full path. Each wake-up moves to that folder first. Wake up about every 60 minutes with `ScheduleWakeup`. That is 3600 seconds, the longest delay the scheduler allows.
+2. In Claude Code, start the `loop` skill in self-paced mode. Its prompt is the pr-watch entry line. Add the PR number and the worktree's full path. Each wake-up moves to that folder first. Wake up at the interval above, with `ScheduleWakeup`.
 3. In another agent with no scheduler, report `blocked_missing_capability` for this step. Tell the user to run pr-watch with the PR number. Each run is one check. The monitor file keeps everything.
 
 ## Each wake-up

@@ -43,7 +43,7 @@ A stopped monitor file is history. Ask before you start a new watch on the same 
 4. Read the Linear ticket again. Use a fresh fetch, never memory. Its acceptance criteria are the spec. Record the ticket ID and update time. With no ticket, ask once for the spec.
 5. Read the PR's comments with `gh pr view <N> --comments`. Do not repeat what is already said.
 6. With a Slack link, read the thread. Keep it read-only. Note which PR the user named.
-7. Decide the permissions. The user's words may set them: "comment if there is a problem" or "approve if it is fine". If not, ask once, in one message. Say you will check the PR every 60 minutes. Ask whether you may comment on a problem. Say they will not see the text first. Say the user approves the PR. Only `--auto-approve` lets you approve. No answer means no. You ask again when you need a go.
+7. Decide the permissions. The user's words may set them: "comment if there is a problem" or "approve if it is fine". If not, ask once, in one message. Read the wake-up interval in `references/watch-loop.md`. Say you will check the PR that often. Ask whether you may comment on a problem. Say they will not see the text first. Say the user approves the PR. Only `--auto-approve` lets you approve. No answer means no. You ask again when you need a go.
 8. Run `python3 scripts/pr_state.py init <PR> --slack <link> [--auto-comment] [--auto-approve]`. Report it if `.vorbit/` was added to `.gitignore`.
 
 ## Step 2: Code review
@@ -86,7 +86,7 @@ Do this before any question about the findings.
 
 ## Step 6: Watch the PR
 
-1. Read `references/watch-loop.md`. Start the loop with the `loop` skill in self-paced mode. Wake up about every 60 minutes.
+1. Read `references/watch-loop.md`. Start the loop with the `loop` skill in self-paced mode. Wake up at the interval it sets.
 2. Each wake-up, run `python3 scripts/pr_state.py tick <N>`. Act on its `event` as the reference says.
 3. A new push: pull, then re-run Step 2 and Step 3 on what changed. A problem goes to Step 4, then Step 5. No problem goes to Step 7.
 4. A new teammate reply with no push: tell the user in one line. Do nothing else.
