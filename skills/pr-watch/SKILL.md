@@ -1,6 +1,6 @@
 ---
 name: pr-watch
-description: Use when the user gives a teammate's pull request and asks to review it, QA it, comment on it, watch it for new pushes, and approve it. It reviews the PR diff, runs the QA flows in a browser, explains each problem as a short story, posts one plain comment with screenshots, watches the PR every 15 minutes and re-tests each new push, then approves and saves a Slack draft reply. It never pushes to the author's branch and saves Slack replies as drafts. Requires the GitHub CLI and a PR URL, plus the Orca CLI for screenshots; do not use for your own PR (use prepare-pr), a review only (use review), QA only (use qa-report), or fixing the code.
+description: Use when the user gives a teammate's pull request and asks to review it, QA it, comment on it, watch it for new pushes, and approve it. It reviews the PR diff, runs the QA flows in a browser, explains each problem as a short story, posts one plain comment with screenshots, and watches the PR every 15 minutes, re-testing each new push. After each QA run it makes one review recording that covers every flow. When the PR is clean it hands the PR to the user to approve (it approves itself only when told to), then saves a Slack draft reply. It never pushes to the author's branch. Requires the GitHub CLI and a PR URL, plus the Orca CLI for screenshots and ffmpeg for the recording; do not use for your own PR (use prepare-pr), a review only (use review), QA only (use qa-report), or fixing the code.
 ---
 
 # PR Watch Skill
@@ -44,7 +44,7 @@ A stopped monitor file is history. Ask before you start a new watch on the same 
 4. Read the Linear ticket again. Use a fresh fetch, never memory. Its acceptance criteria are the spec. Record the ticket ID and update time. With no ticket, ask once for the spec.
 5. Read the PR's comments with `gh pr view <N> --comments`. Do not repeat what is already said.
 6. With a Slack link, read the thread. Keep it read-only. Note which PR the user named.
-7. Decide the permissions. The user's words may set them: "comment if there is a problem" or "approve if it is fine". If not, ask once, in one message. Say you will check the PR every 15 minutes. Ask whether you may comment on a problem. Say they will not see the text first. Ask whether you may approve when all gates hold. No answer means no. You ask again when you need a go.
+7. Decide the permissions. The user's words may set them: "comment if there is a problem" or "approve if it is fine". If not, ask once, in one message. Say you will check the PR every 15 minutes. Ask whether you may comment on a problem. Say they will not see the text first. Say the user approves the PR. Only `--auto-approve` lets you approve. No answer means no. You ask again when you need a go.
 8. Run `python3 scripts/pr_state.py init <PR> --slack <link> [--auto-comment] [--auto-approve]`. Report it if `.vorbit/` was added to `.gitignore`.
 
 ## Step 2: Code review
@@ -62,17 +62,19 @@ A stopped monitor file is history. Ask before you start a new watch on the same 
 5. Check the evidence yourself. Open the screenshots of every failed flow. Open one passed flow too. Do not trust the runner's labels alone.
 6. Flows that could not run for lack of data stay "Not done". The user's request authorizes this QA run. Make test data only on local or DEV. Name it `QA <date> <what>`. Log it. Delete it at the end.
 7. Tag QA problems the same way as review findings. Search Linear and Slack for each pre-existing one.
-8. Run `python3 scripts/pr_state.py mark <N> reviewed <commit you tested>`. This means review and QA are both done for that commit.
+8. Make the review recording. Read `references/review-recording.md`. Write the manifest from the final report. Run `python3 scripts/review_recording.py <manifest> --out .vorbit/pr<N>-review/<commit>/review.mp4`. Exit code 4 means a tool is missing. Say which one. Point the user to the per-flow clips instead.
+9. Run `python3 scripts/pr_state.py mark <N> reviewed <commit you tested>`. Review, QA, and the recording are then all done for that commit.
 
 ## Step 4: Explain to the user
 
 Do this before any question about the findings.
 
 1. Give the result first. Say how many problems you found. Say how many flows passed and how many were not done.
-2. Tell each problem as a numbered story. Say who does what and what they see. Say which step is the bug. Say when it does not happen.
-3. Say how big it is and what the fix is.
-4. List pre-existing findings with their Linear and Slack lines. Ask the one batched ticket question from the pre-existing rule. Create no ticket without a yes.
-5. No problem from this branch? Say so. Then go to Step 7.
+2. Give the path of the review recording and how long it is. The user can watch it to decide.
+3. Tell each problem as a numbered story. Say who does what and what they see. Say which step is the bug. Say when it does not happen.
+4. Say how big it is and what the fix is.
+5. List pre-existing findings with their Linear and Slack lines. Ask the one batched ticket question from the pre-existing rule. Create no ticket without a yes.
+6. No problem from this branch? Say so. Then go to Step 7.
 
 ## Step 5: Comment on the PR
 
@@ -91,22 +93,23 @@ Do this before any question about the findings.
 4. A new teammate reply with no push: tell the user in one line. Do nothing else.
 5. Merged or closed: stop the loop and tell the user.
 
-## Step 7: Approve and reply in Slack
+## Step 7: Hand over for approval, then reply in Slack
 
-1. Approve only when all three gates hold. One: no finding from this branch. Two: every runnable QA flow passed, with a recording. Three: GitHub checks are green. Read them with `python3 scripts/pr_state.py context <N>`. Flows that never ran for lack of data stay "Not done". Say so in the approval text.
-2. Check the permission as in Step 5, with `Auto-approve`.
-3. Check that the head commit has not moved. Run `python3 scripts/pr_state.py context <N>`. Its `head_sha` must equal the commit you marked reviewed. If not, go back to Step 2.
-4. Run `gh pr review <N> --approve --body "<text>"`. Write the text by `references/comment-style.md`. Keep it short and soft.
-5. With a Slack thread, find the Slack tools by connector discovery. Inspect their current schema. Save a draft reply with `slack_send_message_draft`. Use the channel and ts in the monitor file. Write it as the user, in first person. Tell the user the draft is waiting and they press Send. Without a draft tool, give the user the text.
-6. Warn once: a new push after approval removes the approval in this repo.
-7. Run `python3 scripts/pr_state.py set-status <N> stopped "approved"`. End the loop. Tell the user the result.
+1. Continue only when all three gates hold. One: no finding from this branch. Two: every runnable QA flow passed, with a recording. Three: GitHub checks are green. Read them with `python3 scripts/pr_state.py context <N>`. Flows that never ran for lack of data stay "Not done". Say so in the approval text.
+2. Check that the head commit has not moved. Run `python3 scripts/pr_state.py context <N>`. Its `head_sha` must equal the commit you marked reviewed. If not, go back to Step 2.
+3. With `Auto-approve: yes`, run `gh pr review <N> --approve --body "<text>"`. Write the text by `references/comment-style.md`. Then go to item 6.
+4. Otherwise the user approves. Tell the user the PR is ready. Give the PR link, the review recording, and the commit it covers. Give the approval text to paste. Say which flows stayed "Not done". Say this once for each commit.
+5. Run `python3 scripts/pr_state.py mark <N> ready <commit>`. Keep watching. Go on when `tick` says `you_approved`. Or go on when the user says they approved. Check the head commit again first. A new push makes the recording out of date.
+6. With a Slack thread, find the Slack tools by connector discovery. Inspect their current schema. Save a draft reply with `slack_send_message_draft`. Use the channel and ts in the monitor file. Write it as the user, in first person. Tell the user the draft is waiting and they press Send. Without a draft tool, give the user the text.
+7. Warn once: a new push after approval removes the approval in this repo.
+8. Run `python3 scripts/pr_state.py set-status <N> stopped "approved"`. End the loop. Tell the user the result.
 
 ## Report
 
 End each run with one terminal status from the execution contract.
 
 - `completed`: approved and drafted, or the PR merged or closed.
-- `needs_input`: waiting for a go, a sign-in, or a worktree choice.
+- `needs_input`: waiting for a go, a sign-in, a worktree, or your approval.
 - `blocked_missing_capability`: a required tool is missing.
 
-Say what you did and what you did not do. Say what comes next. Give the PR link and the evidence folder. Add the comment link if there is one.
+Say what you did and what you did not do. Say what comes next. Give the PR link and the evidence folder. Add the comment link and the recording path if there are any.

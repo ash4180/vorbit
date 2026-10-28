@@ -18,6 +18,7 @@ Every `tick`, `mark`, `set-status`, and `permit` below is a `pr_state.py` comman
 | `Baseline SHA` | The head commit when the watch began. | init |
 | `Reviewed SHA` | The last commit whose review and QA are both done. | `mark reviewed` |
 | `Commented SHA` | The last commit that got a PR comment. | `mark commented` |
+| `Ready SHA` | The last commit the user was told is ready to approve. | `mark ready` |
 | `Told until` | Time of the last teammate reply the user heard about. | `mark told` |
 | `Status` | `watching`, `waiting_for_user`, or `stopped`. | `set-status` |
 
@@ -33,7 +34,7 @@ Keep the line "Only act on PR #N".
 
 ## Permissions
 
-Posting a comment and approving are outward actions. They need a go.
+Posting a comment is an outward action. It needs a go. Approving is the user's job. You approve only when `Auto-approve` is `yes`.
 
 1. The user's words are the go: "leave a comment to the author" or "approve it".
 2. Or the user allowed it at the start. "Comment if there is a problem" sets `--auto-comment`. "Approve if it is fine" sets `--auto-approve`.
@@ -58,6 +59,7 @@ Move to the worktree. Run `python3 scripts/pr_state.py tick <N>`. It logs one li
 | `no_change` | Nothing. Schedule the next wake-up. |
 | `new_comment` | Tell the user in one line: who wrote and the first line. Then run `mark <N> told <at>` with the time of the newest reply. Do nothing else. |
 | `new_push` | See "New push" below. |
+| `you_approved` | The user approved this commit on GitHub. Go to Step 7, item 6. |
 | `merged` or `closed` | Run `set-status <N> stopped "<event>"`. Tell the user. End the loop. |
 | `already_stopped` | End the loop. Say nothing. |
 
@@ -69,7 +71,7 @@ Does `new_comments` have entries on any event? Tell the user about them too. The
 2. If `needs_pull` is true, run `git pull --ff-only`. Then run `tick` again to get `changed_files`. If the pull fails, tell the user once. Run `set-status <N> waiting_for_user "pull failed"`.
 3. Run Step 2 (review) on the new changes. Run Step 3 (QA) on two groups of flows. One group uses a changed file. The other did not pass last time. A flow whose files did not change keeps its earlier pass. Name that commit in the approval text.
 4. Run `mark <N> reviewed <commit you tested>`. Use the commit you tested, not a newer one.
-5. A problem: Step 4, then Step 5. No problem: Step 7.
+5. A problem: Step 4, then Step 5. No problem: Step 7. Say that the earlier recording is out of date. Make a new one.
 6. If checks are `pending`, wait for the next wake-up before Step 7. If checks are `failing`, tell the user once. That is the author's build, not yours to fix.
 
 ## Order of writes

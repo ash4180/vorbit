@@ -11,6 +11,7 @@ Read before Step 1.
 | Linear connector | Read the ticket | Stop Step 1.4. Follow the execution contract's connector login rule. |
 | Slack connector | Read the thread, save a draft | Skip Slack. Give the draft text to the user. |
 | Browser runner | QA flows | qa-report marks those flows Not done. |
+| `ffmpeg` and Pillow | The review recording | Say which is missing. Point to the per-flow clips. |
 
 Do not use another route for a missing tool. Do not guess a tool name. Inspect the connector's current schema first.
 
@@ -22,6 +23,7 @@ All run in the PR's worktree. `scripts/` is this skill's folder.
 |---|---|
 | `pr_state.py` | `context`, `init`, `tick`, `mark`, `set-status`, `permit`, `slack-ts` |
 | `comment_with_images.py` | Upload screenshots, post one comment, check each image loaded |
+| `review_recording.py` | Join the QA clips into one review recording |
 | `dev_port.py` | `free`, `owners`, `stop` for the dev server port |
 
 Each prints JSON or a PASS or FAIL line. Run one with `--help` to see its options.

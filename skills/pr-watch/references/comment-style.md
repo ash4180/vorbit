@@ -55,7 +55,7 @@ Feel free to skip: the story could show a long search term too.
 
 ## Approval text
 
-Short and soft. Two to four sentences.
+Short and soft. Two to four sentences. The user pastes it when they approve. With `Auto-approve` you post it.
 
 1. Say it looks good, and thank the author.
 2. Say what you tested and on which commit.

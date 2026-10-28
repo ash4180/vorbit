@@ -6,7 +6,7 @@ Commands (all print JSON):
   context PR                    facts about the PR and the local worktrees on its branch
   init PR [--slack LINK]...     create .vorbit/pr<N>-monitor.md (never overwrites)
   tick PR                       compare the PR with the monitor file, log one line
-  mark PR WHAT VALUE            record reviewed (review and QA both done) or commented (a SHA), or told (a time)
+  mark PR WHAT VALUE            record reviewed (review and QA both done), commented or ready (a SHA), or told (a time)
   set-status PR STATUS [WHY]    watching, waiting_for_user or stopped
   permit PR comment|approve     allow it from now on (--off takes it back)
 
@@ -35,9 +35,9 @@ PR_FIELDS = (
 FIELDS = (
     "PR", "Repo", "Branch", "Author", "Base", "Ticket", "Slack threads",
     "Auto-comment", "Auto-approve", "Approval rule", "Baseline SHA",
-    "Reviewed SHA", "Commented SHA", "Told until", "Status", "Status reason",
+    "Reviewed SHA", "Commented SHA", "Ready SHA", "Told until", "Status", "Status reason",
 )
-MARKS = {"reviewed": "Reviewed SHA", "commented": "Commented SHA", "told": "Told until"}
+MARKS = {"reviewed": "Reviewed SHA", "commented": "Commented SHA", "ready": "Ready SHA", "told": "Told until"}
 STATUSES = ("watching", "waiting_for_user", "stopped")
 PERMITS = {"comment": "Auto-comment", "approve": "Auto-approve"}
 APPROVAL_RULE = (
@@ -140,11 +140,22 @@ def new_comments(view: dict, me: str, after: str) -> tuple[list[dict], int]:
     return teammates, skipped
 
 
-def pick_event(state: str, head: str, reviewed: str, comments: list[dict]) -> str:
+def approved_by(view: dict, me: str, head: str) -> bool:
+    return any(
+        (review.get("author") or {}).get("login") == me
+        and review.get("state") == "APPROVED"
+        and (review.get("commit") or {}).get("oid") == head
+        for review in view.get("reviews", [])
+    )
+
+
+def pick_event(state: str, head: str, reviewed: str, comments: list[dict], approved: bool = False) -> str:
     if state in {"MERGED", "CLOSED"}:
         return state.lower()
     if head != reviewed:
         return "new_push"
+    if approved:
+        return "you_approved"
     return "new_comment" if comments else "no_change"
 
 
@@ -285,7 +296,7 @@ def cmd_init(args: argparse.Namespace) -> dict:
         "Auto-comment": "yes" if args.auto_comment else "no",
         "Auto-approve": "yes" if args.auto_approve else "no",
         "Approval rule": APPROVAL_RULE, "Baseline SHA": view["headRefOid"],
-        "Reviewed SHA": "", "Commented SHA": "",
+        "Reviewed SHA": "", "Commented SHA": "", "Ready SHA": "",
         "Told until": max(seen, default=datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")),
         "Status": "watching", "Status reason": "",
     }
@@ -304,10 +315,10 @@ def cmd_tick(args: argparse.Namespace) -> dict:
     me = run(["gh", "api", "user", "--jq", ".login"]).strip()
     comments, skipped = new_comments(view, me, fields["Told until"])
     head = view["headRefOid"]
-    event = pick_event(view["state"], head, fields["Reviewed SHA"], comments)
+    event = pick_event(view["state"], head, fields["Reviewed SHA"], comments, approved_by(view, me, head))
     result = {
         "event": event, "head_sha": head, "reviewed_sha": fields["Reviewed SHA"],
-        "commented_sha": fields["Commented SHA"],
+        "commented_sha": fields["Commented SHA"], "already_told_ready_on_head": fields.get("Ready SHA", "") == head,
         "already_commented_on_head": fields["Commented SHA"] == head,
         "checks": check_state(view["statusCheckRollup"]), "new_comments": comments,
         "skipped_bot_or_outsider_comments": skipped, "status": fields["Status"],
