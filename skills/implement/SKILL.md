@@ -168,7 +168,7 @@ Do not create a generic `memory.md`. Record durable decisions only in an existin
 - Files changed
 - Tests added/updated
 - Worker ID, requested model and verified model when available, parent review result, and evidence folder
-- Next: `/vorbit:implement:qa-plan` to build or refresh the human test plan
+- Next: `/vorbit:implement:qa-plan` to build or refresh the test plan (run by a person or the agent)
 
 ## Quick Mode
 

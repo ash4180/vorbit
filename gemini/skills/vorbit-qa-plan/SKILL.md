@@ -10,4 +10,4 @@ Before planning:
 1. Read `../vorbit-shared/references/load-rules.md`.
 2. Read `../vorbit-shared/workflows/qa-plan.md`.
 3. Load the applicable durable Vorbit rules for the current project and Gemini agent scope.
-4. Then follow the qa-plan workflow: read the branch specs, run the regression scan, resolve test targets with the user (or assume and note them when unattended), draft the human-runnable checklist, get approval unless unattended, and write qa-plan.md.
+4. Then follow the qa-plan workflow: read the branch specs, run the regression scan, resolve test targets with the user (or assume and note them when unattended), draft the test plan (run by a person or the agent), get approval unless unattended, and write qa-plan.md.

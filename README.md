@@ -100,7 +100,7 @@ Every step reads and writes the `.vorbit/` folder of the repo you work in (see "
 9. **Cleanup mocks**: approve the API contract, integrate the real backend, then remove the mocks (`/vorbit:implement:cleanup-mocks`)
 
 **Test and ship**
-10. **QA plan**: write a human-runnable test plan to `.vorbit/qa-plan.md` (`/vorbit:implement:qa-plan`)
+10. **QA plan**: write a test plan that a person or the agent can run to `.vorbit/qa-plan.md` (`/vorbit:implement:qa-plan`)
 11. **QA report**: run the checks, save a screenshot per check, write a dated `.vorbit/qa-report.md` with a ready or not-ready verdict (`/vorbit:implement:qa-report`)
 12. **Prepare PR**: rebase, run the CI checks locally, push, open the PR, update Linear (`/vorbit:implement:prepare-pr`)
 13. **Tutorial**: write the user-facing how-to for the feature (`/vorbit:implement:tutorial`)
@@ -123,7 +123,7 @@ Skills write their documents into `<repo>/.vorbit/`, inside the worktree you wor
 |------|------------|-------|
 | `prd.md` | prd | user stories, acceptance criteria, flows, constraints, success criteria |
 | `epic.md` | epic | one section per story, ordered tasks with IDs and status |
-| `qa-plan.md` | qa-plan | human-runnable checklist. The tester ticks each check |
+| `qa-plan.md` | qa-plan | test plan a person or the agent runs. Whoever tests ticks each passed check |
 | `qa-report.md` | qa-report | dated run history, newest first, with a verdict |
 | `qa-screenshots/<date>/` | qa-report | one picture per check it ran, and one review video of the whole run |
 | `pr<N>-monitor.md` | pr-watch | watch state for one teammate's PR: what was reviewed, the permissions given, the Slack thread, a tick log |
