@@ -150,9 +150,9 @@ For each check this run covered, flows and `QP#` commands alike, update two thin
 
 Change nothing else: keep check wording and IDs, and leave checks this run did not cover as they are. Detail lives in the report. Update the header's `Updated:` line.
 
-## Step 3.5: Publish to Notion (only when the caller names a hub)
+## Step 3.5: Publish to Notion
 
-When the caller names a Notion report hub, read `references/notion-report.md` and follow it after the local report is written. Without a named hub, skip this step and mention in Step 4 that the report can be published to Notion.
+The hub is the one the caller names, else the one `python3 scripts/notion_hub.py` prints for this repository. With a hub, read `references/notion-report.md` and follow it after the local report and the review recording exist. With no hub, skip this step. When the script exits 1, skip it and quote its error in Step 4.
 
 ## Step 4: Report in the Session
 
@@ -164,7 +164,7 @@ When the caller names a Notion report hub, read `references/notion-report.md` an
 - Evidence folder path and links to the recordings of failed flows
 - The review recording path and its length. Or the missing tool, when it could not be made
 - Test data created, and any record that could not be deleted
-- Reminder: the report is local and gitignored. Share it with its `qa-screenshots/` folder, or publish to the named Notion hub.
+- Without a hub: the report is local and gitignored. Saving this repository's hub in `~/.vorbit/qa-report-hubs.json` publishes every run.
 - Next steps:
   - fix problems via `$vorbit-implement`, then re-run this skill
   - report details never go into Linear ticket descriptions; publish to a Notion hub to share them

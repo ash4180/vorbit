@@ -7,6 +7,8 @@ import json
 import shutil
 import subprocess
 import sys
+import threading
+from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 
 import pytest
@@ -18,6 +20,8 @@ ROOT = Path(__file__).resolve().parents[1]
 COLLECT = ROOT / "skills/qa-report/scripts/collect_e2e_evidence.py"
 SCAN = ROOT / "skills/qa-plan/scripts/regression_scan.py"
 REVIEW = ROOT / "skills/qa-report/scripts/review_recording.py"
+HUB = ROOT / "skills/qa-report/scripts/notion_hub.py"
+UPLOAD = ROOT / "skills/qa-report/scripts/notion_upload.py"
 
 _spec = importlib.util.spec_from_file_location("review_recording", REVIEW)
 review_recording = importlib.util.module_from_spec(_spec)
@@ -334,3 +338,73 @@ def test_a_bad_manifest_makes_no_video(tmp_path):
     assert done.returncode == review_recording.EXIT_MANIFEST
     assert "A pass needs a recording" in done.stderr
     assert not out.exists()
+
+
+def find_hub(project: Path, remote: str | None, hubs: object | None, home: Path) -> tuple[int, dict]:
+    if remote:
+        subprocess.run(["git", "remote", "add", "origin", remote], cwd=project, check=True)
+    if hubs is not None:
+        (home / ".vorbit").mkdir()
+        (home / ".vorbit" / "qa-report-hubs.json").write_text(hubs if isinstance(hubs, str) else json.dumps(hubs))
+    done = subprocess.run([sys.executable, "-B", str(HUB), "--repo-dir", str(project)], capture_output=True, text=True)
+    return done.returncode, json.loads(done.stdout)
+
+
+@pytest.mark.parametrize("remote", [
+    "https://Vibe-Ash@github.com/vibraniumlabs/client.git",
+    "git@github.com-ash:VibraniumLabs/Client.git",
+    "https://github.com/vibraniumlabs/client/",
+])
+def test_every_clone_and_worktree_of_a_repo_finds_its_saved_hub(temp_project, temp_home, remote):
+    code, found = find_hub(temp_project, remote, {"vibraniumlabs/client": "https://notion/hub", "other/repo": "https://notion/other"}, temp_home)
+    assert code == 0
+    assert (found["repo"], found["hub"]) == ("vibraniumlabs/client", "https://notion/hub")
+
+
+@pytest.mark.parametrize("remote,hubs", [
+    ("https://github.com/other/app.git", {"vibraniumlabs/client": "https://notion/hub"}),
+    ("https://github.com/vibraniumlabs/client.git", None),
+    (None, {"vibraniumlabs/client": "https://notion/hub"}),
+])
+def test_a_repo_without_a_saved_hub_gets_none(temp_project, temp_home, remote, hubs):
+    code, found = find_hub(temp_project, remote, hubs, temp_home)
+    assert (code, found["hub"]) == (0, None)
+
+
+@pytest.mark.parametrize("hubs", ["{not json", '["https://notion/hub"]', '{"vibraniumlabs/client": 3}'])
+def test_a_broken_hub_list_is_reported_not_skipped(temp_project, temp_home, hubs):
+    code, found = find_hub(temp_project, "https://github.com/vibraniumlabs/client.git", hubs, temp_home)
+    assert code == 1
+    assert found["hub"] is None and found["error"]
+
+
+def test_upload_sends_the_type_the_upload_was_created_with(tmp_path):
+    # Notion creates .mp4 uploads as application/mp4 and refuses any other type on send.
+    received: dict = {}
+
+    class FakeNotion(BaseHTTPRequestHandler):
+        def do_POST(self):
+            received["auth"] = self.headers["Authorization"]
+            received["body"] = self.rfile.read(int(self.headers["Content-Length"]))
+            reply = json.dumps({"status": "uploaded"}).encode()
+            self.send_response(200)
+            self.send_header("Content-Length", str(len(reply)))
+            self.end_headers()
+            self.wfile.write(reply)
+
+        def log_message(self, *args):
+            pass
+
+    server = HTTPServer(("127.0.0.1", 0), FakeNotion)
+    threading.Thread(target=server.handle_request, daemon=True).start()
+    video = tmp_path / "review.mp4"
+    video.write_bytes(b"movie")
+    done = subprocess.run(
+        [sys.executable, "-B", str(UPLOAD), "--url", f"http://127.0.0.1:{server.server_port}/send",
+         "--auth", "Bearer t", "--content-type", "application/mp4", "--file", str(video)],
+        capture_output=True, text=True,
+    )
+    server.server_close()
+    assert done.returncode == 0, done.stdout
+    assert received["auth"] == "Bearer t"
+    assert b"Content-Type: application/mp4\r\n\r\nmovie" in received["body"]

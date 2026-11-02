@@ -4,9 +4,11 @@
 The Notion connector's create-file-upload call returns a short-lived
 upload_url and an authorization header. This script does the one
 multipart POST that finishes the upload, so the agent never hand-types
-file bytes. Prints the Notion response as one JSON object.
+file bytes. Notion refuses a file whose type differs from the one the upload
+was created with, so pass that call's content_type unchanged.
+Prints the Notion response as one JSON object.
 
-Usage: python3 notion_upload.py --url <upload_url> --auth "<authorization header value>" --file <path>
+Usage: python3 notion_upload.py --url <upload_url> --auth "<authorization header value>" --content-type <content_type> --file <path>
 
 Exit codes: 0 when Notion reports status "uploaded", 1 otherwise.
 """
@@ -15,7 +17,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import mimetypes
 import sys
 import urllib.error
 import urllib.request
@@ -23,9 +24,8 @@ import uuid
 from pathlib import Path
 
 
-def build_body(path: Path) -> tuple[bytes, str]:
+def build_body(path: Path, content_type: str) -> tuple[bytes, str]:
     boundary = uuid.uuid4().hex
-    content_type = mimetypes.guess_type(path.name)[0] or "application/octet-stream"
     head = (
         f"--{boundary}\r\n"
         f'Content-Disposition: form-data; name="file"; filename="{path.name}"\r\n'
@@ -39,6 +39,7 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--url", required=True)
     parser.add_argument("--auth", required=True, help="the authorization header value from upload_headers")
+    parser.add_argument("--content-type", required=True, help="the content_type the create-file-upload call returned")
     parser.add_argument("--file", required=True)
     args = parser.parse_args()
 
@@ -47,7 +48,7 @@ def main() -> int:
         print(json.dumps({"status": "error", "error": f"file not found: {path}"}))
         return 1
 
-    body, content_type = build_body(path)
+    body, content_type = build_body(path, args.content_type)
     request = urllib.request.Request(
         args.url,
         data=body,

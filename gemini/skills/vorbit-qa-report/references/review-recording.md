@@ -76,4 +76,4 @@ Exit code 4 means `ffmpeg` or Pillow is missing. Say which one in Step 4. The re
 
 ## Sharing
 
-The recording stays on this machine. Do not attach it anywhere unless the caller asks.
+When Step 3.5 publishes to Notion, the recording goes into the report page's 🎬 callout. Do not attach it anywhere else unless the caller asks.

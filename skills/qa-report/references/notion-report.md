@@ -1,10 +1,10 @@
 # Publish the QA Report to Notion
 
-Load this file only when the caller named a Notion report hub. The local `qa-report.md` stays the full record; the Notion page is the copy people read.
+Load this file when Step 3.5 found a hub. The local `qa-report.md` stays the full record; the Notion page is the copy people read.
 
 ## Inputs
 
-- **Hub:** the Notion database the caller named (a URL or `collection://` ID).
+- **Hub:** the Notion database from Step 3.5 (a URL or `collection://` ID).
 - **Template:** the hub template the caller named. Default: the template called `QAT Report`.
 - **Linear tickets:** the tickets this run covers, from the PR or the caller.
 
@@ -13,6 +13,7 @@ Load this file only when the caller named a Notion report hub. The local `qa-rep
 The template already contains the whole layout, so never build the layout yourself:
 
 - a 💡 Summary callout and a 🧪 Test details callout, with `[placeholder]` text
+- a 🎬 `Whole e2e test recording` callout with an empty video block, for the review recording
 - chart views (by section, by result) and two lists (`Needs you`, `Problems found`)
 - an inline `Flows` database. Every chart and list reads this database, so the page fills itself once the rows exist.
 
@@ -37,9 +38,9 @@ The local report uses three results. `Passed` and `Failed` map as named. A local
 Follow the execution contract for every Notion call. On a login or access error, stop this step, ask the user to reconnect Notion, and never publish through another tool.
 
 1. **Read the hub.** Fetch the hub. Find the template ID in its `page_templates` list. Note which hub properties exist; fill only those.
-2. **Create the report page** from the template, with the hub's `Verdict` set to `In progress`. Title: `PR #[number] [PR title] ([ticket IDs])`, or `Release [YYYY-MM-DD]` for a release. Fill the type, PR, ticket, and FE/BE properties when the hub has them. Record the new page URL at once, so a retry updates this page instead of making a second one.
+2. **Create a new report page** from the template for every run, with the hub's `Verdict` set to `In progress`. Never reuse an earlier run's page. Title: `PR #[number] [PR title] ([ticket IDs]), run [YYYY-MM-DD HH:MM]`, or `Release [YYYY-MM-DD HH:MM]` for a release. Fill the type, PR, ticket, and FE/BE properties when the hub has them. Record the new page URL at once, so a retry of this run updates this page instead of making a second one.
 3. **Fetch the new page** and find the `data-source-url` of its own `Flows` database. Write rows only there, never to the template's database. Fetch that data source too: Notion rejects a `Section` or `Result` value that is not already an option, so add every missing option (keep the existing ones) before creating rows.
-4. **Upload the actual recordings and screenshots.** For each file: call create-file-upload with the file name, then run `python3 scripts/notion_upload.py --url <upload_url> --auth "<authorization value>" --file <path>`. Keep the returned `file_upload_id`. One upload ID can go in both the row's `Video` column and its page body. A local path is not a shared attachment. If an upload fails, retain the local report and leave publication `In progress`; report the upload gap without inventing a URL.
+4. **Upload the actual recordings and screenshots.** For each file: call create-file-upload with the file name, then run `python3 scripts/notion_upload.py --url <upload_url> --auth "<authorization value>" --content-type <content_type> --file <path>` with the content_type that call returned. Keep the returned `file_upload_id`. Upload the run's `review.mp4` too when Step 3 made it; create its upload with content type `video/mp4`, or Notion stores it as a plain file, not a video. A file over 20 MiB cannot be uploaded this way; treat it as a failed upload. One upload ID can go in both the row's `Video` column and its page body. A local path is not a shared attachment. If an upload fails, retain the local report and leave publication `In progress`; report the upload gap without inventing a URL.
 5. **Create one row per check**, in plan order, in batched calls. An automated command becomes **one row per test** from the collector's output (`QP1-1`, `QP1-2`, …), never one row per command; skip `setup` entries. See "Automated test rows" below.
    - `Flow`: the check ID, a colon, and the flow name from the plan (`QA3: Upgrade from Free with a new card`)
    - `Result`: from the table above
@@ -48,12 +49,13 @@ Follow the execution contract for every Notion call. On a login or access error,
    - Page body: `**Did:**`, `**Expected:**`, `**Saw:**`, and `**Tested by:**` lines, followed by the embedded recording and its browser/time range. Put technical fix details (Step 2.7) after the evidence, plus the Linear or Slack line for an old bug.
    - For API speed checks, use the same DEV vs PROD comparison as the local report: target, measured values/sample counts, environment/deployment equivalence, and timing evidence. A PROD speed pass has `Finding: Passed — PROD verified; DEV [measured result]`. Attach the timing log or source link; retain browser recordings when the check includes a browser flow.
 6. **Attach the recording to each row's `Video` column** using the same upload ID; keep the existing column name to preserve template views. Include screenshots as supporting attachments. A screenshot must not disguise a missing recording.
-7. **Fill the two callouts** by replacing their placeholder text only. Use small search-and-replace edits; never rewrite the whole page, because Notion reorders the blocks.
+7. **Fill the callouts** by replacing their placeholder text only. Use small search-and-replace edits; never rewrite the whole page, because Notion reorders the blocks.
    - Summary: lead with the local report's verdict and concrete reason. Then `[N] of [M] report rows passed`, counts for the other results, and who needs to do what next. Label these as report-row counts: automated commands expand into individual tests, so this is not the local plan-check denominator.
    - Test details: date/time, who ran it, actual browser/device (label emulation), branch/revision, environment, and what test data was created and deleted.
+   - Whole e2e test recording: replace the empty `<video />` in the 🎬 callout with the `review.mp4` upload's `suggested_markdown`. With no review recording, or a failed upload, replace it with one line saying why. If the template has no 🎬 callout, do not add one; say so in the session report.
 8. **Set the verdict last:** `Ready` only when the local report is `READY`, every row is `Passed` or `Old bug`, and required evidence was uploaded. Otherwise `Not Ready` once publication is complete. A crashed/incomplete upload stays `In progress`.
 9. **Link the page on each Linear ticket** as a link attachment titled `QA report`. Never as a comment.
-10. **Re-fetch the page** and confirm: row count equals manual plan checks plus non-setup automated tests plus any command-level gap rows described below. Summary counts must match those rows. Confirm recordings appear as uploaded attachments and playable video blocks, not local paths. Fetch each agent row and check its Slack links point at a reply (see "Agent behaviour rows"). A fetch can return an older cached copy: when its `as of` time is earlier than your last edit, fetch again before trusting it.
+10. **Re-fetch the page** and confirm: row count equals manual plan checks plus non-setup automated tests plus any command-level gap rows described below. Summary counts must match those rows. Confirm recordings, including the review recording in the 🎬 callout, appear as uploaded attachments and playable video blocks, not local paths. Fetch each agent row and check its Slack links point at a reply (see "Agent behaviour rows"). A fetch can return an older cached copy: when its `as of` time is earlier than your last edit, fetch again before trusting it.
 
 ## Automated test rows
 
