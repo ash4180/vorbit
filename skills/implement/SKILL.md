@@ -113,6 +113,15 @@ The parent first prepares the handoff in `references/task-worker.md`. The worker
 
 Before writing code, study similar features and call sites: import style, naming conventions, file structure, test patterns. **Consistency > Novelty** — match the team's existing style.
 
+**UI work: page check.** Before the first UI edit, check every page and component file the task will change:
+
+1. Read the repository's UI rules: the file `AGENTS.md` or `CLAUDE.md` names for UI work. Run the preflight steps and discovery commands it lists. If no file is named, use the shared component folders you find.
+2. List each part of those files that does not use an existing shared component: a raw control (`<button>`, `<input>`, `<textarea>`, `<table>`) where a shared one exists, a hand-made copy of a shared pattern, or a style the UI rules forbid.
+3. Record each item: file and line, what it is, the shared component to use, and `in_scope` (true when the task changes that code anyway).
+4. In scope: use the shared component in this task. Out of scope: leave it unchanged. The parent reports it, and the user decides whether to fix it.
+
+Record an empty list when nothing is found. Never skip the check for UI work.
+
 ## Step 4.5: i18n/Localization Rules
 
 Detect whether the project uses any localization system (libraries, locale files, translation-function usage). If it does:
@@ -167,6 +176,7 @@ Do not create a generic `memory.md`. Record durable decisions only in an existin
 - What was implemented
 - Files changed
 - Tests added/updated
+- Page check: the out-of-scope items left unchanged (file and line, what it is, the shared component). Ask whether to fix them.
 - Worker ID, requested model and verified model when available, parent review result, and evidence folder
 - Next: `/vorbit:implement:qa-plan` to build or refresh the test plan (run by a person or the agent)
 
