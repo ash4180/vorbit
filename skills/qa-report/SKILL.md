@@ -62,6 +62,7 @@ Run every eligible flow when Step 1 authorizes testing, even when the plan has n
 7. An emulated viewport is labelled `(emulated)`. It does not clear a real-device need or another browser's matrix cell.
 8. Never replace a run with reading code, an idle screenshot, or an unrelated green suite. A safe result that differs from the plan is Failed with the note `plan may need rewording`.
 9. A human result is `Passed (person: name, date, where)`; never claim the agent saw it. Never invent a recording, tester, or confirmation.
+10. Record each flow at most twice in this run, counting a later return to it. One try may hold several clips: a popup, or each width or browser the flow names. Use a second try only for a broken clip, a setup problem, or to confirm a fail. After two tries, keep what the newer one shows (`Failed` with what appeared, or `Not done` with the reason) and go to the next flow.
 
 ## Step 2.6: API Speed
 
