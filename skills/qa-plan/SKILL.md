@@ -19,6 +19,20 @@ This plan is for testing by hand or by the agent in a browser. The implement ski
 
 A run is unattended when the caller says no one is watching (for example "do not ask questions") or the session cannot take answers. In an unattended run, never stop to ask. Every place below that says "ask" becomes: make the sensible choice named there, and record it in the plan header as one `Assumed:` line per choice. Save the plan without the approval question. An unattended run never ends as `needs_input`.
 
+## Since a Commit
+
+`--since <commit>` plans only the new changes. `<commit>` is the PR head that was checked before. The new changes are this PR's own commits after it, without merge commits and without the work merges bring in.
+
+1. Resolve the spec folder (Step 1, item 1) and the base branch per the Base Branch section of the execution contract. Run `python3 ../_shared/scripts/changes_since.py <commit> --base <base>` inside the repository (the path is relative to this file). It prints JSON with a `status` and a one-line `scope`.
+2. `not_ancestor` or `unknown_commit`: say the `scope` sentence, then build the normal full plan. Its header gets `Scope: [scope sentence]. Full plan instead.` The rest of this section does not apply.
+3. `no_new_commits`: write a since plan with no checks.
+4. `ok`: run it again with `--diff` and read the patches. Changes to tests, comments, docs, and config the app does not read (CI, lint, editor settings) do not change app behavior. When no change alters app behavior, write a since plan with no checks.
+5. Otherwise, plan only flows on the screens that the app-code changes touch: at most 3 checks in total (`QA`, `QR`, and `QP` together). Pick the flows a user would notice first, and name other touched screens in one line. Each check follows the Step 3 writing rules. A `QP#` run of an E2E spec that covers a touched screen may be one of the 3.
+6. Take Environment, Devices, Browsers, and test data from the existing `qa-plan.md` when it has them. Resolve only what is missing, per Step 2. Skip the rest of Step 1 (specs and the regression scan), the coverage gates, and the Step 3 section sources.
+7. The since plan replaces the existing `qa-plan.md`. Of Step 4, only the write guards and the flow and ID checks of item 4 apply; the revision rules do not. The approval question says it replaces the current plan. Earlier results stay in `qa-report.md`.
+
+**Since plan format:** the schema header with `Source: commits since [short commit]` and a `Scope: [scope sentence]` line, then one `## New changes` section with the checks, then `## Open items` when needed. A plan with no checks keeps the header and has one line under `## New changes`: `No checks: [why, e.g. only two E2E specs and one code comment changed].`
+
 ## Step 1: Read the Branch Specs
 
 1. Resolve the spec folder per `../_shared/spec-files.md`.
@@ -87,6 +101,7 @@ Show the full draft in chat and ask: **"Ready to save the QA plan?"** Do not wri
 - Coverage gate results
 - Any `TBD-###` left open, with who provides it
 - Regression source (epic.md or git diff against which base) and whether this is a release plan with the full suite
+- With `--since`: the `scope` line, and for a plan with no checks, why
 - Unattended: every `Assumed:` line
 - Reminder: the plan lives only in this worktree and is gitignored
 - Next steps:

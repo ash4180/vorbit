@@ -166,6 +166,7 @@ def _rules(agent: dict[str, str]) -> list[tuple[re.Pattern[str], object]]:
             "../_shared/design-knowledge/",
             "../references/design-knowledge/",
         ),
+        lit("../_shared/scripts/", "../references/scripts/"),
         lit(
             'save using the "Save Content" section in `_shared/mcp-tool-routing.md` and pass',
             "save via the connected platform's current content-creation tools "
@@ -321,7 +322,7 @@ MIRRORED_SHARED: tuple[str, ...] = (
     "spec-files.md",
 )
 
-MIRRORED_SHARED_DIRS: tuple[str, ...] = ("design-knowledge",)
+MIRRORED_SHARED_DIRS: tuple[str, ...] = ("design-knowledge", "scripts")
 
 
 def _shared_target(agent_key: str, filename: str) -> Path:

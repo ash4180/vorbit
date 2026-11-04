@@ -92,7 +92,7 @@ Use the environment's native subagent mechanism when available. Run independent 
 
 ### What each agent receives
 
-- The full diff
+- The full diff (with `--since`: the new commits' patches, plus the full PR diff marked as background)
 - The blast radius file list and contents
 - The review rules (from `.claude/review-rules.md`)
 - The CLAUDE.md project standards
@@ -120,6 +120,8 @@ If any pass fails or times out, note the gap and continue. Never present an unve
 
 ```markdown
 # PR Review Report
+
+[With `--since` only: the scope line, such as "Changes since 3d84e3c: 3 files, +7/-6"]
 
 ## TL;DR
 [1-3 sentences with the most critical branch finding and merge risk; pre-existing findings do not raise merge risk]

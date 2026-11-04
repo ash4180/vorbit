@@ -1,6 +1,6 @@
 ---
 description: Build or update the QA test plan (run by a person or the agent) from the branch spec files
-argument-hint: [optional story ID or focus area]
+argument-hint: [optional story ID or focus area] [--since <commit>]
 allowed-tools: Read, Write, Edit, Bash, Grep, Glob, Skill, AskUserQuestion
 ---
 
