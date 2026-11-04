@@ -14,9 +14,19 @@ Use the host's native subagent tool. Inspect its actual parameters before callin
 
 The Claude agent ships with the plugin and inherits available tools and permissions while denying nested `Agent` calls. Do not substitute Explore or Plan: these are not browser execution agents. If `vorbit:qa-runner` is missing, reload the installed plugin or restart Claude; do not claim it ran. For a source checkout, `bash dev-setup.sh` at the plugin root installs newly added plugin components before the restart.
 
-Start **one subagent per run**, executing flows sequentially. Keep the exact current worktree; do not request worktree isolation. Codex full-history forks may inherit the parent's model and reject an override, so use a fresh context with `fork_turns: "none"` when that control exists. Supply all required paths and constraints explicitly. Never assume the child sees the parent's conversation, loaded skills, or browser connection.
+Start **one subagent per run**, executing flows sequentially, unless Parallel runners below applies. Keep the exact current worktree; do not request worktree isolation. Codex full-history forks may inherit the parent's model and reject an override, so use a fresh context with `fork_turns: "none"` when that control exists. Supply all required paths and constraints explicitly. Never assume the child sees the parent's conversation, loaded skills, or browser connection.
 
 If native delegation, model selection, or continuation is unavailable, affected flows are `Not done` with the specific reason. Do not silently use the parent, another model, or a shell-launched CLI session. An explicit caller choice to run in the parent is allowed and must be recorded as an override, not a subagent run. Missing-data and human-only checks keep their Step 1 reasons. If all flows are already ineligible, record those reasons without launching a runner.
+
+## Parallel runners
+
+Start more than one runner only when the caller allows it (for example "up to 2 runners") and the plan tags flows `Parallel: yes`. Otherwise start one runner, run the flows in plan order, and ignore the tags.
+
+1. Split the `Parallel: yes` flows across the runners, in plan order inside each runner. Runner N gets its own browser context and its own files in the run folder: `runner-task-N.md`, `runner-ready-N.json`, `runner-session-N.json`, `flow-results-N.json`, and `created-data-N.json`. A single runner keeps the names below, without `-N`.
+2. Before launch, the parent signs in once per `sign-in.md` and starts the app once. Runners use that saved login and that app. They never run the renew command, so no two runners rewrite the login files at once. A runner that meets the sign-in screen marks that flow `Not done: login expired`. The parent renews and reruns it in step 4.
+3. Prepare all runners, then execute them together, each with the steps below and its own files. A runner uses only the records its flows' `Needs:` lines name, or creates for them.
+4. After every parallel runner has finished, one runner runs the `Parallel: no` flows, untagged flows, and the reruns, in plan order, with no other runner active.
+5. Parent review checks each runner's files. Then the parent writes one `flow-results.json` with every flow in plan order, so later steps read one file. Step 2.8 deletes the records in every `created-data` file.
 
 ## Prepare the handoff
 
@@ -27,7 +37,7 @@ The parent owns the unique evidence folder already created in Step 1. Resolve ab
 - Absolute paths to the installed qa-report workflow, this reference, `recording.md`, `sign-in.md`, `test-data.md`, the execution contract, and the browser/recording skills to read. For Codex/Gemini installations the workflow is in the sibling `vorbit-shared/workflows/qa-report.md`; references remain in the installed qa-report skill. Resolve paths for the runner's runtime.
 - The requested model, environment, ordered flow IDs in scope, exact steps and `You should see:` text (or the plan path containing them), and every Step 1 eligibility decision. Include human-only and missing-data flows so none disappear from the report.
 - The caller's testing authorization and restrictions, and the sign-in method from Step 1 per `sign-in.md`. Name env keys; never copy passwords or tokens into prompts or evidence files.
-- Write scope: evidence and runner result files inside this run folder, records created per `test-data.md` and logged in `created-data.json`, and the saved-login files the sign-in renew command rewrites. The child may run that renew command. It must not re-plan, run the parent's automated commands, fix source, edit the plan/report, publish, or launch other agents or CLI sessions. Do not invoke the full qa-report workflow recursively.
+- Write scope: evidence and runner result files inside this run folder, records created per `test-data.md` and logged in `created-data.json`, and the saved-login files the sign-in renew command rewrites. The child may run that renew command, except as a parallel runner. It must not re-plan, run the parent's automated commands, fix source, edit the plan/report, publish, or launch other agents or CLI sessions. Do not invoke the full qa-report workflow recursively.
 - The requirement to follow the workflow's Flow rules and recording reference, check console errors, retain failures, and never fake server responses. Release owned browser contexts and remove only temporary files created by this run.
 
 Do not run a second browser driver or change source, plan, or test data while the runner uses them. The parent can read existing evidence while waiting.
@@ -71,7 +81,7 @@ On cancellation, stop the owned subagent using the host's native control and ver
 
 ## Result contract
 
-The child writes `flow-results.json` in the run evidence folder. Paths to clips and screenshots are relative to that folder. Use JSON null for absent evidence, never an invented path. Example of one completed flow:
+The child writes `flow-results.json` (parallel runner N: `flow-results-N.json`) in the run evidence folder. Paths to clips and screenshots are relative to that folder. Use JSON null for absent evidence, never an invented path. Example of one completed flow:
 
 ```json
 {

@@ -68,6 +68,7 @@ Unattended: nothing blocks the save. Use these choices and write each one as an 
 - One check = one complete flow. It has a name a user would say ("Upgrade from Free with a new card"), 2 to 8 numbered steps, one `You should see:` with the end result (and any mid-flow result that matters), and one `Needs:` line (account, workspace, records, starting state). More than 8 steps means two flows.
 - Plain language for a non-technical tester. Name screens and buttons the way the user sees them. No code words, no file paths.
 - Put shared setup under `## Test data & preconditions`; the `Needs:` line names only what that flow uses.
+- After `Needs:`, each browser flow gets a `Parallel:` line, so an agent knows which flows can run at the same time in separate browsers. Write `Parallel: yes` only when no other flow changes what this flow uses, and this flow changes nothing another flow uses: records, settings, roles, plan, or the test account. Give a flow its own records in `Needs:` when that makes it safe. Otherwise write `Parallel: no (the shared thing)`. A timing check is `no`: it needs the machine to itself. When unsure, write `no`. Commands (`QP#`) get no tag.
 - Check IDs are file-unique and never renumbered: `QA1`, `QA2`, … for story, failure, and performance flows; `QR1`, `QR2`, … for regression flows; `QP1`, … for commands.
 - A step a person must do (judgment, real device, camera, print, sign-off) gets `**Needs human:** [what and why]` on the check. When the rest of the flow can run without it, split that step into its own check so an automated pass cannot clear the human part.
 
@@ -91,7 +92,7 @@ Show the full draft in chat and ask: **"Ready to save the QA plan?"** Do not wri
 1. Run the write guards per `../references/spec-files.md`.
 2. Write `qa-plan.md` in the spec folder per the schema below.
 3. **Revision rules:** preserve the box and the `Result:` line of every unchanged check; untick a check whose steps or `You should see:` changed, and end its `Result:` line with `(steps changed since)`; never renumber existing IDs; new checks get fresh IDs continuing each sequence; list removed checks explicitly and ask before dropping any check whose last result is Failed (unattended: keep that check instead of asking).
-4. Re-read the written file: every flow has steps, one `You should see:`, and a `Needs:` line; one section per PRD story; all IDs unique; every applicable list or table story has its reliability flow; the Regression section names its source and has at least one flow or the "no shared files changed" line.
+4. Re-read the written file: every flow has steps, one `You should see:`, a `Needs:` line, and a `Parallel:` line; one section per PRD story; all IDs unique; every applicable list or table story has its reliability flow; the Regression section names its source and has at least one flow or the "no shared files changed" line.
 
 ## Step 5: Report
 
@@ -153,6 +154,7 @@ Assumed: [unattended only: one line per choice made without asking]
   4. Back on Billing, reload the page.
   You should see: "Card saved", the plan dialog open on your plan, and no second message after the reload.
   Needs: admin of a workspace billed in gems, no card saved.
+  Parallel: no (changes the card and plan that QA2 to QA4 use)
 
 ### Failure paths
 
@@ -160,6 +162,7 @@ Assumed: [unattended only: one line per choice made without asking]
   1. Save the card 4000 0000 0000 0341, pick a plan, click "Pay and start".
   You should see: "Card declined" saying nothing was charged; the plan stays Free.
   Needs: same workspace as QA1.
+  Parallel: no (same workspace as QA1)
 
 ### List & table reliability
 
@@ -168,6 +171,7 @@ Assumed: [unattended only: one line per choice made without asking]
   2. Reload the page five times.
   You should see: the same rows in the same order each time, none missing, none repeated.
   Needs: a workspace with 3 or more invoices, 2 issued the same day.
+  Parallel: no (QA1's upgrade adds an invoice to this list)
 
 ### Performance
 
@@ -175,6 +179,7 @@ Assumed: [unattended only: one line per choice made without asking]
   1. Open the Billing page on a normal connection.
   You should see: the full page in under 3 seconds.
   Needs: same workspace as QA1.
+  Parallel: no (a timing check needs the machine to itself)
 
 ## US-002: [Story Title]
 
@@ -196,6 +201,7 @@ Regression source: [epic.md | git diff against origin/dev]
   1. Open Settings, then Members.
   You should see: the member list, with no error message.
   Needs: admin account.
+  Parallel: yes
 
 ## Automated checks
 

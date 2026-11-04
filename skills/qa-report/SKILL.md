@@ -46,7 +46,7 @@ Only when the plan has an `Automated checks` section:
 
 ## Step 2.5: Run the Flows in the Browser
 
-Run every eligible flow when Step 1 authorizes testing, even when the plan has no automated commands. Follow `references/flow-runner.md`: prepare one native Claude Sonnet or Codex Luna (`gpt-6-luna`) subagent in the same worktree, save its returned ID and model selection in `runner-session.json`, then resume that same agent to execute. If launch, model selection, or resume is unavailable, affected flows are `Not done` with the reason. The subagent follows the flow rules below and returns evidence; the parent reviews it before Steps 2.6–4 and alone updates the plan and report. An assigned runner never delegates again. Report-only runs do not launch a runner.
+Run every eligible flow when Step 1 authorizes testing, even when the plan has no automated commands. Follow `references/flow-runner.md`: prepare one native Claude Sonnet or Codex Luna (`gpt-6-luna`) subagent in the same worktree, save its returned ID and model selection in `runner-session.json`, then resume that same agent to execute. If launch, model selection, or resume is unavailable, affected flows are `Not done` with the reason. The subagent follows the flow rules below and returns evidence; the parent reviews it before Steps 2.6–4 and alone updates the plan and report. An assigned runner never delegates again. Report-only runs do not launch a runner. When the caller allows more than one runner and the plan tags flows `Parallel: yes`, those flows run in parallel runners first, then the rest in one runner, per the reference's Parallel runners section.
 
 ### Flow rules (also apply inside the child)
 
