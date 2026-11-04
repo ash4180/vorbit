@@ -73,7 +73,7 @@ Unattended: nothing blocks the save. Use these choices and write each one as an 
   - `Parallel: no (...)` only when the flow must share something it or another flow changes: account or workspace settings, roles, plan or billing, a one-of-a-kind record, or a list or count other flows change. Name that thing and the other flow, for example `Parallel: no (changes the workspace plan QA2 reads)`.
   - A timing check is `no`: it needs the machine to itself.
   - Never give every flow the same reason. If every flow is `no`, say why under `## Open items`.
-  Commands (`QP#`) get no tag.
+  Commands (`QP#`) get no tag. Sum the tags up in `## Run order`, so a reader sees them without opening each flow.
 - Check IDs are file-unique and never renumbered: `QA1`, `QA2`, … for story, failure, and performance flows; `QR1`, `QR2`, … for regression flows; `QP1`, … for commands.
 - A step a person must do (judgment, real device, camera, print, sign-off) gets `**Needs human:** [what and why]` on the check. When the rest of the flow can run without it, split that step into its own check so an automated pass cannot clear the human part.
 
@@ -140,6 +140,11 @@ Updated: [YYYY-MM-DD]
 Environment: [where to test]
 Devices: [list] | Browsers: [list]
 Assumed: [unattended only: one line per choice made without asking]
+
+## Run order
+
+- At the same time ([N] flows): [flow IDs]
+- Alone, in plan order ([M] flows): [flow ID]: [the shared thing], one line each
 
 ## Test data & preconditions
 
