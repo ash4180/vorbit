@@ -43,6 +43,10 @@ Only when the plan has an `Automated checks` section:
 7. A command that cannot run is `Not done: [reason]`, never guessed.
 8. **Never run the suite on the base-branch code** to sort out failures. Tag unrelated failures per `pre-existing-findings.md` (blame, base-branch file, or the project's scheduled suite result). Failures that stay unsure are listed under For developers as `unresolved`, and the command stays Failed.
 
+## Step 2.4: Write the Flow Tests
+
+Only when the project has a Playwright setup. The parent writes one flow test for each flow the agent can run, per `references/recording.md` Flow tests, items 1 to 6. It only reads and writes files: it never runs a test, the app, or a browser. Hand each test to the runner as soon as it is ready. Give flows marked `Needs human` and flows missing a need a `not_done` handoff with their Step 1 reason. The runner never writes or edits a test.
+
 ## Step 2.5: Run the Flows in the Browser
 
 Run every eligible flow when Step 1 authorizes testing, even when the plan has no automated commands. Follow `references/flow-runner.md`: prepare one native Claude Sonnet or Codex Luna (`gpt-6-luna`) subagent in the same worktree, save its returned ID and model selection in `runner-session.json`, then resume that same agent to execute. If launch, model selection, or resume is unavailable, affected flows are `Not done` with the reason. The subagent follows the flow rules below and returns evidence; the parent reviews it before Steps 2.6–4 and alone updates the plan and report. An assigned runner never delegates again. Report-only runs do not launch a runner. When the caller allows more than one runner and the plan tags flows `Parallel: yes`, those flows run in parallel runners first, then the rest in one runner, per the reference's Parallel runners section.
@@ -51,17 +55,17 @@ Run every eligible flow when Step 1 authorizes testing, even when the plan has n
 
 1. Confirm the environment from the plan header and that the app is reachable. If not, every browser flow is `Not done: need [X]`.
 2. Sign in per `references/sign-in.md`, with the plan's test accounts only, never the user's real account.
-3. For each flow, in plan order: start the recording **before** the first step, per `references/recording.md` (title card, labelled actions, slow motion, one clip per flow). Do every step with the stated data. Compare each `You should see:` line with what appears.
+3. For each flow, in plan order: start the recording **before** the first step, per `references/recording.md` (title card, labelled actions, slow motion, one clip per flow). When the project has a Playwright setup, run the flow's test from Step 2.4 per that reference's Flow tests section, items 7 and 8. Do every step with the stated data. Compare each `You should see:` line with what appears.
 4. Save the clip as `<check-id>-<flow-name>.webm` and a screenshot of the end result as `<check-id>-<flow-name>.png`. On a fail, frame the wrong result. When a console error is the fail, also save `<check-id>-console.png`. Use safe test data from the start; a hidden value in the screenshot is still in the clip.
 5. After each flow, read the browser console. A new error fails the flow even when the screen looks right; quote it under For developers.
 6. One result per flow, one of three:
    - `Passed`: every `You should see:` matched and the clip is saved.
-   - `Failed`: a step differed. Note the step and what appeared, in the words a user would use. A flow with several wrong things is one Failed flow listing each problem.
+   - `Failed`: a step differed. Note the step and what appeared, in the words a user would use. A flow with several wrong things is one Failed flow listing each problem. Decide by the plan's words against what the clip and screenshot show. A test's own check is a hint, never the result: before marking Failed, confirm that what appeared contradicts the plan's words, not only the test's guess.
    - `Not done`: with a short reason: `need [X]`, `needs a person`, `no recording` (keep the observation, rerun with recording), or `not reached` (an earlier step failed).
 7. An emulated viewport is labelled `(emulated)`. It does not clear a real-device need or another browser's matrix cell.
 8. Never replace a run with reading code, an idle screenshot, or an unrelated green suite. A safe result that differs from the plan is Failed with the note `plan may need rewording`.
 9. A human result is `Passed (person: name, date, where)`; never claim the agent saw it. Never invent a recording, tester, or confirmation.
-10. Record each flow at most twice in this run, counting a later return to it. One try may hold several clips: a popup, or each width or browser the flow names. Use a second try only for a broken clip, a setup problem, or to confirm a fail. After two tries, keep what the newer one shows (`Failed` with what appeared, or `Not done` with the reason) and go to the next flow.
+10. Record each flow at most twice in this run, counting a later return to it. One try may hold several clips: a popup, or each width or browser the flow names. Use a second try only for a broken clip, a setup problem, or to confirm a fail. Rerunning a flow test after the parent fixed its own bug is not a try (`recording.md` Flow tests, item 8). After two tries, keep what the newer one shows (`Failed` with what appeared, or `Not done` with the reason) and go to the next flow.
 
 ## Step 2.6: API Speed
 
@@ -81,7 +85,7 @@ Every problem from this branch gets a suggested fix. This skill suggests only; i
 
 ## Step 2.8: Delete Test Data
 
-When this run created records, delete them per `references/test-data.md` before writing the report. Leftovers go under For developers and in Step 4.
+When this run created records, delete them per `references/test-data.md` before writing the report. Leftovers go under For developers and in Step 4. Also delete any flow test still in the project's test folder; its copy stays in the run folder's `flow-tests/`.
 
 ## Step 3: Write the Report
 
@@ -134,6 +138,7 @@ Old problems not caused by this branch: [count], in [flow names]. See For develo
 - Automated runs: command, exit code, raw totals, manifest link, one line per test with its recording, unresolved failures
 - Pre-existing table: what, where, evidence it predates the branch, Linear and Slack lines
 - API speed table when measured, temporary configs used, data created and deleted
+- Flow tests this run wrote, linked in `flow-tests/`, as tests a developer may add to the project
 
 </details>
 

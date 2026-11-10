@@ -5,7 +5,7 @@ Read before Step 1 checks the plan's needs. On the local app or DEV, a missing r
 ## When to create
 
 1. Setup records are created only on the local app or the DEV environment. On staging, production, or an unknown environment, a missing record stays `Not done: need [X]`. A flow whose own steps create a record (for example "Create a schedule") runs freely on the local app or DEV. On any other environment, an attended run asks once, batched with Step 1's other questions, before the first flow. An unattended run marks those flows `Not done: creates data on [environment], needs approval`. Log and delete every created record the same way.
-2. The parent creates setup records in Step 1, before the runner starts. Prefer the project's API or test helpers; the app's screens are allowed too. The runner creates only what its flow steps create.
+2. The parent creates setup records in Step 1, before the runner starts. Parallel runners create their own flows' setup records instead, per `flow-runner.md` Parallel runners. A flow test creates its own flow's records and deletes them when it ends, per `recording.md` Flow tests; they are still logged. Prefer the project's API or test helpers; the app's screens are allowed too. The runner creates only what its flow steps create.
 3. Create the records the plan marks `Agent creates:`, and any other record a flow needs that the test accounts can make. Use the app's screens or the project's own API or test helpers (seed scripts, fixtures). Never write to the database directly.
 4. Create only what the flows need, in the starting state the plan names (for example two rotations with the same start time, or enough rows to cross a page).
 5. Never change or delete a record this run did not create. To act on a shared record, create an own copy and act on that.
@@ -20,7 +20,7 @@ Read before Step 1 checks the plan's needs. On the local app or DEV, a missing r
 
 ## Delete at the end (parent)
 
-1. After the runner finishes, delete every record in `created-data.json`, newest first, with the same account and method. Do this even when the run failed or stopped early.
+1. After the runner finishes, delete every record in `created-data.json` not yet marked deleted, newest first, with the same account and method. Do this even when the run failed or stopped early. When the app offers no delete for a record type, use its closest cleanup: archive it (an incident) or close it (an alert). Log it as `archived` or `closed`, never as deleted. A missing delete is never a reason to skip a flow.
 2. Confirm each one is gone by opening or searching for it, then mark it deleted in the file.
 3. A record that cannot be deleted goes under For developers with its type, name, ID, and reason, and in the session report.
 4. Never delete a record that is not in the list, even one that looks like old test data.
