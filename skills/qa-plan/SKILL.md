@@ -1,6 +1,6 @@
 ---
 name: qa-plan
-description: Use when the user asks to build or update a QA test plan for the current branch. One check is one complete user flow a person can click through, start to end result, with its steps, expected result, and the data it needs. The plan covers story flows, failure paths, list and table reliability, device and browser coverage, regression flows for touched features, and the automated test files for the changed screens (the full suite only for a release). It drafts from the branch prd.md and epic.md when they exist, or from the user's answers (or the PR and diff in an unattended run), and writes the plan to the branch spec folder. Do not use for agent-run acceptance checks (the implement skill does those), writing requirements, or implementing fixes.
+description: Use when the user asks to build or update a QA test plan for the current branch. One check is one complete user flow a person can click through, start to end result, with its steps, expected result, and the data it needs. Each flow is one task a real user does, and the number of flows follows the size of the change. The plan covers story flows, failure paths, list and table reliability, device and browser coverage, regression flows for touched features, and the automated test files for the changed screens (the full suite only for a release). It drafts from the branch prd.md and epic.md when they exist, or from the user's answers (or the PR and diff in an unattended run), and writes the plan to the branch spec folder. Do not use for agent-run acceptance checks (the implement skill does those), writing requirements, or implementing fixes.
 ---
 
 # QA Plan Skill
@@ -66,7 +66,8 @@ Unattended: nothing blocks the save. Use these choices and write each one as an 
 ## Step 3: Draft the Plan
 
 **Writing rules (every check):**
-- One check = one complete flow. It has a name a user would say ("Upgrade from Free with a new card"), 2 to 8 numbered steps, one `You should see:` with the end result (and any mid-flow result that matters), and one `Needs:` line (account, workspace, records, starting state). More than 8 steps means two flows.
+- One check = one complete flow. It has a name a user would say ("Upgrade from Free with a new card"), 2 to 10 numbered steps, one `You should see:` with the end result (and any mid-flow result that matters), and one `Needs:` line (account, workspace, records, starting state).
+- A flow is one task a real user sets out to do, done the way they would do it. Variations of that task are steps or `You should see:` lines inside it, never new flows: another way to do the same action (button or keyboard), the same component on another screen the user passes, or an empty or wrong input on the way. Start a new flow only for a different task, a different role, or a different starting state. More than 10 steps means two tasks: split by task, never by variation.
 - Plain language for a non-technical tester. Name screens and buttons the way the user sees them. No code words, no file paths.
 - Put shared setup under `## Test data & preconditions`; the `Needs:` line names only what that flow uses.
 - After `Needs:`, each browser flow gets a `Parallel:` line, so agents can run safe flows at the same time in separate browsers. Decide it for each flow:
@@ -74,22 +75,30 @@ Unattended: nothing blocks the save. Use these choices and write each one as an 
   - `Parallel: no (...)` only when the flow must share something it or another flow changes: account or workspace settings, roles, plan or billing, a one-of-a-kind record, or a list or count other flows change. Name that thing and the other flow, for example `Parallel: no (changes the workspace plan QA2 reads)`.
   - A timing check is `no`: it needs the machine to itself.
   - Never give every flow the same reason. If every flow is `no`, say why under `## Open items`.
-  Commands (`QP#`) get no tag. Sum the tags up in `## Run order`, so a reader sees them without opening each flow.
+  Commands (`QP#`) get no tag. Sum the tags up in `## Run order`, so a reader sees them without opening each flow. Its first two lines say who runs what: the Playwright tests (or, with no Playwright runner, the agent in a browser), and the person flows.
 - Check IDs are file-unique and never renumbered: `QA1`, `QA2`, … for story, failure, and performance flows; `QR1`, `QR2`, … for regression flows; `QP1`, … for commands.
 - A step a person must do (judgment, real device, camera, print, sign-off) gets `**Needs human:** [what and why]` on the check. When the rest of the flow can run without it, split that step into its own check so an automated pass cannot clear the human part.
+- With a Playwright runner (Step 2), the QA run writes a temporary Playwright test for every flow without `Needs human`. So a step is for a person only when a test cannot do or judge it: a real phone or tablet, a typing tool for languages such as Korean or Chinese, a screen reader, print, a camera, or a judgment that needs a native reader or the team. Looks (fades, overlap, a theme) are not a person step: the agent judges them from screenshots.
 
 **Section sources:**
 - **Test data & preconditions**: from Step 2. Name the account, role, workspace, starting state, and records. For a list or table, state the record count, repeated visible sort values, and reachable boundaries. No vague setup such as "use enough data."
-- **Story flows**: one flow per user path in each story of `prd.md`: the happy path first, then each alternative path (conversation mode: from the gathered answers, under `## Feature flows`). Coverage gate: every acceptance criterion is checked by a `You should see:` line of some flow.
-- **Failure paths**: one flow per realistic failure: wrong or empty input, offline or slow network, empty state, missing permission, double click or repeat. Derive from the flows and criteria; do not invent cases the feature cannot reach.
-- **List & table reliability**: one flow whenever a story displays, sorts, filters, groups, paginates, lazy-loads, or selects rows. Its steps cover every applicable case: same row order and identity after refresh with repeated sort values; no missing or duplicate rows across a page, lazy-load, or group boundary; selection and row stability in filtered and unfiltered views; range or bulk selection across boundaries; a fetch-sensitive action repeated five times with no rows jumping.
+- **Story flows**: one flow per task in each story of `prd.md`: the main task first, then each task a user does differently (conversation mode: from the gathered answers, under `## Feature flows`). Coverage gate: every acceptance criterion is checked by a `You should see:` line of some flow.
+- **Failure paths**: a failure a user meets by hand (wrong or empty input, empty state, double click or repeat) is a step of the flow where the user meets it. A failure gets its own flow only when a user reaches it as its own task, such as a role without permission opening the screen. A failure that needs the server or network to break (server error, offline, slow or failed upload) is not a browser flow, because the QA run never fakes the server. List it as a `suggested:` line under Automated checks, or as a `QP#` when an existing spec covers it. Do not invent cases the feature cannot reach.
+- **List & table reliability**: when a story displays, sorts, filters, groups, paginates, lazy-loads, or selects rows, cover each applicable case as steps in the flow that already shows that list: same row order and identity after refresh with repeated sort values; no missing or duplicate rows across a page, lazy-load, or group boundary; selection and row stability in filtered and unfiltered views; range or bulk selection across boundaries; a fetch-sensitive action repeated five times with no rows jumping. Give the list its own flow only when the list itself is what the story changes.
 - **Device & browser matrix**: map only the flows whose behavior can differ per device or browser to the Step 2 targets.
-- **Regression flows**: never skipped. Source: `epic.md` File Changes when it exists; otherwise the scan's `shared_modified_files`. One flow per existing feature that uses a modified shared file, named in the words a user sees on screen. Skip created-from-scratch files. When many features use one file, test the three most-used screens and name the rest in one line. When no shared file changed, write one line saying so and naming the base branch. Always write `Regression source: epic.md` or `Regression source: git diff against [base]` under the heading.
+- **Regression flows**: never skipped. Source: `epic.md` File Changes when it exists; otherwise the scan's `shared_modified_files`. Per modified shared file, pick at most 2 existing features a user would most notice breaking, named in the words a user sees on screen. One flow may pass through several of them when a user would. Name the rest in one line. Skip created-from-scratch files. When no shared file changed, write one line saying so and naming the base branch. Always write `Regression source: epic.md` or `Regression source: git diff against [base]` under the heading.
 - **Full regression suite**: only for a release plan (the caller says release). Then add the scan's primary suite as the first `QP#` check, labelled `Full regression suite`, using the QA-mode variant (such as `e2e:qa`) when the project has one. A PR plan never includes the full suite; the project's scheduled suite covers the rest of the app, and the plan says so in one line under Automated checks.
 - **Performance flows**: human-observable phrasing of the Step 2 targets ("page is ready in under 3 seconds on a normal connection"). An API speed check only when its limit, measurement, and PROD address are resolved; it records both DEV and PROD, and PROD decides. Keep page readiness and API speed as separate checks.
 - **Automated checks**: only when Step 2 detected a runner. Search the project's E2E folders for spec files that touch the changed screens and flows. One check per relevant spec file, with its exact run command. Add a `Covers:` mapping only after reading the test's assertions and confirming they verify the complete expected result with the required data and browser. Never map a human-only step to an automated pass. Add at most one `suggested:` line per story for an important flow no spec covers; a missing list or table reliability spec takes priority.
 
-Before showing the draft, verify both coverage gates and state their results in chat: criteria coverage and list or table reliability coverage. Keep the mappings out of the file.
+**Size limit:** the plan's size follows the size of the change. Count the screens a user can reach whose behavior the app-code changes alter; a shared component counts once per screen that shows the change. Browser flows (`QA` and `QR` together):
+- up to 3 screens: at most 10
+- 4 to 8 screens: at most 20
+- more screens, or a release plan: no limit
+
+Fill the limit in this order: the main task of each story, failures a user meets by hand, regression, then list stability, devices, assistive tools, and the rest. Past the limit, fold a check into an existing flow as a step when a user would meet it there. Otherwise write it as one `## Open items` line: `Not in this plan: [check] (size limit)`. Write the header line `Estimate: [N] browser flows, about [N × 6] minutes for an agent run`.
+
+Before showing the draft, verify both coverage gates and the size limit, and state their results in chat: criteria coverage, list or table reliability coverage, and flows against the limit. Keep the mappings out of the file.
 
 Show the full draft in chat and ask: **"Ready to save the QA plan?"** Do not write the file before approval. A request for a draft or review only stops here. Unattended: skip the question and save; the `Assumed:` lines take the place of the approval.
 
@@ -98,12 +107,12 @@ Show the full draft in chat and ask: **"Ready to save the QA plan?"** Do not wri
 1. Run the write guards per `../_shared/spec-files.md`.
 2. Write `qa-plan.md` in the spec folder per the schema below.
 3. **Revision rules:** preserve the box and the `Result:` line of every unchanged check; untick a check whose steps or `You should see:` changed, and end its `Result:` line with `(steps changed since)`; never renumber existing IDs; new checks get fresh IDs continuing each sequence; list removed checks explicitly and ask before dropping any check whose last result is Failed (unattended: keep that check instead of asking).
-4. Re-read the written file: every flow has steps, one `You should see:`, a `Needs:` line, and a `Parallel:` line whose `no` reason names the shared thing; one section per PRD story; all IDs unique; every applicable list or table story has its reliability flow; the Regression section names its source and has at least one flow or the "no shared files changed" line.
+4. Re-read the written file: every flow has steps, one `You should see:`, a `Needs:` line, and a `Parallel:` line whose `no` reason names the shared thing; one section per PRD story; all IDs unique; every applicable list or table story has its reliability steps; no two flows are the same task done another way; browser flows are within the size limit; the Regression section names its source and has at least one flow or the "no shared files changed" line.
 
 ## Step 5: Report
 
 - File **path** and branch
-- Counts: story flows, failure paths, list or table flows, matrix rows, regression flows, performance checks, automated checks
+- Counts: browser flows against the size limit, with the estimate; matrix rows; automated checks; `Not in this plan` lines
 - Coverage gate results
 - Any `TBD-###` left open, with who provides it
 - Regression source (epic.md or git diff against which base) and whether this is a release plan with the full suite
@@ -140,10 +149,13 @@ Branch: [branch name]
 Updated: [YYYY-MM-DD]
 Environment: [where to test]
 Devices: [list] | Browsers: [list]
+Estimate: [N] browser flows, about [N × 6] minutes for an agent run
 Assumed: [unattended only: one line per choice made without asking]
 
 ## Run order
 
+- Playwright tests the QA run writes ([N] flows): [flow IDs]
+- By a person ([K] flows): [flow ID]: [what a test cannot do], one line each
 - At the same time ([N] flows): [flow IDs]
 - Alone, in plan order ([M] flows): [flow ID]: [the shared thing], one line each
 
