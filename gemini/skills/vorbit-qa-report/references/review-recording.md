@@ -8,7 +8,7 @@ Read before Step 3, item 10. The review recording is one video of the whole run.
 2. Then one result card per flow, in plan order. Each card shows Passed, Failed, or Not done, with the reason.
 3. After each card comes that flow's clip, when it has one.
 
-It is made from the clips this run already saved. Those clips stay the proof. The review recording is for watching only. `recording.md` still applies: one clip per flow. Never use the review recording in place of a clip.
+It is made from the clips this run already saved. A rerun (SKILL.md Step 1) also uses the earlier run's clips for the flows it kept, so the video shows every flow. Those clips stay the proof. The review recording is for watching only. `recording.md` still applies: one clip per flow. Never use the review recording in place of a clip.
 
 ## Where it lives
 

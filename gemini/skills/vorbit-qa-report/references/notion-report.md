@@ -38,7 +38,7 @@ The local report uses three results. `Passed` and `Failed` map as named. A local
 Follow the execution contract for every Notion call. On a login or access error, stop this step, ask the user to reconnect Notion, and never publish through another tool.
 
 1. **Read the hub.** Fetch the hub. Find the template ID in its `page_templates` list. Note which hub properties exist; fill only those.
-2. **Create a new report page** from the template for every run, with the hub's `Verdict` set to `In progress`. Never reuse an earlier run's page. Title: `PR #[number] [PR title] ([ticket IDs]), run [YYYY-MM-DD HH:MM]`, or `Release [YYYY-MM-DD HH:MM]` for a release. Fill the type, PR, ticket, and FE/BE properties when the hub has them. Record the new page URL at once, so a retry of this run updates this page instead of making a second one.
+2. **Create a new report page** from the template for every run, with the hub's `Verdict` set to `In progress`. Never reuse an earlier run's page. A rerun (SKILL.md Step 1) is the one exception: it updates the earlier run's page per "Update the page for a rerun" below, and skips these steps. Title: `PR #[number] [PR title] ([ticket IDs]), run [YYYY-MM-DD HH:MM]`, or `Release [YYYY-MM-DD HH:MM]` for a release. Fill the type, PR, ticket, and FE/BE properties when the hub has them. Record the page URL at once as a `Notion report: [URL]` line under For developers in this run's section of `qa-report.md`. A retry of this run then updates this page instead of making a second one, and a later rerun can find it.
 3. **Fetch the new page** and find the `data-source-url` of its own `Flows` database. Write rows only there, never to the template's database. Fetch that data source too: Notion rejects a `Section` or `Result` value that is not already an option, so add every missing option (keep the existing ones) before creating rows.
 4. **Upload the actual recordings and screenshots.** For each file: call create-file-upload with the file name, then run `python3 scripts/notion_upload.py --url <upload_url> --auth "<authorization value>" --content-type <content_type> --file <path>` with the content_type that call returned. Keep the returned `file_upload_id`. Upload the run's `review.mp4` too when Step 3 made it; create its upload with content type `video/mp4`, or Notion stores it as a plain file, not a video. A file over 20 MiB cannot be uploaded this way; treat it as a failed upload. One upload ID can go in both the row's `Video` column and its page body. A local path is not a shared attachment. If an upload fails, retain the local report and leave publication `In progress`; report the upload gap without inventing a URL.
 5. **Create one row per check**, in plan order, in batched calls. An automated command becomes **one row per test** from the collector's output (`QP1-1`, `QP1-2`, …), never one row per command; skip `setup` entries. A component test run (no video, such as Storybook) is the exception: one row for the whole run. See "Automated test rows" below.
@@ -56,6 +56,24 @@ Follow the execution contract for every Notion call. On a login or access error,
 8. **Set the verdict last:** `Ready` only when the local report is `READY`, every row is `Passed` or `Old bug`, and required evidence was uploaded. Otherwise `Not Ready` once publication is complete. A crashed/incomplete upload stays `In progress`.
 9. **Link the page on each Linear ticket** as a link attachment titled `QA report`. Never as a comment.
 10. **Re-fetch the page** and confirm: row count equals manual plan checks plus non-setup automated tests plus one row per component test run plus any command-level gap rows described below. Summary counts must match those rows. Confirm recordings, including the review recording in the 🎬 callout, appear as uploaded attachments and playable video blocks, not local paths. Fetch each agent row and check its Slack links point at a reply (see "Agent behaviour rows"). A fetch can return an older cached copy: when its `as of` time is earlier than your last edit, fetch again before trusting it.
+
+## Update the page for a rerun
+
+A rerun never makes a new page. People already read and link the earlier page, so that page must show the newest result. On PR #1363, run 2 passed the one flow run 1 could not finish, but run 1's page still said Not Ready.
+
+1. **Find the page.** Take the URL from the earlier run's `Notion report:` line. With no such line, find the page in the hub by its title. When it cannot be found, make a new page per the steps above, and say why in the session report.
+2. **Set `Verdict` to `In progress`.** Fetch the page and its own `Flows` data source.
+3. **Upload** this run's recordings and its new `review.mp4`, per step 4.
+4. **Update the row of each repeated flow:** `Result`, `Finding`, and `Video`, from this run. In its page body, put this run's evidence first, under `**Rerun [YYYY-MM-DD HH:MM]:**`. Keep the earlier evidence below it, under `**Run [YYYY-MM-DD HH:MM]:**`. Never delete the earlier evidence.
+5. **Leave every other row as it is.**
+6. **Update the callouts** with small search-and-replace edits, per step 7:
+   - Summary: replace the earlier text with the result over every row, per step 7. Start it with `Updated [YYYY-MM-DD HH:MM]: rerun of [flow IDs].`
+   - Test details: add one line: `Rerun [YYYY-MM-DD HH:MM]: [flow IDs], same revision [revision], run by [who]. Why: [reason].`
+   - Whole e2e test recording: replace the earlier video with the new `review.mp4`.
+7. **Set the verdict last**, per step 8, over every row of the page.
+8. **Keep the title and the Linear link.** Add the link per step 9 only when it is missing.
+9. **Re-fetch and confirm** per step 10. Also confirm that each repeated row and the 🎬 callout show the new videos.
+10. Add the `Notion report: [URL]` line to this run's section of `qa-report.md`.
 
 ## Automated test rows
 
