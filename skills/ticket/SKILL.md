@@ -1,6 +1,6 @@
 ---
 name: ticket
-description: Use when the user asks to create a Linear ticket for the current branch work ("create ticket", "create the Linear ticket", "make a ticket") or to post or refresh its short human-readable Linear summaries. It reads the branch prd.md and epic.md, creates or updates one compact summary ticket per user story with its goal and acceptance criteria, and records ticket IDs back into prd.md. Tickets stay summaries; implementation detail lives only in the branch spec files. Requires Linear and an existing branch PRD; do not use to write the PRD or epic plan, implement code, or create engineering sub-issues.
+description: Use when the user asks to create a Linear ticket for the current branch work ("create ticket", "create the Linear ticket", "make a ticket") or to post or refresh its short human-readable Linear summaries, or to update the branch's existing ticket when requirements change. It reads the branch prd.md and epic.md, creates or updates one compact summary ticket per user story with its goal and acceptance criteria, and records ticket IDs back into prd.md. When the branch plan was made from an existing ticket, it edits only that ticket's changed lines after a before-and-after preview. Tickets stay summaries; implementation detail lives only in the branch spec files. Requires Linear and a branch PRD or a plan made from a ticket; do not use to write the PRD or epic plan, implement code, or create engineering sub-issues.
 ---
 
 # Ticket Skill
@@ -16,7 +16,7 @@ Before any Linear call, read `_shared/mcp-tool-routing.md`. Verb names below des
 ## Step 1: Read the Branch Specs
 
 1. Resolve the spec folder per `../_shared/spec-files.md`.
-2. Require `prd.md`. If missing, run `git worktree list`, report any sibling worktree that may hold it, direct the user to `/vorbit:design:prd`, and stop.
+2. Require `prd.md`. If missing and `epic.md` has a `Ticket:` header line, the plan was made from that ticket: run Step 2's auth check only, then follow **Ticket Plan Mode** below instead of Steps 3 to 5. Otherwise run `git worktree list`, report any sibling worktree that may hold it, direct the user to `/vorbit:design:prd`, and stop.
 3. Read `epic.md` when present — it shows which criteria are done, for the checkboxes. Its absence is fine; every box then stays unchecked.
 4. Parse the `## Linear Sync` section in `prd.md` when present: it maps `US-###` to previously created ticket IDs. This decides create vs update; never trust memory of earlier runs over this record.
 
@@ -78,3 +78,18 @@ Do not create sub-issues, labels, statuses, comments, or any engineering breakdo
    - Criteria checked per story (checked / total)
    - Team and project used
    - Reminder: summaries go stale as work continues — re-run `/vorbit:ticket` after finishing tasks to refresh them
+
+## Ticket Plan Mode
+
+A person wrote this ticket and the plan was made from it. Never replace its whole text, and never create a second ticket for it.
+
+1. Fetch the ticket named on the plan's `Ticket:` line.
+2. Collect the differences. Compare criteria only; the plan's `Goal:` line is a summary and is never compared. Box marks and bullet style are not differences.
+   - each criterion in the plan's `Requirements from [ticket ID]` baseline that the ticket lacks or words differently
+   - each criterion the ticket has that the baseline lacks
+   - each requirement change the user states in this request
+3. If the ticket's update time is later than the plan's `Ticket updated:` line, say so first: someone may have changed the ticket in Linear, so a difference may be theirs.
+4. Preview each difference as the line reads now and as it will read, in the ticket and in the plan. Defaults: a line the plan changed or added goes into the ticket, next to its other criteria; a criterion only the ticket has stays and is added to the plan. The user may flip any line. New or changed ticket lines follow the Tracker Communication rule. Get one approval; a preview-only request stops here.
+5. Write the ticket's current description with only the approved lines changed, added, or removed. Every other word, heading, link, and image stays as it was. Change the title only when the user asks. Re-fetch and confirm the result.
+6. Apply approved changes to the plan's baseline and set `Ticket updated:` to the ticket's new update time. Never change a task's status. List tasks that quote a changed criterion, and suggest re-running the epic skill to update them.
+7. Report the ticket URL, the lines changed in the ticket, and the plan lines changed. With no differences and no stated change, report that the ticket matches the plan and write nothing.

@@ -46,6 +46,7 @@ PROJECTED_SKILLS: dict[str, str] = {
     "webflow": "webflow",
     "implement": "implement",
     "review": "review",
+    "pr-watch": "pr-watch",
     "implement-cleanup-mocks": "cleanup-mocks",
     "prepare-pr": "prepare-pr",
     "ux": "ux",
@@ -107,7 +108,7 @@ FORBIDDEN_OUTPUT_TOKENS = (
     "at most 15 nodes",
     "no back-loops",
     "call `save_issue`",
-    "artifact-design",
+    "claude-artifacts",
 )
 
 
@@ -165,6 +166,7 @@ def _rules(agent: dict[str, str]) -> list[tuple[re.Pattern[str], object]]:
             "../_shared/design-knowledge/",
             "../references/design-knowledge/",
         ),
+        lit("../_shared/scripts/", "../references/scripts/"),
         lit(
             'save using the "Save Content" section in `_shared/mcp-tool-routing.md` and pass',
             "save via the connected platform's current content-creation tools "
@@ -234,10 +236,18 @@ def _rules(agent: dict[str, str]) -> list[tuple[re.Pattern[str], object]]:
         ),
         # -- explore solution page: each runtime uses its own visual tool -----
         lit(
-            "Use the `artifact-design` skill and the Artifact tool: write the HTML "
-            "to that path first, then publish that same file as an artifact, with "
-            "the saved reference pictures as supporting files, and keep its link "
-            "for Step 7.",
+            "Write the HTML to that path first, then publish it as a Claude "
+            "canvas, so the user can open it from a link on any device. Make one "
+            "canvas from the \"Design\" artifact type with the `claude-artifacts` "
+            "tools: `list_types`, `describe_type`, `create_from_type` once, then "
+            "`publish_files`, following the type's instructions. One board per "
+            "page section. Each layout board shows the screen where the user "
+            "enters the flow. Each unresolved decision is an orange \"To decide\" "
+            "sticky note next to the board it affects. No iframes and no links to "
+            "local files: upload the reference pictures, or link to their source "
+            "pages. Keep the canvas link for Step 7. When this session has no "
+            "`claude-artifacts` tools, skip the canvas and write `not published: "
+            "no canvas tools` in place of its link.",
             agent["solution_page"],
         ),
         # -- misc ---------------------------------------------------------------
@@ -312,7 +322,7 @@ MIRRORED_SHARED: tuple[str, ...] = (
     "spec-files.md",
 )
 
-MIRRORED_SHARED_DIRS: tuple[str, ...] = ("design-knowledge",)
+MIRRORED_SHARED_DIRS: tuple[str, ...] = ("design-knowledge", "scripts")
 
 
 def _shared_target(agent_key: str, filename: str) -> Path:

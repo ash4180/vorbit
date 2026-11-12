@@ -1,10 +1,10 @@
 # Publish the QA Report to Notion
 
-Load this file only when the caller named a Notion report hub. The local `qa-report.md` stays the full record; the Notion page is the copy people read.
+Load this file when Step 3.5 found a hub. The local `qa-report.md` stays the full record; the Notion page is the copy people read.
 
 ## Inputs
 
-- **Hub:** the Notion database the caller named (a URL or `collection://` ID).
+- **Hub:** the Notion database from Step 3.5 (a URL or `collection://` ID).
 - **Template:** the hub template the caller named. Default: the template called `QAT Report`.
 - **Linear tickets:** the tickets this run covers, from the PR or the caller.
 
@@ -13,10 +13,11 @@ Load this file only when the caller named a Notion report hub. The local `qa-rep
 The template already contains the whole layout, so never build the layout yourself:
 
 - a 💡 Summary callout and a 🧪 Test details callout, with `[placeholder]` text
+- a 🎬 `Whole e2e test recording` callout with an empty video block, for the review recording
 - chart views (by section, by result) and two lists (`Needs you`, `Problems found`)
-- an inline `All Checks` database. Every chart and list reads this database, so the page fills itself once the rows exist.
+- an inline `Flows` database. Every chart and list reads this database, so the page fills itself once the rows exist.
 
-`All Checks` columns: `Check` (title), `Result`, `Section`, `What`, `Finding`, `Screenshot`.
+`Flows` columns: `Flow` (title), `Result`, `Section`, `Finding`, `Video`.
 
 ## Result values
 
@@ -24,34 +25,55 @@ Map every check in this run to exactly one `Result`:
 
 | Result | When |
 |---|---|
-| Passed | the expected result was seen, and the row has proof (picture, video, or pass line for a no-page test) |
+| Passed | complete expected result verified with a saved browser recording, a confirmed API-only pass, a documented PROD speed resolution per `api-performance.md`, or an explicit human result with tester/date/environment |
 | Failed | a fail this branch caused |
 | Old bug | a fail tagged `pre-existing` |
-| Needs you | the app is safe but differs from the plan, or the check needs a human decision |
-| Not tested | blocked, skipped, `needs human`, or no picture or video exists |
+| Needs you | human-only check awaiting its tester, a flaky test, or a result that needs a human decision |
+| Not done | blocked, skipped, incomplete, or a browser success missing its recording; state the precise gap in Finding |
+
+The local report uses three results. `Passed` and `Failed` map as named. A local `Not done` becomes `Needs you` when its reason is a person, a decision, or a flaky test, and stays `Not done` otherwise. Each local flow row becomes one Notion row.
 
 ## Steps
 
 Follow the execution contract for every Notion call. On a login or access error, stop this step, ask the user to reconnect Notion, and never publish through another tool.
 
 1. **Read the hub.** Fetch the hub. Find the template ID in its `page_templates` list. Note which hub properties exist; fill only those.
-2. **Create the report page** from the template, with the hub's `Verdict` set to `In progress`. Title: `PR #[number] [PR title] ([ticket IDs])`, or `Release [YYYY-MM-DD]` for a release. Fill the type, PR, ticket, and FE/BE properties when the hub has them. Record the new page URL at once, so a retry updates this page instead of making a second one.
-3. **Fetch the new page** and find the `data-source-url` of its own `All Checks` database. Write rows only there, never to the template's database. Fetch that data source too: Notion rejects a `Section` or `Result` value that is not already an option, so add every missing option (keep the existing ones) before creating rows.
-4. **Upload each picture or video.** For each file: call create-file-upload with the file name, then run `python3 scripts/notion_upload.py --url <upload_url> --auth "<authorization value>" --file <path>`. Keep the returned `file_upload_id`. One upload ID can go in both the row's `Screenshot` column and its page body.
-5. **Create one row per check**, in plan order, in batched calls. An automated command becomes **one row per test** from the collector's output (`QP1-1`, `QP1-2`, …), never one row per command; skip `setup` entries. See "Automated test rows" below.
-   - `Check`: the check ID (`QA3`, `QR1`, `QP2`)
+2. **Create a new report page** from the template for every run, with the hub's `Verdict` set to `In progress`. Never reuse an earlier run's page. A rerun (SKILL.md Step 1) is the one exception: it updates the earlier run's page per "Update the page for a rerun" below, and skips these steps. Title: `PR #[number] [PR title] ([ticket IDs]), run [YYYY-MM-DD HH:MM]`, or `Release [YYYY-MM-DD HH:MM]` for a release. Fill the type, PR, ticket, and FE/BE properties when the hub has them. Record the page URL at once as a `Notion report: [URL]` line under For developers in this run's section of `qa-report.md`. A retry of this run then updates this page instead of making a second one, and a later rerun can find it.
+3. **Fetch the new page** and find the `data-source-url` of its own `Flows` database. Write rows only there, never to the template's database. Fetch that data source too: Notion rejects a `Section` or `Result` value that is not already an option, so add every missing option (keep the existing ones) before creating rows.
+4. **Upload the actual recordings and screenshots.** For each file: call create-file-upload with the file name, then run `python3 scripts/notion_upload.py --url <upload_url> --auth "<authorization value>" --content-type <content_type> --file <path>` with the content_type that call returned. Keep the returned `file_upload_id`. Upload the run's `review.mp4` too when Step 3 made it; create its upload with content type `video/mp4`, or Notion stores it as a plain file, not a video. A file over 20 MiB cannot be uploaded this way; treat it as a failed upload. One upload ID can go in both the row's `Video` column and its page body. A local path is not a shared attachment. If an upload fails, retain the local report and leave publication `In progress`; report the upload gap without inventing a URL.
+5. **Create one row per check**, in plan order, in batched calls. An automated command becomes **one row per test** from the collector's output (`QP1-1`, `QP1-2`, …), never one row per command; skip `setup` entries. A component test run (no video, such as Storybook) is the exception: one row for the whole run. See "Automated test rows" below.
+   - `Flow`: the check ID, a colon, and the flow name from the plan (`QA3: Upgrade from Free with a new card`)
    - `Result`: from the table above
    - `Section`: the plan section the check belongs to (story title or subsection name)
-   - `What`: the action, in the plan's own words, shortened to one line
-   - `Finding`: one line for anything not `Passed`; empty for a pass
-   - Page body: `**Did:**`, `**Expected:**`, `**Saw:**` lines. For a fail or old bug, add `**Fix idea:**` (from Step 2.7), plus the Linear or Slack line for an old bug. Then the image or video block.
-6. **Attach the picture to each row's `Screenshot` column** with the same upload ID.
-7. **Fill the two callouts** by replacing their placeholder text only. Use small search-and-replace edits; never rewrite the whole page, because Notion reorders the blocks.
-   - Summary: `[N] of [M] checks passed.` Then one short sentence each for Needs you, Failed, Old bug, and what was not tested. Skip a sentence when its count is zero.
-   - Test details: date, who ran it, browser, branch, where it was tested, and what test data was created and deleted.
-8. **Set the verdict last:** `Ready` when every row is `Passed` or `Old bug`; otherwise `Not Ready`. Setting it last means a crashed run stays `In progress`, which is honest.
+   - `Finding`: what actually happened; for an unresolved check, include the next action and who needs to do it. Identify human confirmations with tester/date/environment.
+   - Page body: `**Did:**`, `**Expected:**`, `**Saw:**`, and `**Tested by:**` lines, followed by the embedded recording and its browser/time range. Put technical fix details (Step 2.7) after the evidence, plus the Linear or Slack line for an old bug.
+   - For API speed checks, use the same DEV vs PROD comparison as the local report: target, measured values/sample counts, environment/deployment equivalence, and timing evidence. A PROD speed pass has `Finding: Passed — PROD verified; DEV [measured result]`. Attach the timing log or source link; retain browser recordings when the check includes a browser flow.
+6. **Attach the recording to each row's `Video` column** using the same upload ID; keep the existing column name to preserve template views. Include screenshots as supporting attachments. A screenshot must not disguise a missing recording.
+7. **Fill the callouts** by replacing their placeholder text only. Use small search-and-replace edits; never rewrite the whole page, because Notion reorders the blocks.
+   - Summary: lead with the local report's verdict and concrete reason. Then `[N] of [M] report rows passed`, counts for the other results, and who needs to do what next. Label these as report-row counts: automated commands expand into individual tests, so this is not the local plan-check denominator.
+   - Test details: date/time, who ran it, actual browser/device (label emulation), branch/revision, environment, and what test data was created and deleted.
+   - Whole e2e test recording: replace the empty `<video />` in the 🎬 callout with the `review.mp4` upload's `suggested_markdown`. With no review recording, or a failed upload, replace it with one line saying why. If the template has no 🎬 callout, do not add one; say so in the session report.
+8. **Set the verdict last:** `Ready` only when the local report is `READY`, every row is `Passed` or `Old bug`, and required evidence was uploaded. Otherwise `Not Ready` once publication is complete. A crashed/incomplete upload stays `In progress`.
 9. **Link the page on each Linear ticket** as a link attachment titled `QA report`. Never as a comment.
-10. **Re-fetch the page** and confirm: the row count equals the plan's check count, and the counts in the Summary match the rows. Fetch each agent row and check its Slack links point at a reply (see "Agent behaviour rows"). A fetch can return an older cached copy: when its `as of` time is earlier than your last edit, fetch again before trusting it.
+10. **Re-fetch the page** and confirm: row count equals manual plan checks plus non-setup automated tests plus one row per component test run plus any command-level gap rows described below. Summary counts must match those rows. Confirm recordings, including the review recording in the 🎬 callout, appear as uploaded attachments and playable video blocks, not local paths. Fetch each agent row and check its Slack links point at a reply (see "Agent behaviour rows"). A fetch can return an older cached copy: when its `as of` time is earlier than your last edit, fetch again before trusting it.
+
+## Update the page for a rerun
+
+A rerun never makes a new page. People already read and link the earlier page, so that page must show the newest result. On PR #1363, run 2 passed the one flow run 1 could not finish, but run 1's page still said Not Ready.
+
+1. **Find the page.** Take the URL from the earlier run's `Notion report:` line. With no such line, find the page in the hub by its title. When it cannot be found, make a new page per the steps above, and say why in the session report.
+2. **Set `Verdict` to `In progress`.** Fetch the page and its own `Flows` data source.
+3. **Upload** this run's recordings and its new `review.mp4`, per step 4.
+4. **Update the row of each repeated flow:** `Result`, `Finding`, and `Video`, from this run. In its page body, put this run's evidence first, under `**Rerun [YYYY-MM-DD HH:MM]:**`. Keep the earlier evidence below it, under `**Run [YYYY-MM-DD HH:MM]:**`. Never delete the earlier evidence.
+5. **Leave every other row as it is.**
+6. **Update the callouts** with small search-and-replace edits, per step 7:
+   - Summary: replace the earlier text with the result over every row, per step 7. Start it with `Updated [YYYY-MM-DD HH:MM]: rerun of [flow IDs].`
+   - Test details: add one line: `Rerun [YYYY-MM-DD HH:MM]: [flow IDs], same revision [revision], run by [who]. Why: [reason].`
+   - Whole e2e test recording: replace the earlier video with the new `review.mp4`.
+7. **Set the verdict last**, per step 8, over every row of the page.
+8. **Keep the title and the Linear link.** Add the link per step 9 only when it is missing.
+9. **Re-fetch and confirm** per step 10. Also confirm that each repeated row and the 🎬 callout show the new videos.
+10. Add the `Notion report: [URL]` line to this run's section of `qa-report.md`.
 
 ## Automated test rows
 
@@ -59,16 +81,21 @@ Build each row from one collector entry:
 
 | Column | Value |
 |---|---|
-| `Check` | the entry's `id`, then a colon and its `title` (`QP1-12: Team field opens the list`) |
-| `Result` | `passed` → Passed; `passed` with `flaky: true` → Needs you, Finding "passed only on a retry"; failed, timedOut, or interrupted → Failed (or Old bug when tagged pre-existing); `skipped` → Not tested |
+| `Flow` | the entry's `id`, then a colon and its `title` (`QP1-12: Team field opens the list`) |
+| `Result` | Default to `qa_status`, never raw `status`: `passed` → Passed; `flaky` → Needs you; `failed` → Failed (or Old bug when confirmed); `not_tested` or `needs_evidence` → Not done. Apply only the documented PROD speed resolution below as an exception. |
 | `Section` | `Automated checks` |
-| `What` | the entry's `path` |
-| `Finding` | empty for a pass; otherwise the entry's `note` in plain words |
-| `Screenshot` | the uploaded video, or the screenshot when there is no video |
+| `Finding` | observed outcome, or the entry's `note` in plain words plus the next action |
+| `Video` | the uploaded recording; screenshots may support failures but do not clear recording gaps |
 
-Page body: `**Did:**` the test's path and the command that ran it; `**Saw:**` the result, plus the `note` when present. Then one block per evidence file: `<video src="file-upload://…">` for a video, `<image src="file-upload://…">` for a screenshot. Attach a trace file as `<file src="file-upload://…">` only for a fail. For an API-only pass, write `**Proof:** Playwright reported this test as passed` instead of a picture.
+Page body: `**Did:**` the user-facing action; `**Expected:**` the assertion's meaning; `**Saw:**` the result and any gap. Then one block per evidence file: `<video src="file-upload://…">` for a video, `<image src="file-upload://…">` for a screenshot. Label browser and attempt number/status; show the failed attempt as well as the retry. Put the test path, command, and optional failed trace after the evidence. For a confirmed API-only pass, state the inspected test/fixtures and assertion instead of claiming a recording exists.
 
-Before setting the verdict, compare the counts: rows under `Automated checks` must equal the collector's `summary.tests` for every command. A mismatch means rows are missing, so fix it first.
+For a DEV-only API-duration failure resolved under `api-performance.md`, use `Passed` only when the local report documents the equivalent PROD speed pass and completed functional assertions. Set `Finding` to `Passed — PROD speed verified; DEV timing failed`, and include both measurements and evidence in the page body. Keep the raw DEV runner result in technical details. Never apply this exception to a functional failure, flaky test, incomplete run, missing recording, or undeployed backend change. Summary counts are assessed QA results; label raw DEV runner totals separately.
+
+Before setting the verdict, compare the counts: rows under `Automated checks` must equal the collector's `summary.tests` for every Playwright command, plus one row per component test run. A mismatch means rows are missing, so fix it first.
+
+**Component test runs get one row, not one row per test.** A runner that checks components and records no video (for example Storybook's test runner) gets one row for the whole command. Use `Flow` `[ID]: [runner] component tests`. Set `Result` to Passed when every test passed, and Failed when any failed. `Finding` gives the totals (`960 of 960 passed in 253 suites`). Attach the results file and screenshots. A missing video never makes such a row Not done: the per-test rows rule and the recording rule are for browser flows and Playwright tests. On PR #1346, 960 passing Storybook tests became 960 Not done rows, which hid the real results.
+
+Keep command-level gaps in a separate `Run gaps` section: create a `QP#` row when its command did not run, produced no tests/report, or had a setup/runner error not represented by a test row. Never lose that blocker because there are no individual test entries. Do not create an extra command row for a healthy run or solely for speed failures already represented by test rows with documented PROD resolutions.
 
 ## Agent behaviour rows (chat tests in Slack)
 
@@ -76,10 +103,9 @@ One row per agent check (`QB#`, `QS#`), never one per run:
 
 | Column | Value |
 |---|---|
-| `Check` | the ID, a colon, and the check name (`QS4: Korean question gets a Korean answer`) |
-| `Result` | Passed only when every run met `Must show` and avoided `Must not show`; any failed run → Failed; the tester could not reach the behaviour (for example its account is not linked) → Not tested |
+| `Flow` | the ID, a colon, and the check name (`QS4: Korean question gets a Korean answer`) |
+| `Result` | Passed only when every run met `Must show` and avoided `Must not show`; any failed run → Failed; the tester could not reach the behaviour (for example its account is not linked) → Not done |
 | `Section` | `Agent behaviour` |
-| `What` | the message sent, shortened to one line |
 | `Finding` | `[passed runs] of [runs] passed`, plus one line for anything wrong |
 
 Page body: `**Sent:**` the exact message. Then for each run, `**Run N:**` pass or fail, the answer time in seconds, and a `Slack thread` link; below it, the final answer as a quote. The Slack thread link is the proof; a quoted answer alone is not.
@@ -91,7 +117,7 @@ Page body: `**Sent:**` the exact message. Then for each run, `**Run N:**` pass o
 
 ## Rules
 
-- Every `Passed` row needs proof: a picture or video, the runner's pass line for a test that opened no page, or the Slack thread link for an agent check. No proof means `Not tested`.
-- A check a human ran by hand keeps its result, with `Finding: run by hand, no picture` when none was attached.
-- Automated runs: attach the runner's own videos or pictures, one row per test. A test that opened no page uses its pass line as proof.
+- Every agent-run browser `Passed` row needs its recording. Confirmed API-only tests use their inspected assertion and runner result; agent chat checks use the Slack thread proof below. A missing recording means `Not done`, with `missing recording` in Finding, even if the raw runner passed.
+- A check a human ran by hand keeps its confirmed result and tester/date/environment, with `no recording supplied` when none was attached. An unexplained tick is not human confirmation.
+- Never infer an API-only test from absent video. Use the collector's explicit API-only confirmation process.
 - Never put secrets, tokens, or real customer data in a row or a picture.

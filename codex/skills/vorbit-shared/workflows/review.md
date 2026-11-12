@@ -28,6 +28,8 @@ Detailed pipeline specs live in `references/` within this skill's directory. The
 2. Read `<rules-root>/projects/<project-slug>/review-rules.md` (resolve the root via `vorbit-resolve-rules`) if it exists — learnable rules from previous reviews
 3. Determine mode from input (see Mode Detection)
 
+When QA is requested alongside code review, use the qa-report workflow for execution and evidence. Review findings and a green static/test run never mark manual QA checks passed. Report code-review findings separately from QA readiness; keep human-only checks pending and link the QA report's screen recordings.
+
 ---
 
 ## Mode Detection
@@ -37,6 +39,8 @@ Detailed pipeline specs live in `references/` within this skill's directory. The
 3. **No arguments** → PR Review Mode (base resolved per the Base Branch section of the execution contract)
 
 To detect without flag: if any argument matches an existing file or directory path, use File Review Mode. Otherwise, treat arguments as a base branch name for PR Review Mode.
+
+**`--since <commit>`**: strip it and its commit before the steps above. In PR Review Mode it limits the review to the changes since that commit (see Since a Commit). File Review Mode ignores it and says so.
 
 ---
 
@@ -96,6 +100,23 @@ End with: **"Say 'fix it' to apply changes, or tell me what you disagree with."*
 3. Get changed file list: `git diff --name-only <base>..HEAD`
 4. **If no committed changes**: fall back to uncommitted changes with `git diff` (staged + unstaged) and `git diff --name-only`
 5. **If STILL no changes** → output "No changes detected (committed or uncommitted)." → **STOP**
+6. **With `--since <commit>`** → apply Since a Commit below before running the pipeline.
+
+### Since a Commit
+
+`<commit>` is the PR head that was checked before. The new changes are this PR's own commits after it, without merge commits and without the work merges bring in.
+
+1. Run `python3 ../references/scripts/changes_since.py <commit> --base <base>` inside the repository (the path is relative to this file). It prints JSON with a `status` and a one-line `scope`.
+2. `ok`: run it again with `--diff` for the patches of the new commits, oldest first. Those patches are the review scope. The full PR diff from Step 1 is background only.
+3. `no_new_commits`: print the `scope` line, then "Nothing new to review." Stop with `completed`.
+4. `not_ancestor` or `unknown_commit`: print the `scope` line, then "Full review instead." Review the full PR as usual.
+
+With the new changes as the scope:
+- Layer 1 runs on the files in `files` that still exist. Layer 2 starts from those files only.
+- Layer 3 passes get the new patches as the diff, plus the full PR diff marked as background.
+- Report only findings in, or caused by, the new changes. Judge the code as it is at HEAD: a line that a later new commit changed again is not a finding. Leave out findings in older code of this PR or the base branch, pre-existing follow-ups included. The earlier check covered them.
+
+With `--since`, the report's first line under its title is the `scope` line, for example "Changes since 3d84e3c: 3 files, +7/-6". After a fallback, the line ends with "Full review instead."
 
 ### Steps 2–5: Run the 3-Layer Pipeline
 

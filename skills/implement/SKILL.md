@@ -13,6 +13,10 @@ Read `../_shared/glossary.md`: use the project's `CONTEXT.md` glossary terms whe
 
 > **Requirement sources**: Branch spec tasks come from `.vorbit/epic.md` in the current worktree — read `../_shared/spec-files.md` for path resolution, the `Branch:` line check, and status fields. Linear issues remain fully supported: use the connected Linear tools shipped with Vorbit and verify the available operation and parameter schema before calling; never guess a verb or field name.
 
+**Model roles:** prefer Claude Fable or Codex Astra for planning and parent review. Delegate implementation to one fresh native Sonnet or Luna (`gpt-6-luna`) worker per selected task using `references/task-worker.md`. The parent alone resolves requirements, updates task/issue status, reviews evidence, and advances loop state. A skill cannot switch the parent's model; record an explicit caller override. Missing native delegation or model selection is a reported blocker, never a silent fallback to the parent or a CLI worker. Quick mode keeps this handoff.
+
+**Worker entry:** an agent assigned a `worker-task.md` follows only the worker reference and Steps 4, 4.5, and 6 below. It skips loop routing, task selection, status updates, and parent completion steps, even when an active loop exists.
+
 ## Handle Loop Mode
 
 **If `--loop` or `--cancel` is present, or `.claude/.loop-state.json` contains an active loop:**
@@ -28,14 +32,16 @@ Read and follow `_shared/mcp-tool-routing.md` (glob for `**/skills/_shared/mcp-t
 
 **Priority order for finding work:**
 
-1. **IF args = a spec task or story ID** (`T3`, `US-002`) — or args are empty while the branch spec plan `.vorbit/epic.md` exists (its `Branch:` line matching the current branch): use the spec chain. Read `prd.md` and `epic.md`; no Linear connection is needed. For empty args, list that plan's `pending` tasks in implementation order and ask which one to take
+1. **IF args = a spec task or story ID** (`T3`, `US-002`, `TS-001`) — or args are empty while the branch spec plan `.vorbit/epic.md` exists (its `Branch:` line matching the current branch): use the spec chain. Read `prd.md` (when it exists) and `epic.md`; no Linear connection is needed. For empty args, list that plan's `pending` tasks in implementation order and ask which one to take
 2. **IF args = Linear issue ID** (e.g., `ABC-123`): Fetch issue details from Linear
 3. **IF args = Linear URL**: Extract issue ID from URL, fetch details
 4. **IF args = a git branch name containing a ticket ID** (e.g. `feature/vib-3814-signup-ux-...`, as copied from Linear's branch button): extract the ticket ID (`vib-3814` → `VIB-3814`), fetch the issue, and treat the pasted name as the target branch for Step 2.7
 5. **IF nothing found**: Ask what to implement. Do not select assigned work without the user's request
 6. **IF description only**: Work directly on what user describes (no spec or Linear tracking)
 
-For a spec task, the requirement baseline is the task section plus its story header in `epic.md`, and the quoted criteria's source story in `prd.md`; note the file state at read time. For a Linear issue, record the issue ID and description update timestamp. If the baseline changes during implementation, stop and reconcile the new requirements.
+For a spec task, the requirement baseline is the task section plus its story header in `epic.md`, and the quoted criteria's source story in `prd.md` (or the plan's baseline section when it has no `prd.md`, such as a plan made from a ticket); note the file state at read time. For a Linear issue, record the issue ID and description update timestamp. If the baseline changes during implementation, stop and reconcile the new requirements.
+
+Resolve multi-task inputs using Step 5 before changing any task status or starting a worker. Normal implementation must select one item; only explicit loop mode owns the queue.
 
 ## Step 2.7: Branch Setup
 
@@ -55,7 +61,7 @@ Branch setup completes before Step 3 moves the issue to In Progress, so an abort
 ## Step 3: Before Starting
 
 For spec tasks:
-- Read the task section and its story header in `epic.md`, and the owning story in `prd.md`
+- Read the task section and its story header in `epic.md`, and the owning story in `prd.md` (or the plan's baseline section when there is no `prd.md`)
 - Map the task to its story (`US-*`), its acceptance criteria, and its flow steps
 - Confirm no implementation-affecting `TBD` remains
 - Only after those gates pass, set the task's `**Status:**` line to `in-progress` — edit exactly that line and nothing else in the file
@@ -103,7 +109,18 @@ If issue involves UI components:
 
 ## Step 4: Learn Codebase Style
 
+The parent first prepares the handoff in `references/task-worker.md`. The worker performs Steps 4 and 4.5 during Prepare, returns readiness without source edits, then executes Step 6 only after the parent records its native agent ID and resumes it. The parent does not implement concurrently.
+
 Before writing code, study similar features and call sites: import style, naming conventions, file structure, test patterns. **Consistency > Novelty** — match the team's existing style.
+
+**UI work: page check.** Before the first UI edit, check every page and component file the task will change:
+
+1. Read the repository's UI rules: the file `AGENTS.md` or `CLAUDE.md` names for UI work. Run the preflight steps and discovery commands it lists. If no file is named, use the shared component folders you find.
+2. List each part of those files that does not use an existing shared component: a raw control (`<button>`, `<input>`, `<textarea>`, `<table>`) where a shared one exists, a hand-made copy of a shared pattern, or a style the UI rules forbid.
+3. Record each item: file and line, what it is, the shared component to use, and `in_scope` (true when the task changes that code anyway).
+4. In scope: use the shared component in this task. Out of scope: leave it unchanged. The parent reports it, and the user decides whether to fix it.
+
+Record an empty list when nothing is found. Never skip the check for UI work.
 
 ## Step 4.5: i18n/Localization Rules
 
@@ -138,11 +155,15 @@ For each task, follow Red/Green/Refactor:
 Register every temporary application mock in the project registry before the task is done (test fixtures are excluded) — this enables cleanup before backend handover. Read `../_shared/mock-registry.md` for the path resolution, schema, and field semantics; entries created here use `"createdBy": "implement"`.
 
 ### Task Complete Criteria
-Mark done only when every gate defined in Steps 3.5-6 above is satisfied.
+The worker returns `ready_for_review` only when every gate defined in Steps 3.5-6 above is satisfied. This is a claim for the parent to verify, not permission to mark the task done.
+
+## Step 6.5: Parent Review
+
+Follow the parent review in `references/task-worker.md`: inspect the actual diff against the saved starting state, check every acceptance criterion, and independently run the decisive focused checks. Verify existing user changes remain intact and the requirement baseline has not changed. Request corrections from the same worker for the same task. Unresolved scope, failing checks, missing evidence, or a running worker prevent completion. Only an accepted review reaches Step 7.
 
 ## Step 7: On Task Completion
 
-- Spec task: set its `**Status:**` line to `done` once its ACs and tests pass. The story is complete only when all of its tasks are `done`; suggest `/vorbit:ticket` to refresh the Linear summaries.
+- Parent only: for a spec task, set its `**Status:**` line to `done` after Step 6.5 accepts its ACs and tests. The story is complete only when all of its tasks are `done`; suggest `/vorbit:ticket` to refresh the Linear summaries.
 - Linear: keep the implementation parent "In Progress" until a PR exists. Implementation sub-issues may move to "Done" after their own ACs and tests pass.
 - Report changed files, verification evidence, and remaining release steps in the current session.
 
@@ -155,7 +176,9 @@ Do not create a generic `memory.md`. Record durable decisions only in an existin
 - What was implemented
 - Files changed
 - Tests added/updated
-- Next: `/vorbit:implement:qa-plan` to build or refresh the human test plan
+- Page check: the out-of-scope items left unchanged (file and line, what it is, the shared component). Ask whether to fix them.
+- Worker ID, requested model and verified model when available, parent review result, and evidence folder
+- Next: `/vorbit:implement:qa-plan` to build or refresh the test plan (run by a person or the agent)
 
 ## Quick Mode
 

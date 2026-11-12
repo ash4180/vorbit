@@ -1,6 +1,6 @@
 interface:
   display_name: "Vorbit QA Plan"
-  short_description: "Build a human-runnable QA test plan from branch specs"
+  short_description: "Build a QA test plan a person or the agent can run"
   default_prompt: "Use $vorbit-qa-plan to build the QA test plan for the current branch specs."
 
 policy:

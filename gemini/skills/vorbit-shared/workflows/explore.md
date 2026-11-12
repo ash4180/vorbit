@@ -77,13 +77,18 @@ After analysis, build one self-contained visual HTML page presenting the recomme
 
 Build the page yourself as one self-contained HTML file, drawing the diagrams and charts with inline SVG or CSS. There is no online publishing step.
 
-The page explains the solution with pictures, so the user understands it without reading long text:
-- The user flow of the recommended approach, drawn as a step-by-step diagram.
-- The options compared side by side in a visual chart or comparison graphic.
-- The reference patterns from research: app name, the saved picture, and a link to the source.
-- One micro-interaction card per key interaction, with a live CSS demo, using the card shape in `references/motion-principles.md` (from this skill's installed directory). Follow its role models and hard limits, including `prefers-reduced-motion`.
+The page is a design review page, not a website: no hero, no marketing style. It explains the solution with pictures, so the user understands it without reading long text. Its sections, in this order:
+1. **Flow.** A Mermaid flowchart (the Mermaid script from a CDN, or an SVG) of the flow today and the proposed flow. One box per step, with the loops and the error paths. A fresh idea has no flow today.
+2. **Layout.** For existing code, a faithful mockup of the real screen in HTML and CSS. Not a wireframe, not a running prototype, not a picture from an image model. Change no app code.
+   - Scan: read the real screen's code. Note its layout, the components it uses, and the design tokens (colors, type, spacing, radius) from the app's theme or Tailwind config.
+   - Rebuild: reproduce the screen as it is today with those tokens and component shapes, so it looks like the app, not like a template.
+   - Change: apply the recommended option on top. Show today and proposed side by side, plus every state the change adds (empty, loading, error). One line each on what changed and which existing component it reuses.
+   For a fresh idea, draw the proposed screen from the reference research and the chosen style direction. Web screens are drawn at desktop width, mobile screens inside a 390 by 844 phone frame. Use the `frontend-design` skill for the craft when it is available, with one rule above it: the app's own tokens win over any new direction.
+3. **Options.** The options side by side in a visual comparison, and the recommendation.
+4. **Interactions.** One micro-interaction card per key interaction, with a live CSS demo, using the card shape in `references/motion-principles.md` (from this skill's installed directory). Follow its role models and hard limits, including `prefers-reduced-motion`.
+5. **References.** The reference patterns from research: app name, the saved picture, and a link to the source.
 
-The page presents the solution. It is not a pixel-perfect mockup and not a PRD.
+The page presents the solution. It is not a PRD.
 
 ## Step 6: Draft in Chat
 

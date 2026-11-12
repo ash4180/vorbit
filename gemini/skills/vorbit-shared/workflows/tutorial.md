@@ -81,7 +81,7 @@ Show the full draft in the session with the list of captured images and placehol
 
 1. Write the doc and images to the folder from Step 1. Report the paths and the placeholder count.
 2. **Notion (optional):** when a Notion connector is connected, ask once whether to post a copy. If yes, save via the connected platform's current content-creation tools (inspect schemas first) and pass the doc text; record the page URL. Images that cannot upload stay as links to the repo file; say so.
-3. **Linear (optional):** when a Linear connector is connected and the story has a ticket (the `## Linear Sync` section in `prd.md`, or an ID the user gives), ask once, batched:
+3. **Linear (optional):** when a Linear connector is connected and the story has a ticket (the `## Linear Sync` section in `prd.md`, the `Ticket:` line in `epic.md`, or an ID the user gives), ask once, batched:
    - add the doc link to the ticket (attachment or link): yes or no
    - leave one comment that mentions someone: yes or no, and who
    Read the ticket's existing comments first and copy the team's mention style (for example a leading `@Name`). Show the exact comment text and post only after the user approves it. This is the one Linear comment a Vorbit workflow may post, and only on the user's explicit yes in this session.

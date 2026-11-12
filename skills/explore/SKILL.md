@@ -76,15 +76,20 @@ After gathering context:
 
 After analysis, build one self-contained visual HTML page presenting the recommended solution. Save it as `.vorbit/explore/YYYY-MM-DD-<topic>.html` (folder rules in Step 7), where `<topic>` is a short lowercase-hyphenated name. Do not ask permission first; this page is part of the exploration deliverable.
 
-Use the `artifact-design` skill and the Artifact tool: write the HTML to that path first, then publish that same file as an artifact, with the saved reference pictures as supporting files, and keep its link for Step 7.
+Write the HTML to that path first, then publish it as a Claude canvas, so the user can open it from a link on any device. Make one canvas from the "Design" artifact type with the `claude-artifacts` tools: `list_types`, `describe_type`, `create_from_type` once, then `publish_files`, following the type's instructions. One board per page section. Each layout board shows the screen where the user enters the flow. Each unresolved decision is an orange "To decide" sticky note next to the board it affects. No iframes and no links to local files: upload the reference pictures, or link to their source pages. Keep the canvas link for Step 7. When this session has no `claude-artifacts` tools, skip the canvas and write `not published: no canvas tools` in place of its link.
 
-The page explains the solution with pictures, so the user understands it without reading long text:
-- The user flow of the recommended approach, drawn as a step-by-step diagram.
-- The options compared side by side in a visual chart or comparison graphic.
-- The reference patterns from research: app name, the saved picture, and a link to the source.
-- One micro-interaction card per key interaction, with a live CSS demo, using the card shape in `references/motion-principles.md` (relative to this skill). Follow its role models and hard limits, including `prefers-reduced-motion`.
+The page is a design review page, not a website: no hero, no marketing style. It explains the solution with pictures, so the user understands it without reading long text. Its sections, in this order:
+1. **Flow.** A Mermaid flowchart (the Mermaid script from a CDN, or an SVG) of the flow today and the proposed flow. One box per step, with the loops and the error paths. A fresh idea has no flow today.
+2. **Layout.** For existing code, a faithful mockup of the real screen in HTML and CSS. Not a wireframe, not a running prototype, not a picture from an image model. Change no app code.
+   - Scan: read the real screen's code. Note its layout, the components it uses, and the design tokens (colors, type, spacing, radius) from the app's theme or Tailwind config.
+   - Rebuild: reproduce the screen as it is today with those tokens and component shapes, so it looks like the app, not like a template.
+   - Change: apply the recommended option on top. Show today and proposed side by side, plus every state the change adds (empty, loading, error). One line each on what changed and which existing component it reuses.
+   For a fresh idea, draw the proposed screen from the reference research and the chosen style direction. Web screens are drawn at desktop width, mobile screens inside a 390 by 844 phone frame. Use the `frontend-design` skill for the craft when it is available, with one rule above it: the app's own tokens win over any new direction.
+3. **Options.** The options side by side in a visual comparison, and the recommendation.
+4. **Interactions.** One micro-interaction card per key interaction, with a live CSS demo, using the card shape in `references/motion-principles.md` (relative to this skill). Follow its role models and hard limits, including `prefers-reduced-motion`.
+5. **References.** The reference patterns from research: app name, the saved picture, and a link to the source.
 
-The page presents the solution. It is not a pixel-perfect mockup and not a PRD.
+The page presents the solution. It is not a PRD.
 
 ## Step 6: Draft in Chat
 
