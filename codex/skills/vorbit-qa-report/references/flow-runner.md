@@ -1,6 +1,6 @@
 # Run an existing plan with Sonnet or Luna
 
-Use this handoff for qa-report Step 2.5 only, after the parent completes Steps 1, 2, and 2.4. Planning, writing flow tests, automated commands, API speed analysis, suggested fixes, final judgment, and publishing stay with the parent. Prefer Claude Fable or Codex Astra (`gpt-6-astra`) for that work; a skill cannot switch the parent model. Honor an explicit caller model override and record the actual selection.
+Use this handoff for qa-report Step 2.5 only, after the parent completes Steps 1, 2, and 2.4. A small run (Step 2.5: 3 or fewer flow tests) skips this handoff; the parent runs those tests. Planning, writing flow tests, automated commands, API speed analysis, suggested fixes, final judgment, and publishing stay with the parent. Prefer Claude Fable or Codex Astra (`gpt-6-astra`) for that work; a skill cannot switch the parent model. Honor an explicit caller model override and record the actual selection.
 
 ## Choose the runner
 
@@ -14,11 +14,13 @@ Use the host's native subagent tool. Inspect its actual parameters before callin
 
 The Claude agent ships with the plugin and inherits available tools and permissions while denying nested `Agent` calls. Do not substitute Explore or Plan: these are not browser execution agents. If `vorbit:qa-runner` is missing, reload the installed plugin or restart Claude; do not claim it ran. For a source checkout, `bash dev-setup.sh` at the plugin root installs newly added plugin components before the restart.
 
-Start **one subagent per run**, executing flows sequentially, unless Parallel runners below applies. Keep the exact current worktree; do not request worktree isolation. Codex full-history forks may inherit the parent's model and reject an override, so use a fresh context with `fork_turns: "none"` when that control exists. Supply all required paths and constraints explicitly. Never assume the child sees the parent's conversation, loaded skills, or browser connection.
+Start **one subagent per run**, unless Parallel runners below applies. It runs flow tests as `recording.md` Flow tests items 7 to 9 say: safe flows together in one batch, the rest one by one, then one judging pass. It drives flows with a browser tool one by one, in plan order. Keep the exact current worktree; do not request worktree isolation. Codex full-history forks may inherit the parent's model and reject an override, so use a fresh context with `fork_turns: "none"` when that control exists. Supply all required paths and constraints explicitly. Never assume the child sees the parent's conversation, loaded skills, or browser connection.
 
 If native delegation, model selection, or continuation is unavailable, affected flows are `Not done` with the specific reason. Do not silently use the parent, another model, or a shell-launched CLI session. An explicit caller choice to run in the parent is allowed and must be recorded as an override, not a subagent run. Missing-data and human-only checks keep their Step 1 reasons. If all flows are already ineligible, record those reasons without launching a runner.
 
 ## Parallel runners
+
+Flow tests need no extra runner: one runner runs the `Parallel: yes` flows together with Playwright workers (`recording.md` Flow tests, item 7). This section is for flows driven with a browser tool.
 
 Start more than one runner only when the caller allows it (for example "up to 2 runners") and the plan tags flows `Parallel: yes`. Otherwise start one runner, run the flows in plan order, and ignore the tags.
 
@@ -77,7 +79,7 @@ Tell the user `QA runner prepared: [runtime], requested [model], agent [returned
 
 Only after the session record is saved, resume the **same** agent with: `Execute the assigned flows from runner-task.md. Read runner-session.json at [absolute path] first. Do not delegate.` Use Claude's `SendMessage` to that ID (or native resume on versions that expose it), or Codex's `followup_task` (or equivalent). Keep the selected model on continuation when the host requires it. Do not create a second agent. Set the session status to `running` when continuation succeeds.
 
-The runner requires `runner-ready.json` to be `ready` and the session status to be `prepared` or `running`, then checks the saved worktree, digests, and flow IDs against its handoff before flow actions. It follows Step 2.5's Flow rules in plan order and writes `flow-results.json` after each flow using a temporary file and atomic rename. It copies `agent_id` from the session record for correlation, not as independent proof of identity. It returns evidence paths and blockers when finished. Partial evidence must survive interruption.
+The runner requires `runner-ready.json` to be `ready` and the session status to be `prepared` or `running`, then checks the saved worktree, digests, and flow IDs against its handoff before flow actions. It follows Step 2.5's Flow rules in plan order and writes `flow-results.json` after each judged flow using a temporary file and atomic rename. With flow tests, every run comes before the judging pass, and each command's evidence is collected right after it, so an interrupted run keeps its evidence. It copies `agent_id` from the session record for correlation, not as independent proof of identity. It returns evidence paths and blockers when finished. Partial evidence must survive interruption.
 
 ### 4. Wait and collect (parent)
 

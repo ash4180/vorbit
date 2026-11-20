@@ -10,6 +10,12 @@ Usage: python3 collect_e2e_evidence.py --report <playwright.json> --dest <run ev
 Use --api-only QP1-2 only after inspecting that test and its fixtures to confirm
 it never opens a page. Repeat the flag for other confirmed API-only tests.
 
+One report that holds several flow tests: pass --batch batch1 instead of --check.
+Each test's check ID then comes from its file name, qa-<ID>-<name>.spec.ts.
+Prints JSON: {"batch", "summary", "setup": [...], "unmatched": [...], "checks": {"QA1": {...}}}
+and writes one <id>-manifest.json per check plus <batch>-manifest.json. "unmatched" lists
+tests whose file is not named as a flow test. The batch name must not be a check ID.
+
 Prints JSON: {"check", "summary", "tests": [...]}. Each test entry has:
   id            QP1-1, QP1-2, ... in report order (setup steps are not numbered)
   title         the test name; path is file › group › test
@@ -20,6 +26,8 @@ Prints JSON: {"check", "summary", "tests": [...]}. Each test entry has:
   evidence      copied files from every attempt: kind, file, attempt (1-based), status
   proof         video | screenshot | pass line | none; final attempt only
   note          missing recording, confirmed API-only check, or first error line
+  console_errors  the lines the test attached as "console-errors" (a JSON list) on its
+                final attempt; [] when it captured none; null when it attached nothing
 Summary passed counts verified, non-flaky passes, not raw runner passes.
 Exit codes: 0 when the report was read, 1 when it could not be read.
 """
@@ -27,6 +35,7 @@ Exit codes: 0 when the report was read, 1 when it could not be read.
 from __future__ import annotations
 
 import argparse
+import base64
 import json
 import re
 import shutil
@@ -35,6 +44,46 @@ from pathlib import Path
 from typing import Any, Iterator
 
 SETUP_FILE = re.compile(r"\.setup\.[cm]?[jt]sx?$")
+FLOW_FILE = re.compile(r"(?:^|/)qa-([A-Za-z]+\d+)-[^/]*$")
+CONSOLE_ATTACHMENT = "console-errors"
+MAX_CONSOLE_LINES = 50
+MAX_CONSOLE_LINE_LENGTH = 500
+
+
+def flow_check(file: str) -> str | None:
+    match = FLOW_FILE.search(file.replace("\\", "/"))
+    return match.group(1).upper() if match else None
+
+
+def console_errors(result: dict[str, Any]) -> list[str] | None:
+    for attachment in result.get("attachments", []):
+        if attachment.get("name") != CONSOLE_ATTACHMENT:
+            continue
+        try:
+            raw = base64.b64decode(attachment["body"]) if attachment.get("body") else Path(attachment["path"]).read_bytes()
+            lines = json.loads(raw)
+        except (OSError, ValueError, KeyError, TypeError):
+            return None
+        if not isinstance(lines, list):
+            lines = [lines]
+        return [
+            (line if isinstance(line, str) else json.dumps(line, ensure_ascii=False))[:MAX_CONSOLE_LINE_LENGTH]
+            for line in lines[:MAX_CONSOLE_LINES]
+        ]
+    return None
+
+
+def summarize(checks: list[dict[str, Any]]) -> dict[str, int]:
+    return {
+        "tests": len(checks),
+        "passed": sum(t["qa_status"] == "passed" for t in checks),
+        "failed": sum(t["qa_status"] == "failed" for t in checks),
+        "skipped": sum(t["qa_status"] == "not_tested" for t in checks),
+        "flaky": sum(t["flaky"] for t in checks),
+        "needs_evidence": sum(t["qa_status"] == "needs_evidence" for t in checks),
+        "with_video": sum(t["proof"] == "video" for t in checks),
+        "without_proof": sum(t["proof"] == "none" for t in checks),
+    }
 
 
 def kind_of(attachment: dict[str, Any]) -> str:
@@ -120,10 +169,14 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--report", required=True)
     parser.add_argument("--dest", required=True)
-    parser.add_argument("--check", required=True, help="the plan's QP# for this command")
+    source = parser.add_mutually_exclusive_group(required=True)
+    source.add_argument("--check", help="the plan's check ID when the whole report is one check")
+    source.add_argument("--batch", metavar="NAME",
+                        help="a name for a report that holds several flow tests; each check ID comes from its qa-<ID>- file name")
     parser.add_argument("--api-only", action="append", default=[], metavar="TEST_ID",
                         help="collector test ID confirmed by source inspection to open no page (repeatable)")
     args = parser.parse_args()
+    name: str = args.check or args.batch
 
     try:
         report = json.loads(Path(args.report).read_text())
@@ -131,19 +184,29 @@ def main() -> int:
         print(json.dumps({"error": f"cannot read report: {error}"}))
         return 1
 
+    found = list(walk(report, []))
+    flow_ids = {flow_check(spec.get("file", "")) for _, spec, _ in found} - {None} if args.batch else set()
+    if name.upper() in flow_ids:
+        print(json.dumps({"error": f"batch name {name} is also the check ID {name.upper()}; name the batch batch1, batch2, ..."}))
+        return 1
+
     dest = Path(args.dest)
     dest.mkdir(parents=True, exist_ok=True)
     tests: list[dict[str, Any]] = []
-    number = 0
+    owners: list[str | None] = []
+    numbers: dict[str, int] = {}
 
-    for titles, spec, test in walk(report, []):
+    for titles, spec, test in found:
         results = test.get("results") or [{}]
         project = test.get("projectName", "")
         file = spec.get("file", "")
         setup = project == "setup" or bool(SETUP_FILE.search(file))
+        flow = flow_check(file) if args.batch and not setup else None
+        check = flow or name
         if not setup:
-            number += 1
-        test_id = f"{args.check}-{number}" if not setup else f"{args.check}-setup"
+            numbers[check] = numbers.get(check, 0) + 1
+        test_id = f"{check}-{numbers[check]}" if not setup else f"{name}-setup"
+        owners.append(flow)
         label = f"{test_id.lower()}-{slug(titles[-1])}"
         if setup:
             label += f"-{len(tests)}"
@@ -163,21 +226,31 @@ def main() -> int:
             "evidence": evidence,
             "proof": proof,
             "note": note,
+            "console_errors": console_errors(results[-1]),
         })
 
     checks = [t for t in tests if not t["setup"]]
-    summary = {
-        "tests": len(checks),
-        "passed": sum(t["qa_status"] == "passed" for t in checks),
-        "failed": sum(t["qa_status"] == "failed" for t in checks),
-        "skipped": sum(t["qa_status"] == "not_tested" for t in checks),
-        "flaky": sum(t["flaky"] for t in checks),
-        "needs_evidence": sum(t["qa_status"] == "needs_evidence" for t in checks),
-        "with_video": sum(t["proof"] == "video" for t in checks),
-        "without_proof": sum(t["proof"] == "none" for t in checks),
-    }
-    manifest = {"check": args.check, "summary": summary, "tests": tests}
-    (dest / f"{args.check.lower()}-manifest.json").write_text(json.dumps(manifest, indent=2, ensure_ascii=False))
+    manifest: dict[str, Any]
+    if args.batch:
+        by_flow: dict[str, list[dict[str, Any]]] = {}
+        for test, flow in zip(tests, owners):
+            if flow:
+                by_flow.setdefault(flow, []).append(test)
+        manifest = {
+            "batch": name,
+            "summary": summarize(checks),
+            "setup": [t for t in tests if t["setup"]],
+            "unmatched": [t for t, flow in zip(tests, owners) if not flow and not t["setup"]],
+            "checks": {
+                flow: {"check": flow, "batch": name, "summary": summarize(items), "tests": items}
+                for flow, items in by_flow.items()
+            },
+        }
+        for flow, flow_manifest in manifest["checks"].items():
+            (dest / f"{flow.lower()}-manifest.json").write_text(json.dumps(flow_manifest, indent=2, ensure_ascii=False))
+    else:
+        manifest = {"check": name, "summary": summarize(checks), "tests": tests}
+    (dest / f"{name.lower()}-manifest.json").write_text(json.dumps(manifest, indent=2, ensure_ascii=False))
     print(json.dumps(manifest, ensure_ascii=False))
     return 0
 

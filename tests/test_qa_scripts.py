@@ -207,6 +207,90 @@ def test_collect_preserves_nonpassing_results_even_with_video(tmp_path, status, 
     assert manifest["summary"]["passed"] == 0
 
 
+def collect_batch(tmp_path: Path, report: dict, batch: str) -> subprocess.CompletedProcess:
+    report_path = tmp_path / "report.json"
+    report_path.write_text(json.dumps(report))
+    return subprocess.run(
+        [sys.executable, str(COLLECT), "--report", str(report_path), "--dest", str(tmp_path / "shots"), "--batch", batch],
+        capture_output=True, text=True,
+    )
+
+
+def test_collect_splits_one_batch_report_into_one_manifest_per_flow(tmp_path):
+    src = tmp_path / "test-results"
+    src.mkdir()
+
+    def video(name: str) -> dict:
+        return attachment(src / name, "qa-video", "video/webm")
+
+    report = {"suites": [
+        {"title": "auth.setup.ts", "specs": [spec("log in", "e2e/tests/auth.setup.ts", "setup", [result("passed", [])])]},
+        {"title": "qa-QA1-create.spec.ts", "specs": [
+            spec("QA1: create a schedule", "e2e/tests/qa-QA1-create.spec.ts", "chromium-authenticated", [result("passed", [video("a.webm")])])]},
+        {"title": "qa-QA10-read-only.spec.ts", "specs": [
+            spec("QA10: wide screen", "e2e/tests/qa-QA10-read-only.spec.ts", "chromium-authenticated", [result("passed", [video("b.webm")])]),
+            spec("QA10: narrow screen", "e2e/tests/qa-QA10-read-only.spec.ts", "chromium-authenticated", [result("passed", [video("c.webm")])])]},
+        {"title": "qa-QR2-list.member.spec.ts", "specs": [
+            spec("QR2: list still works", "e2e/tests/qa-QR2-list.member.spec.ts", "chromium-member", [
+                result("failed", [attachment(src / "d.png", "screenshot", "image/png")], errors=[{"message": "row missing"}])])]},
+        {"title": "smoke.spec.ts", "specs": [spec("page loads", "e2e/tests/smoke.spec.ts", "chromium-authenticated", [result("passed", [video("e.webm")])])]},
+    ]}
+
+    batch = json.loads(collect_batch(tmp_path, report, "batch1").stdout)
+    shots = tmp_path / "shots"
+
+    assert sorted(batch["checks"]) == ["QA1", "QA10", "QR2"]
+    assert [t["id"] for t in batch["checks"]["QA10"]["tests"]] == ["QA10-1", "QA10-2"]
+    assert batch["checks"]["QA1"]["summary"]["passed"] == 1
+    assert batch["checks"]["QR2"]["summary"] == {
+        "tests": 1, "passed": 0, "failed": 1, "skipped": 0, "flaky": 0, "needs_evidence": 0, "with_video": 0, "without_proof": 0}
+    assert batch["checks"]["QR2"]["tests"][0]["note"] == "row missing"
+    assert Path(batch["checks"]["QA1"]["tests"][0]["evidence"][0]["file"]).name.startswith("qa1-1-")
+    assert [t["id"] for t in batch["setup"]] == ["batch1-setup"]
+    assert [t["file"] for t in batch["unmatched"]] == ["e2e/tests/smoke.spec.ts"]
+    assert batch["summary"]["tests"] == 5
+    for check in ("QA1", "QA10", "QR2"):
+        saved = json.loads((shots / f"{check.lower()}-manifest.json").read_text())
+        assert saved == batch["checks"][check]
+        assert saved["batch"] == "batch1"
+    assert json.loads((shots / "batch1-manifest.json").read_text()) == batch
+
+
+def test_collect_refuses_a_batch_named_like_one_of_its_flows(tmp_path):
+    report = {"suites": [{"title": "qa-QA1-create.spec.ts", "specs": [
+        spec("QA1: create", "e2e/tests/qa-QA1-create.spec.ts", "chromium", [result("passed", [])])]}]}
+
+    run = collect_batch(tmp_path, report, "qa1")
+
+    assert run.returncode == 1
+    assert "QA1" in json.loads(run.stdout)["error"]
+    assert not (tmp_path / "shots" / "qa1-manifest.json").exists()
+
+
+def test_collect_reads_the_console_errors_a_flow_test_attached(tmp_path):
+    import base64
+
+    def console(lines: object) -> dict:
+        return {"name": "console-errors", "contentType": "application/json", "body": base64.b64encode(json.dumps(lines).encode()).decode()}
+
+    saved = tmp_path / "console.json"
+    saved.write_text(json.dumps(["TypeError: x is undefined"]))
+    report = {"suites": [{"title": "flows", "specs": [
+        spec("clean", "e2e/tests/qa-QA1-a.spec.ts", "chromium", [result("passed", [console([])])]),
+        spec("noisy", "e2e/tests/qa-QA2-b.spec.ts", "chromium", [result("passed", [console(["Failed to load /api/x: 500", {"text": "boom"}])])]),
+        spec("from a file", "e2e/tests/qa-QA3-c.spec.ts", "chromium", [
+            result("passed", [{"name": "console-errors", "contentType": "application/json", "path": str(saved)}])]),
+        spec("not captured", "e2e/tests/qa-QA4-d.spec.ts", "chromium", [result("passed", [])]),
+    ]}]}
+
+    checks = json.loads(collect_batch(tmp_path, report, "batch1").stdout)["checks"]
+
+    assert checks["QA1"]["tests"][0]["console_errors"] == []
+    assert checks["QA2"]["tests"][0]["console_errors"] == ["Failed to load /api/x: 500", '{"text": "boom"}']
+    assert checks["QA3"]["tests"][0]["console_errors"] == ["TypeError: x is undefined"]
+    assert checks["QA4"]["tests"][0]["console_errors"] is None
+
+
 def scan_suites(project: Path, scripts: dict) -> list:
     (project / "package.json").write_text(json.dumps({"scripts": scripts}))
     subprocess.run(["git", "add", "-A"], cwd=project, check=True)
