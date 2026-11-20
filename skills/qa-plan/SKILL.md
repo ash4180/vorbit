@@ -13,11 +13,17 @@ Read `../_shared/spec-files.md` for spec path resolution, write guards, and file
 
 This plan is for testing by hand or by the agent in a browser. The implement skill already checks every acceptance criterion before a task is done; the two do not replace each other.
 
-**Model roles:** use Claude Fable or Codex Astra (`gpt-6-astra`) for planning and reviewing results. Once a plan exists, qa-report hands browser execution to one native subagent in the same worktree: Claude's `vorbit:qa-runner` on Sonnet or Codex's runner on `gpt-6-luna`. A skill cannot change the current session's model: report the actual model when known, never claim a switch, and honor an explicit caller override. Hosts without native delegation and model selection report the missing capability as described in qa-report's runner reference.
+**Model roles:** use Claude Fable or Codex Astra (`gpt-6-astra`) for planning and reviewing results. Once a plan exists, qa-report hands browser execution to one native subagent in the same worktree: Claude's `vorbit:qa-runner` on Sonnet or Codex's runner on `gpt-6-luna`. A small run (3 or fewer flow tests) runs in the parent instead, per qa-report Step 2.5. A skill cannot change the current session's model: report the actual model when known, never claim a switch, and honor an explicit caller override. Hosts without native delegation and model selection report the missing capability as described in qa-report's runner reference.
 
 ## Unattended Runs
 
 A run is unattended when the caller says no one is watching (for example "do not ask questions") or the session cannot take answers. In an unattended run, never stop to ask. Every place below that says "ask" becomes: make the sensible choice named there, and record it in the plan header as one `Assumed:` line per choice. Save the plan without the approval question. An unattended run never ends as `needs_input`.
+
+## Chained Runs
+
+A run is chained when the same request also asks for qa-report, for example "review, qa-plan and qa-report". The request already approves the save, so never ask "Ready to save the QA plan?". Show the draft, save it, and hand over to qa-report without stopping. Every Step 2 choice takes its unattended default and gets an `Assumed:` line.
+
+Ask only about a real blocker, in one batched question: data the agent cannot create on the local app or DEV, or consent to change a server answer in the test browser. Ask it as soon as the blocker is known, before drafting the rest. With no blocker, a chained run asks nothing.
 
 ## Since a Commit
 
@@ -96,11 +102,11 @@ Unattended: nothing blocks the save. Use these choices and write each one as an 
 - 4 to 8 screens: at most 20
 - more screens, or a release plan: no limit
 
-Fill the limit in this order: the main task of each story, failures a user meets by hand, regression, then list stability, devices, assistive tools, and the rest. Past the limit, fold a check into an existing flow as a step when a user would meet it there. Otherwise write it as one `## Open items` line: `Not in this plan: [check] (size limit)`. Write the header line `Estimate: [N] browser flows, about [N × 6] minutes for an agent run`.
+Fill the limit in this order: the main task of each story, failures a user meets by hand, regression, then list stability, devices, assistive tools, and the rest. Past the limit, fold a check into an existing flow as a step when a user would meet it there. Otherwise write it as one `## Open items` line: `Not in this plan: [check] (size limit)`. Write the header line `Estimate:`. With a Playwright runner (Step 2), the run writes a test for each flow and then runs them: `Estimate: [N] browser flows, about [N × 4] minutes to write the tests, then [N × 1.5] minutes to run and judge them`. With no Playwright runner, the agent drives a browser: `Estimate: [N] browser flows, about [N × 6] minutes for an agent run`.
 
 Before showing the draft, verify both coverage gates and the size limit, and state their results in chat: criteria coverage, list or table reliability coverage, and flows against the limit. Keep the mappings out of the file.
 
-Show the full draft in chat and ask: **"Ready to save the QA plan?"** Do not write the file before approval. A request for a draft or review only stops here. Unattended: skip the question and save; the `Assumed:` lines take the place of the approval.
+Show the full draft in chat and ask: **"Ready to save the QA plan?"** Do not write the file before approval. A request for a draft or review only stops here. Unattended or chained: skip the question and save; the `Assumed:` lines take the place of the approval.
 
 ## Step 4: Write the File
 
@@ -117,7 +123,7 @@ Show the full draft in chat and ask: **"Ready to save the QA plan?"** Do not wri
 - Any `TBD-###` left open, with who provides it
 - Regression source (epic.md or git diff against which base) and whether this is a release plan with the full suite
 - With `--since`: the `scope` line, and for a plan with no checks, why
-- Unattended: every `Assumed:` line
+- Unattended or chained: every `Assumed:` line
 - Reminder: the plan lives only in this worktree and is gitignored
 - Next steps:
   - test by hand and record results (rules below)
@@ -149,8 +155,8 @@ Branch: [branch name]
 Updated: [YYYY-MM-DD]
 Environment: [where to test]
 Devices: [list] | Browsers: [list]
-Estimate: [N] browser flows, about [N × 6] minutes for an agent run
-Assumed: [unattended only: one line per choice made without asking]
+Estimate: [N] browser flows, about [N × 4] minutes to write the tests, then [N × 1.5] minutes to run and judge them
+Assumed: [unattended or chained only: one line per choice made without asking]
 
 ## Run order
 
@@ -237,7 +243,7 @@ Regression source: [epic.md | git diff against origin/dev]
 - TBD-001: [what is missing]. Who: [person]. Impact: [flows that wait on it].
 ```
 
-Include the Automated checks section only when the project has a runner, and the `Assumed:` line only in unattended runs; `QP#` IDs follow the same never-renumber rule. In conversation mode (no `prd.md`), the header carries `Source: conversation` and story sections are replaced by one `## Feature flows` section. Include `### List & table reliability` only for stories with reachable list or table behavior.
+Include the Automated checks section only when the project has a runner, and the `Assumed:` line only in unattended or chained runs; `QP#` IDs follow the same never-renumber rule. In conversation mode (no `prd.md`), the header carries `Source: conversation` and story sections are replaced by one `## Feature flows` section. Include `### List & table reliability` only for stories with reachable list or table behavior.
 
 Result line examples:
 
