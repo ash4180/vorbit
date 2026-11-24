@@ -237,18 +237,21 @@ def _rules(agent: dict[str, str]) -> list[tuple[re.Pattern[str], object]]:
         ),
         # -- explore solution page: each runtime uses its own visual tool -----
         lit(
-            "Write the HTML to that path first, then publish it as a Claude "
-            "canvas, so the user can open it from a link on any device. Make one "
-            "canvas from the \"Design\" artifact type with the `claude-artifacts` "
-            "tools: `list_types`, `describe_type`, `create_from_type` once, then "
-            "`publish_files`, following the type's instructions. One board per "
-            "page section. Each layout board shows the screen where the user "
-            "enters the flow. Each unresolved decision is an orange \"To decide\" "
-            "sticky note next to the board it affects. No iframes and no links to "
-            "local files: upload the reference pictures, or link to their source "
-            "pages. Keep the canvas link for Step 7. When this session has no "
-            "`claude-artifacts` tools, skip the canvas and write `not published: "
-            "no canvas tools` in place of its link.",
+            "Write the HTML to that path first, then publish the solution as a "
+            "Claude canvas, so the user can open it from a link on any device. "
+            "Draw the canvas with the `concept` skill: read `../concept/SKILL.md` "
+            "and follow its frame rules, its example frame and its check. One row "
+            "per page section, one concept frame per board. The Layout and "
+            "Options rows start with a `today` frame of the screen where the user "
+            "enters the flow, then one frame per option, with the recommendation "
+            "as the `pick`. The Flow frame and each Interactions frame is a "
+            "looping demo of the real screen, never a diagram or a still picture. "
+            "Each reference with a saved picture is one `result` frame. Add no "
+            "sticky notes: unresolved decisions stay in the PRD Handoff of the "
+            "document. No iframes and no links to local files: upload the "
+            "reference pictures. Keep the canvas link for Step 7. When this "
+            "session has no canvas tools, skip the canvas and write `not "
+            "published: no canvas tools` in place of its link.",
             agent["solution_page"],
         ),
         # After the explore rule: that paragraph names `../concept/`, and

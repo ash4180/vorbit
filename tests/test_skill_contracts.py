@@ -160,6 +160,20 @@ def test_projected_outputs_are_fresh():
     assert check_all() == []
 
 
+@pytest.mark.parametrize("agent_name", ["codex", "gemini"])
+def test_projected_explore_uses_the_agents_own_solution_page(agent_name):
+    """Only Claude Code can publish a Claude canvas. The projector swaps the
+    canonical canvas paragraph for the agent's own visual tool; an earlier
+    rule that rewrites text inside it silently breaks that swap."""
+    from vorbit_core.project_skills import AGENTS
+
+    root = CODEX_SKILLS if agent_name == "codex" else GEMINI_SKILLS
+    explore = (root / "vorbit-shared" / "workflows" / "explore.md").read_text()
+
+    assert AGENTS[agent_name]["solution_page"] in explore
+    assert "Claude canvas" not in explore
+
+
 def test_agent_neutral_references_do_not_drift():
     codex_references = CODEX_SKILLS / "vorbit-shared" / "references"
     gemini_references = GEMINI_SKILLS / "vorbit-shared" / "references"
