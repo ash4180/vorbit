@@ -1,0 +1,7 @@
+interface:
+  display_name: "Vorbit Concept"
+  short_description: "Draw ideas as checked concept frames"
+  default_prompt: "Use $vorbit-concept to draw this idea as concept frames: today first, then one frame per idea."
+
+policy:
+  allow_implicit_invocation: true

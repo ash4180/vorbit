@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Task list today</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#8ab4ff}a:hover{color:#b3cdff}
+</style>
+</helmet>
+<div data-cf="frame" data-cf-kind="today" data-cf-source="none" style="width: 1280px; height: 760px; box-sizing: border-box; padding: 40px; background: #0b0c0e; color: #ededed; font-family: Inter, system-ui, sans-serif; display: flex; flex-direction: column; gap: 24px">
+<div style="display: flex; align-items: center; gap: 16px; height: 56px">
+<div data-cf="chip" style="height: 32px; padding: 0 12px; border-radius: 8px; background: #1d1e22; border: 1px solid #2a2c32; display: flex; align-items: center; font-size: 13px; font-weight: 600; color: #c9cbd1">Today</div>
+<div style="display: flex; flex-direction: column; gap: 4px">
+<div data-cf="title" style="font-size: 26px; font-weight: 600; letter-spacing: -0.01em">The task list now</div>
+<div data-cf="subtitle" style="font-size: 15px; color: #a1a3ab">One long list. Done tasks stay mixed with open ones.</div>
+</div>
+</div>
+<div style="display: flex; gap: 24px; height: 600px">
+<div data-cf="drawing" data-cf-motion="none" style="position: relative; width: 800px; height: 600px; flex: none; box-sizing: border-box; border-radius: 14px; border: 1px solid #22242a; background: #0e0f12; overflow: hidden">
+<div style="position: absolute; left: 0; top: 0; width: 180px; height: 600px; box-sizing: border-box; padding: 20px 14px; background: #131417; border-right: 1px solid #22242a; display: flex; flex-direction: column; gap: 6px; font-size: 13px">
+<div style="height: 32px; padding: 0 10px; border-radius: 8px; background: #22242a; display: flex; align-items: center; font-weight: 500">Tasks</div>
+<div style="height: 32px; padding: 0 10px; display: flex; align-items: center; color: #a1a3ab">Projects</div>
+<div style="height: 32px; padding: 0 10px; display: flex; align-items: center; color: #a1a3ab">Team</div>
+</div>
+<div style="position: absolute; left: 180px; top: 0; width: 620px; height: 600px; box-sizing: border-box; padding: 24px 28px; display: flex; flex-direction: column; gap: 12px">
+<div style="display: flex; align-items: center; justify-content: space-between; height: 36px">
+<div style="font-size: 20px; font-weight: 600">Tasks</div>
+<button type="button" style="height: 32px; padding: 0 12px; border-radius: 8px; border: 1px solid #34363e; background: #24262c; color: #ededed; font: 500 12px Inter, system-ui, sans-serif">New task</button>
+</div>
+<div style="height: 52px; box-sizing: border-box; padding: 0 14px; border-radius: 10px; background: #1b1c21; border: 1px solid #2c2e35; display: flex; align-items: center; gap: 12px; font-size: 14px">
+<span style="width: 16px; height: 16px; flex: none; border-radius: 5px; border: 1.5px solid #5b5e68"></span>
+<span>Write the release notes</span>
+</div>
+<div style="height: 52px; box-sizing: border-box; padding: 0 14px; border-radius: 10px; background: #1b1c21; border: 1px solid #2c2e35; display: flex; align-items: center; gap: 12px; font-size: 14px; color: #7d808a">
+<span style="width: 16px; height: 16px; flex: none; border-radius: 5px; background: #3ecf8e"></span>
+<span style="text-decoration: line-through">Fix the login button</span>
+</div>
+<div style="height: 52px; box-sizing: border-box; padding: 0 14px; border-radius: 10px; background: #1b1c21; border: 1px solid #2c2e35; display: flex; align-items: center; gap: 12px; font-size: 14px">
+<span style="width: 16px; height: 16px; flex: none; border-radius: 5px; border: 1.5px solid #5b5e68"></span>
+<span>Review the pricing page</span>
+</div>
+<div style="height: 52px; box-sizing: border-box; padding: 0 14px; border-radius: 10px; background: #1b1c21; border: 1px solid #2c2e35; display: flex; align-items: center; gap: 12px; font-size: 14px; color: #7d808a">
+<span style="width: 16px; height: 16px; flex: none; border-radius: 5px; background: #3ecf8e"></span>
+<span style="text-decoration: line-through">Send the invoice</span>
+</div>
+</div>
+</div>
+<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 16px">
+<div data-cf="tile" style="height: 138px; box-sizing: border-box; padding: 12px; display: flex; align-items: center; gap: 16px; background: #121316; border: 1px solid #22242a; border-radius: 12px">
+<div data-cf="tile-picture" style="width: 150px; height: 112px; flex: none; border-radius: 8px; background: #0e0f12; display: flex; align-items: center; justify-content: center">
+<div style="width: 122px; height: 30px; box-sizing: border-box; padding: 0 8px; border-radius: 7px; background: #1b1c21; border: 1px solid #2c2e35; display: flex; align-items: center; gap: 7px; font-size: 10px">
+<span style="width: 11px; height: 11px; flex: none; border-radius: 3px; border: 1.5px solid #5b5e68"></span>
+<span>Write the notes</span>
+</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px; min-width: 0">
+<div data-cf="tile-title" style="font-size: 15px; font-weight: 600">Open task</div>
+<div data-cf="tile-line" style="font-size: 13px; line-height: 1.45; color: #a1a3ab">An empty box and white text.</div>
+</div>
+</div>
+<div data-cf="tile" style="height: 138px; box-sizing: border-box; padding: 12px; display: flex; align-items: center; gap: 16px; background: #121316; border: 1px solid #22242a; border-radius: 12px">
+<div data-cf="tile-picture" style="width: 150px; height: 112px; flex: none; border-radius: 8px; background: #0e0f12; display: flex; align-items: center; justify-content: center">
+<div style="width: 122px; height: 30px; box-sizing: border-box; padding: 0 8px; border-radius: 7px; background: #1b1c21; border: 1px solid #2c2e35; display: flex; align-items: center; gap: 7px; font-size: 10px; color: #7d808a">
+<span style="width: 11px; height: 11px; flex: none; border-radius: 3px; background: #3ecf8e"></span>
+<span style="text-decoration: line-through">Fix the button</span>
+</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px; min-width: 0">
+<div data-cf="tile-title" style="font-size: 15px; font-weight: 600">Done task</div>
+<div data-cf="tile-line" style="font-size: 13px; line-height: 1.45; color: #a1a3ab">Stays in place, with a line through it.</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":760}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

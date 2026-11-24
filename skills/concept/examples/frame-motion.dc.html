@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Done tasks move down</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#8ab4ff}a:hover{color:#b3cdff}
+@keyframes m_check{0%,22%{opacity:0}28%,94%{opacity:1}99%,100%{opacity:0}}
+@keyframes m_dim{0%,22%{opacity:1}28%,94%{opacity:.5}99%,100%{opacity:1}}
+@keyframes m_out{0%,46%{max-height:52px;margin-bottom:0;opacity:1;animation-timing-function:cubic-bezier(.4,0,.2,1)}60%,94%{max-height:0;margin-bottom:-12px;opacity:0}99%,100%{max-height:52px;margin-bottom:0;opacity:1}}
+@keyframes m_in{0%,46%{max-height:0;margin-bottom:-12px;opacity:0;animation-timing-function:cubic-bezier(.2,.8,.2,1)}60%,94%{max-height:52px;margin-bottom:0;opacity:1}99%,100%{max-height:0;margin-bottom:-12px;opacity:0}}
+@keyframes m_s1{0%,22%{opacity:1}25%,97%{opacity:0}100%{opacity:1}}
+@keyframes m_s2{0%,24%{opacity:0}27%,46%{opacity:1}49%,100%{opacity:0}}
+@keyframes m_s3{0%,48%{opacity:0}51%,94%{opacity:1}97%,100%{opacity:0}}
+@media (prefers-reduced-motion: reduce){*{animation:none !important}}
+</style>
+</helmet>
+<div data-cf="frame" data-cf-kind="pick" data-cf-source="none" style="width: 1280px; height: 760px; box-sizing: border-box; padding: 40px; background: #0b0c0e; color: #ededed; font-family: Inter, system-ui, sans-serif; display: flex; flex-direction: column; gap: 24px">
+<div style="display: flex; align-items: center; gap: 16px; height: 56px">
+<div data-cf="chip" style="height: 32px; padding: 0 12px; border-radius: 8px; background: #12261d; border: 1px solid rgba(62,207,142,0.55); display: flex; align-items: center; font-size: 13px; font-weight: 600; color: #8fe3bd">My pick</div>
+<div style="display: flex; flex-direction: column; gap: 4px">
+<div data-cf="title" style="font-size: 26px; font-weight: 600; letter-spacing: -0.01em">Done tasks move to their own list</div>
+<div data-cf="subtitle" style="font-size: 15px; color: #a1a3ab">Check a task and it slides down. Open work stays on top.</div>
+</div>
+<button type="button" data-cf="loop-badge" onClick="{{ toggle }}" style="margin-left: auto; height: 32px; padding: 0 12px; border-radius: 999px; background: #1d1e22; border: 1px solid #2a2c32; display: flex; align-items: center; gap: 6px; font: 600 11px Inter, system-ui, sans-serif; color: #c9cbd1; cursor: pointer"><span style="width: 6px; height: 6px; border-radius: 50%; background: {{ dot }}"></span>{{ badge }}</button>
+</div>
+<div style="display: flex; gap: 24px; height: 600px">
+<div data-cf="drawing" data-cf-motion="loop" style="position: relative; width: 800px; height: 600px; flex: none; box-sizing: border-box; border-radius: 14px; border: 1px solid #22242a; background: #0e0f12; overflow: hidden">
+<div style="position: absolute; left: 0; top: 0; width: 180px; height: 600px; box-sizing: border-box; padding: 20px 14px; background: #131417; border-right: 1px solid #22242a; display: flex; flex-direction: column; gap: 6px; font-size: 13px">
+<div style="height: 32px; padding: 0 10px; border-radius: 8px; background: #22242a; display: flex; align-items: center; font-weight: 500">Tasks</div>
+<div style="height: 32px; padding: 0 10px; display: flex; align-items: center; color: #a1a3ab">Projects</div>
+<div style="height: 32px; padding: 0 10px; display: flex; align-items: center; color: #a1a3ab">Team</div>
+</div>
+<div style="position: absolute; left: 180px; top: 0; width: 620px; height: 600px; box-sizing: border-box; padding: 24px 28px; display: flex; flex-direction: column; gap: 12px">
+<div style="display: flex; align-items: center; justify-content: space-between; height: 36px">
+<div style="font-size: 20px; font-weight: 600">Tasks</div>
+<button type="button" style="height: 32px; padding: 0 12px; border-radius: 8px; border: 1px solid #34363e; background: #24262c; color: #ededed; font: 500 12px Inter, system-ui, sans-serif">New task</button>
+</div>
+<div style="height: 52px; box-sizing: border-box; padding: 0 14px; border-radius: 10px; background: #1b1c21; border: 1px solid #2c2e35; display: flex; align-items: center; gap: 12px; font-size: 14px">
+<span style="width: 16px; height: 16px; flex: none; border-radius: 5px; border: 1.5px solid #5b5e68"></span>
+<span>Write the release notes</span>
+</div>
+<div style="height: 52px; box-sizing: border-box; padding: 0 14px; border-radius: 10px; background: #1b1c21; border: 1px solid #2c2e35; display: flex; align-items: center; gap: 12px; font-size: 14px; overflow: hidden; animation: m_out 8s linear infinite">
+<span style="position: relative; width: 16px; height: 16px; flex: none; box-sizing: border-box; border-radius: 5px; border: 1.5px solid #5b5e68"><span style="position: absolute; inset: -1.5px; border-radius: 5px; background: #3ecf8e; opacity: 0; animation: m_check 8s linear infinite"></span></span>
+<span style="animation: m_dim 8s linear infinite">Review the pricing page</span>
+</div>
+<div style="height: 20px; display: flex; align-items: center; font-size: 12px; font-weight: 600; color: #9a9da6">Done</div>
+<div style="height: 52px; box-sizing: border-box; padding: 0 14px; border-radius: 10px; background: #1b1c21; border: 1px solid #2c2e35; display: flex; align-items: center; gap: 12px; font-size: 14px; color: #7d808a; overflow: hidden; max-height: 0; margin-bottom: -12px; opacity: 0; animation: m_in 8s linear infinite">
+<span style="width: 16px; height: 16px; flex: none; border-radius: 5px; background: #3ecf8e"></span>
+<span style="text-decoration: line-through">Review the pricing page</span>
+</div>
+<div style="height: 52px; box-sizing: border-box; padding: 0 14px; border-radius: 10px; background: #1b1c21; border: 1px solid #2c2e35; display: flex; align-items: center; gap: 12px; font-size: 14px; color: #7d808a">
+<span style="width: 16px; height: 16px; flex: none; border-radius: 5px; background: #3ecf8e"></span>
+<span style="text-decoration: line-through">Fix the login button</span>
+</div>
+</div>
+<div style="position: absolute; left: 204px; bottom: 16px; width: 380px; height: 30px">
+<div data-cf="step" style="position: absolute; left: 0; top: 0; height: 30px; padding: 0 12px; border-radius: 999px; background: #1d1e22; border: 1px solid #2a2c32; display: flex; align-items: center; font-size: 12px; font-weight: 600; color: #e4e5e9; white-space: nowrap; animation: m_s1 8s linear infinite">1 · A task waits in the list</div>
+<div data-cf="step" style="position: absolute; left: 0; top: 0; height: 30px; padding: 0 12px; border-radius: 999px; background: #1d1e22; border: 1px solid #2a2c32; display: flex; align-items: center; font-size: 12px; font-weight: 600; color: #e4e5e9; white-space: nowrap; opacity: 0; animation: m_s2 8s linear infinite">2 · You check it</div>
+<div data-cf="step" style="position: absolute; left: 0; top: 0; height: 30px; padding: 0 12px; border-radius: 999px; background: #1d1e22; border: 1px solid #2a2c32; display: flex; align-items: center; font-size: 12px; font-weight: 600; color: #e4e5e9; white-space: nowrap; opacity: 0; animation: m_s3 8s linear infinite">3 · It moves down to Done</div>
+</div>
+</div>
+<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 16px">
+<button type="button" data-cf="tile" data-cf-at="1" onClick="{{ showStep }}" style="position: relative; height: 138px; box-sizing: border-box; padding: 12px; display: flex; align-items: center; gap: 16px; background: #121316; border: 1px solid #22242a; border-radius: 12px; color: inherit; font: inherit; text-align: left; cursor: pointer">
+<span aria-hidden="true" style="position: absolute; inset: -1px; border-radius: 12px; border: 2px solid #3ecf8e; opacity: 0; pointer-events: none; animation: m_s1 8s linear infinite"></span>
+<span data-cf="tile-picture" style="width: 150px; height: 112px; flex: none; border-radius: 8px; background: #0e0f12; display: flex; align-items: center; justify-content: center">
+<span style="width: 122px; height: 30px; box-sizing: border-box; padding: 0 8px; border-radius: 7px; background: #1b1c21; border: 1px solid #2c2e35; display: flex; align-items: center; gap: 7px; font-size: 10px">
+<span style="width: 11px; height: 11px; flex: none; box-sizing: border-box; border-radius: 3px; border: 1.5px solid #5b5e68"></span>
+<span>Review the page</span>
+</span>
+</span>
+<span style="display: flex; flex-direction: column; gap: 6px; min-width: 0">
+<span data-cf="tile-title" style="font-size: 15px; font-weight: 600">Open task</span>
+<span data-cf="tile-line" style="font-size: 13px; line-height: 1.45; color: #a1a3ab">The task waits in the list.</span>
+</span>
+</button>
+<button type="button" data-cf="tile" data-cf-at="3" onClick="{{ showStep }}" style="position: relative; height: 138px; box-sizing: border-box; padding: 12px; display: flex; align-items: center; gap: 16px; background: #121316; border: 1px solid #22242a; border-radius: 12px; color: inherit; font: inherit; text-align: left; cursor: pointer">
+<span aria-hidden="true" style="position: absolute; inset: -1px; border-radius: 12px; border: 2px solid #3ecf8e; opacity: 0; pointer-events: none; animation: m_s2 8s linear infinite"></span>
+<span data-cf="tile-picture" style="width: 150px; height: 112px; flex: none; border-radius: 8px; background: #0e0f12; display: flex; align-items: center; justify-content: center">
+<span style="width: 122px; height: 30px; box-sizing: border-box; padding: 0 8px; border-radius: 7px; background: #1b1c21; border: 1px solid #2c2e35; display: flex; align-items: center; gap: 7px; font-size: 10px">
+<span style="width: 11px; height: 11px; flex: none; border-radius: 3px; background: #3ecf8e"></span>
+<span>Review the page</span>
+</span>
+</span>
+<span style="display: flex; flex-direction: column; gap: 6px; min-width: 0">
+<span data-cf="tile-title" style="font-size: 15px; font-weight: 600">Just checked</span>
+<span data-cf="tile-line" style="font-size: 13px; line-height: 1.45; color: #a1a3ab">The box turns green before the row moves.</span>
+</span>
+</button>
+<button type="button" data-cf="tile" data-cf-at="6" onClick="{{ showStep }}" style="position: relative; height: 138px; box-sizing: border-box; padding: 12px; display: flex; align-items: center; gap: 16px; background: #121316; border: 1px solid #22242a; border-radius: 12px; color: inherit; font: inherit; text-align: left; cursor: pointer">
+<span aria-hidden="true" style="position: absolute; inset: -1px; border-radius: 12px; border: 2px solid #3ecf8e; opacity: 0; pointer-events: none; animation: m_s3 8s linear infinite"></span>
+<span data-cf="tile-picture" style="width: 150px; height: 112px; flex: none; border-radius: 8px; background: #0e0f12; display: flex; align-items: center; justify-content: center">
+<span style="width: 122px; height: 30px; box-sizing: border-box; padding: 0 8px; border-radius: 7px; background: #1b1c21; border: 1px solid #2c2e35; display: flex; align-items: center; gap: 7px; font-size: 10px; color: #7d808a">
+<span style="width: 11px; height: 11px; flex: none; border-radius: 3px; background: #3ecf8e"></span>
+<span style="text-decoration: line-through">Review the page</span>
+</span>
+</span>
+<span style="display: flex; flex-direction: column; gap: 6px; min-width: 0">
+<span data-cf="tile-title" style="font-size: 15px; font-weight: 600">Done list</span>
+<span data-cf="tile-line" style="font-size: 13px; line-height: 1.45; color: #a1a3ab">The task sits under the open tasks, dimmed.</span>
+</span>
+</button>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":760}}'>
+class Component extends DCLogic {
+state = { playing: true };
+demo(event) {
+return event.currentTarget.closest('[data-cf="frame"]').getAnimations({ subtree: true });
+}
+renderVals() {
+return {
+badge: this.state.playing ? 'Stop the loop' : 'Play the loop',
+dot: this.state.playing ? '#3ecf8e' : '#5b5e68',
+toggle: (event) => {
+const playing = !this.state.playing;
+this.demo(event).forEach((part) => playing ? part.play() : part.pause());
+this.setState({ playing: playing });
+},
+showStep: (event) => {
+const at = Number(event.currentTarget.dataset.cfAt) * 1000;
+this.demo(event).forEach((part) => { part.pause(); part.currentTime = at; });
+this.setState({ playing: false });
+}
+};
+}
+}
+</script>
+</body>
+</html>

@@ -110,6 +110,7 @@ Every step reads and writes the `.vorbit/` folder of the repo you work in (see "
 - `/vorbit:design:ui-patterns`: constraints for accessible, fast interfaces
 - `/vorbit:design:webflow`: Webflow pages, templates, CMS structure, and components
 - `/vorbit:implement:pr-watch`: review, QA, comment on, and watch a teammate's PR. It chains review, qa-plan, and qa-report, hands the PR over for your approval with the QA review recording, then saves a Slack draft
+- `/vorbit:design:concept`: draw an idea, options or findings as concept frames, checked before they are published
 - `/vorbit:teach`: turn the last technical answer into plain language, or teach one word
 - Skills with no command, loaded by intent: `adhd` (plain-language output mode), `ux` (deep UX questioning), `react-best-practices`, `implement-loop`
 

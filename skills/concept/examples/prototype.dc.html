@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Tasks, done list prototype</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#8ab4ff}a:hover{color:#b3cdff}
+</style>
+</helmet>
+<div data-cf="prototype" data-cf-source="none" style="min-height: 760px; box-sizing: border-box; background: #0e0f12; color: #ededed; font-family: Inter, system-ui, sans-serif; display: flex; flex-wrap: wrap">
+<nav style="flex: 1 1 180px; max-width: 220px; box-sizing: border-box; padding: 20px 14px; background: #131417; border-right: 1px solid #22242a; display: flex; flex-direction: column; gap: 6px; font-size: 13px">
+<button type="button" onClick="{{ showTasks }}" style="height: 44px; padding: 0 10px; border: none; border-radius: 8px; background: #22242a; color: #ededed; text-align: left; font: 500 13px Inter, system-ui, sans-serif">Tasks</button>
+<button type="button" data-cf-idle style="height: 44px; padding: 0 10px; border: none; border-radius: 8px; background: transparent; color: #a1a3ab; text-align: left; font: 400 13px Inter, system-ui, sans-serif">Projects</button>
+<button type="button" data-cf-idle style="height: 44px; padding: 0 10px; border: none; border-radius: 8px; background: transparent; color: #a1a3ab; text-align: left; font: 400 13px Inter, system-ui, sans-serif">Team</button>
+</nav>
+<main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 24px 28px; display: flex; flex-direction: column; gap: 12px">
+<div style="display: flex; align-items: center; justify-content: space-between; min-height: 44px">
+<h1 style="margin: 0; font-size: 20px; font-weight: 600">Tasks</h1>
+<button type="button" onClick="{{ addTask }}" style="height: 44px; padding: 0 14px; border-radius: 8px; border: 1px solid #34363e; background: #24262c; color: #ededed; font: 500 13px Inter, system-ui, sans-serif">New task</button>
+</div>
+<sc-for list="{{ open }}" as="task" hint-placeholder-count="2">
+<button type="button" onClick="{{ task.toggle }}" style="min-height: 52px; box-sizing: border-box; padding: 0 14px; border-radius: 10px; background: #1b1c21; border: 1px solid #2c2e35; display: flex; align-items: center; gap: 12px; color: #ededed; text-align: left; font: 400 14px Inter, system-ui, sans-serif">
+<span style="width: 16px; height: 16px; flex: none; box-sizing: border-box; border-radius: 5px; border: 1.5px solid #5b5e68"></span>
+<span>{{ task.title }}</span>
+</button>
+</sc-for>
+<sc-if value="{{ hasDone }}" hint-placeholder-val="{{ true }}">
+<div style="height: 20px; display: flex; align-items: center; font-size: 12px; font-weight: 600; color: #9a9da6">Done</div>
+</sc-if>
+<sc-for list="{{ done }}" as="task" hint-placeholder-count="1">
+<button type="button" onClick="{{ task.toggle }}" style="min-height: 52px; box-sizing: border-box; padding: 0 14px; border-radius: 10px; background: #1b1c21; border: 1px solid #2c2e35; display: flex; align-items: center; gap: 12px; color: #7d808a; text-align: left; font: 400 14px Inter, system-ui, sans-serif">
+<span style="width: 16px; height: 16px; flex: none; border-radius: 5px; background: #3ecf8e"></span>
+<span style="text-decoration: line-through">{{ task.title }}</span>
+</button>
+</sc-for>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":760}}'>
+class Component extends DCLogic {
+state = {
+tasks: [
+{ id: 1, title: 'Write the release notes', done: false },
+{ id: 2, title: 'Review the pricing page', done: false },
+{ id: 3, title: 'Fix the login button', done: true }
+],
+next: 4
+};
+renderVals() {
+const withToggle = (task) => ({
+...task,
+toggle: () => this.setState({
+tasks: this.state.tasks.map((item) => item.id === task.id ? { ...item, done: !item.done } : item)
+})
+});
+const tasks = this.state.tasks.map(withToggle);
+const done = tasks.filter((task) => task.done);
+return {
+open: tasks.filter((task) => !task.done),
+done: done,
+hasDone: done.length > 0,
+showTasks: () => this.forceUpdate(),
+addTask: () => this.setState({
+tasks: [{ id: this.state.next, title: 'New task ' + this.state.next, done: false }, ...this.state.tasks],
+next: this.state.next + 1
+})
+};
+}
+}
+</script>
+</body>
+</html>

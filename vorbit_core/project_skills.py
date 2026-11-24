@@ -41,6 +41,7 @@ PROJECTED_SKILLS: dict[str, str] = {
     "qa-report": "qa-report",
     "tutorial": "tutorial",
     "teach": "teach",
+    "concept": "concept",
     "figma": "figma",
     "prototype": "prototype",
     "webflow": "webflow",
@@ -250,6 +251,9 @@ def _rules(agent: dict[str, str]) -> list[tuple[re.Pattern[str], object]]:
             "no canvas tools` in place of its link.",
             agent["solution_page"],
         ),
+        # After the explore rule: that paragraph names `../concept/`, and
+        # rewriting it first would stop the paragraph from matching.
+        lit("../concept/", "../../vorbit-concept/"),
         # -- misc ---------------------------------------------------------------
         lit("relative to this skill", "from this skill's installed directory"),
         lit("discovered through routing", "resolved during connector preflight"),
