@@ -1,7 +1,7 @@
 ---
-description: Generate UI prototype fast. Creates page/feature with mock data.
-argument-hint: [feature name, Linear PRD URL/ID, pasted/local PRD, or Figma URL]
-allowed-tools: Read, Write, Edit, Bash, Grep, Glob, Skill, ToolSearch, AskUserQuestion, TaskCreate, TaskUpdate, mcp__plugin_linear_linear__*, mcp__figma__*, mcp__plugin_figma_figma__*
+description: Build a clickable prototype of a flow on a Claude canvas
+argument-hint: [flow to try, picked concept frame, or PRD story]
+allowed-tools: Read, Grep, Glob, Write, Edit, Bash(python3:*), Skill, ToolSearch, AskUserQuestion, Artifact
 ---
 
 Use the **prototype** skill.

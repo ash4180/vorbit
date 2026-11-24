@@ -147,7 +147,7 @@ For each task, follow Red/Green/Refactor:
 
 - **Red**: When the repository has a runnable harness, write a failing test for the changed behavior first (follow the project's test patterns; confirm the focused test fails for the expected reason). If no suitable harness exists, agree on a real verification surface; do not invent a cheater test.
 - **Green**: Write the minimum code to pass, following existing codebase patterns and the example files found earlier; no over-engineering.
-- **Refactor**: Clean up, check coverage on new code, ensure no regressions. Remove dead code and unregistered placeholder TODOs (registered prototype mocks may remain until backend integration).
+- **Refactor**: Clean up, check coverage on new code, ensure no regressions. Remove dead code and unregistered placeholder TODOs (registered mocks may remain until backend integration).
 
 **Test quality gates:** mock only at the network edge — never the app's own modules; keep (or add) the story's one real-API/integrated test; for UI work, the focused run must finish with a clean browser console — an unexpected console error is a failure even when the screen looks right.
 

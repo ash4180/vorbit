@@ -106,7 +106,7 @@ Every step reads and writes the `.vorbit/` folder of the repo you work in (see "
 13. **Tutorial**: write the user-facing how-to for the feature (`/vorbit:implement:tutorial`)
 
 **Helpers at any point**
-- `/vorbit:design:prototype`: a working front-end prototype with mock data
+- `/vorbit:design:prototype`: a clickable prototype of a flow on a Claude canvas, checked against the real screen
 - `/vorbit:design:ui-patterns`: constraints for accessible, fast interfaces
 - `/vorbit:design:webflow`: Webflow pages, templates, CMS structure, and components
 - `/vorbit:implement:pr-watch`: review, QA, comment on, and watch a teammate's PR. It chains review, qa-plan, and qa-report, hands the PR over for your approval with the QA review recording, then saves a Slack draft

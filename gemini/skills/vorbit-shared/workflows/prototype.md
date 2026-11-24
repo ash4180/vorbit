@@ -2,206 +2,50 @@
 
 # Prototype Skill
 
-Create reusable UI prototypes that become production code. Frontend devs swap mocks for real API.
+Build a prototype the user can really click, on a Claude canvas. It is for trying a flow and for presenting it. It changes no project file and is never app code.
 
 Read and follow `../references/execution-contract.md` before starting.
 
-## Core Principles
+## Step 1: Name the flow
 
-- **Ask when it changes the contract**: Use plain-text chat questions when a decision changes the mock boundary, the data contract, or user-visible scope. Make reasonable inline choices for cosmetic details and record them in the final summary.
-- **Analyze codebase first**: Find existing patterns before writing any code.
-- **Props-driven**: Components receive data as props. Never hardcode data inside components.
-- **One mock integration boundary**: Exactly one feature-level container/adapter imports mock data. Presentational components only receive typed props and never import mocks.
-- **Spec-first PRD context**: The branch `.vorbit/prd.md` (see `../references/spec-files.md`) is canonical. A Linear ticket, pasted text, or named local file is a fallback only when no `prd.md` exists.
-- **Smoke-tested**: The prototype is not complete until its route renders and navigation reaches it.
-- **Keep a markdown progress checklist**: Track progress through all phases.
+Write down, in one line each: the screen where the flow starts, each click the user makes, and the end result.
 
-## Phase 0: Detect Platform & Verify Connection
+- The branch `.vorbit/prd.md` (see `../references/spec-files.md`) is the source for behavior when it exists. Use the steps and acceptance criteria of the story as the flow.
+- With no PRD, take the flow from the request, or from the concept frame the user picked.
+- Ask the user only when the start or the end result is unclear. Never add steps, screens or features that nobody asked for.
 
-### Platform Discovery
-Preflight required connectors: confirm each needed connector is configured in Gemini CLI and inspect its current operation/parameter schemas; never guess tool names. Verify only the external services actually needed. The branch `prd.md` is the requirements source; Figma is an optional design input, not a competing one.
+## Step 2: Read the real screen
 
-**IF Figma URL provided:**
-1. Use the connected Figma `get_design_context` tool resolved during connector preflight to fetch the design
-2. **IF fails:** "Figma connection failed. Reconnect the connector in Gemini CLI, then retry." → **STOP**
-3. **IF succeeds:** extract design specs
+Read `../../vorbit-concept/references/screen-source.md` and follow it. When the screen exists in the code, write its `screen-source.json` before you draw anything. The prototype must look and behave like the real product: the same layout, components, colors, type and features.
 
-**IF no external services needed:** skip to Phase 1
+Only a flow for a product with no code yet uses `data-cf-source="none"`.
 
-## Phase 1: Discovery
+## Step 3: Build
 
-**Goal**: Understand what prototype needs to be built
+Read `../../vorbit-concept/references/prototype-rules.md` and follow it. Copy `../../vorbit-concept/examples/prototype.dc.html` and replace its screen with the real one.
 
-**Actions**:
-1. Create todo list with all 6 phases (0-5)
-2. Resolve PRD context in this order:
-   - **Branch `prd.md`:** resolve it per `../references/spec-files.md` and check its `Branch:` line
-   - **No `prd.md`:** a Linear ticket, pasted PRD text, or a user-named local file is a legacy fallback; record its provenance
-   - **URL with no accessible content:** ask the user to paste/export it; do not guess
-3. Extract each `US-###` with its acceptance criteria verbatim, its flow steps, constraints, and unresolved `TBD-###` items. Record the PRD source in the handoff.
-4. **IF Figma URL provided:**
-   - Use design context from Phase 0
-   - Extract layout, components, and styling specs
-5. **IF purpose is unclear, use plain-text chat questions:**
-   - What is this feature for?
-   - Who uses it and when?
-   - Any reference designs or similar features?
-6. **Use plain-text chat questions** to confirm understanding before proceeding
+Save the files in `.vorbit/prototype/<topic>/` in the worktree (folder rules in `../references/spec-files.md`). Write nothing outside that folder.
 
-**Output**: Clear statement of prototype purpose
+## Step 4: Check
 
-## Phase 2: Codebase Analysis
+`python3 ../../vorbit-concept/scripts/check_frames.py <prototype file> [...]`
 
-**Goal**: Understand existing patterns before writing any code
+Fix every `FAIL` line and run it again. Publish nothing until it prints `OK`.
 
-**Actions**:
-1. Identify the framework from `package.json`; match the project's existing framework and conventions.
+## Step 5: Publish
 
-2. Scan codebase for patterns:
-   - Where pages/routes live (src/pages/, src/routes/, app/)
-   - Component structure (how components are organized)
-   - Styling approach (CSS modules, Tailwind, styled-components)
-   - Existing UI components to reuse (buttons, cards, inputs, layouts)
+- With canvas tools in this session: publish to one Claude canvas of the "Design" type, following that type's instructions. Each prototype artboard gets `"is_interactive": true`. When the idea came from a concept row, add the prototype to that same canvas, after the row.
+- Without canvas tools: stop and say that a clickable prototype needs a Claude canvas. Offer looping concept frames in its place. Do not build the flow as app code.
 
-3. **Report findings to user**:
-   ```
-   Framework: React/TSX
-   Pages location: src/pages/
-   Styling: Tailwind CSS
-   Existing components: Layout, Card, Button, Input, Table
-   ```
+## Step 6: Walk the flow
 
-4. **Use plain-text chat questions** to confirm: "These are the patterns I found. Should I follow them?"
+The check cannot click. Open the canvas, press Play, and make every click of the flow from Step 1. Use a browser tool when the session has one. When it has none, say plainly that the clicks are not tested, and ask the user to walk the flow.
 
-**Output**: Documented codebase patterns to follow
+Fix what does not work, run the check, and publish again.
 
-## Phase 3: Requirements Clarification
+## Step 7: Report
 
-**Goal**: Resolve all ambiguities before building
-
-Resolve these before building; they define the mock contract.
-
-**IF Figma design provided:**
-- Use design specs as the visual source of truth for layout and styling; the PRD remains canonical for behavior and scope
-- Only ask about behavior not shown in design (actions, empty states)
-
-**If there is no Figma design, ask with plain-text chat questions about:**
-- **Layout**: List, grid, table, or cards?
-- **Data fields**: What info should each item show?
-- **Actions**: What can users do? (view, edit, delete, filter, etc.)
-- **Empty state**: What shows when there's no data?
-
-**Wait for answers before proceeding.**
-
-**Style references (optional):** If the user names a brand look ("like Linear"), check `../references/design-knowledge/design-systems/INDEX.md` and read the matching brand file for exact tokens. For a fresh visual direction with no reference, offer the closest presets from `../references/design-knowledge/style-seeds.md` and let the user pick. Without a named reference or chosen seed, avoid the usual model defaults: a cream or off-white background with a serif display headline, italic accent words in headlines, numbered "01/02/03" section labels, monospace eyebrow labels, pill-shaped buttons, and a purple-to-blue gradient. Use Cream Editorial only when the user chooses it. Codebase styling patterns still win on conflicts. If the prototype needs animation or micro-interactions, pick effects from `../references/design-knowledge/motion-library.md` and follow its performance principles.
-
-**Don't invent features:**
-- Adding search/filter without asking
-- Creating tabs or navigation not requested
-- Adding pagination "just in case"
-- Inventing extra fields or columns
-
-**Output**: Complete specification for prototype
-
-## Phase 4: Build Prototype
-
-**Goal**: Create prototype following codebase patterns
-
-**Actions**:
-1. Create page structure matching codebase patterns:
-   ```
-   src/pages/[Feature]/
-   ├── index.tsx                # Main page
-   ├── data-source.ts           # ONLY mock integration boundary
-   ├── index.smoke.test.tsx     # Render/navigation smoke test (name follows repo pattern)
-   ├── components/              # Feature-specific presentational components
-   └── mocks/                   # Mock data (delete when implementing real API)
-       └── data.json            # Shape matches API response
-   ```
-
-2. Create components with clean props:
-   - Components receive data via props, not hardcoded
-   - Compose using existing UI components from codebase
-   - Feature-specific components under the page folder
-   - **IF Figma provided:** Match design specs exactly
-
-3. Create one feature data boundary and mock data:
-   - Mock folder under feature: `pages/Feature/mocks/`
-   - JSON filename = endpoint: `users.json` → `/api/users`
-   - Show exact fields the UI needs (API contract)
-   - Choose one route container **or** one adapter as the boundary; do not create both
-   - That boundary is the only module that imports file mocks or initializes mock-only state
-   - Pass all data and callbacks from that boundary into child components via typed props
-   - If the feature has multiple mock payloads, import them all at the same boundary; do not create per-component boundaries
-
-4. Register every mock boundary in the Vorbit mock registry:
-   - Read `../references/mock-registry.md` for the schema, field semantics, registration rules, and storage-root resolution (its legacy `.vorbit/` fallback is intentional and does not override the rule-loading contract's missing-resolver stop).
-   - Prototype-specific: set `createdBy: "prototype"`; register the one boundary actually used (`type: "file"` or `type: "state"`), never both forms for the same feature.
-
-5. Put the replacement TODO next to the single mock boundary's imports:
-   ```tsx
-   import mockData from './mocks/data.json';
-   // TODO: Replace this mock boundary with the real API client.
-   ```
-
-   Child components must not import anything from `mocks/`.
-
-6. Update todos as each component is completed
-
-**Mock Data Rules:**
-- Show only fields the UI actually uses
-- Don't add fields "for completeness"
-- Don't create mock utilities, factories, or generators
-- Don't duplicate same data in different mock files
-- Keep the integration seam boring: one boundary can be replaced without editing presentational components
-
-**Output**: Working prototype with clean structure
-
-## Phase 5: Verification & Handoff
-
-**Goal**: Ensure prototype is ready for frontend handover
-
-**Actions**:
-1. **Verify checklist**:
-   - [ ] Components receive data via props (not hardcoded)
-   - [ ] Exactly one feature-level module imports from `mocks/`
-   - [ ] That boundary has `// TODO: Replace this mock boundary with the real API client.`
-   - [ ] No presentational component imports mocks or knows whether data is mocked
-   - [ ] Page is navigable/renderable
-   - [ ] Uses existing UI components from codebase
-   - [ ] Matches codebase styling patterns
-   - [ ] **IF Figma:** Matches design specs
-
-2. **Run render/navigation smoke tests (required):**
-   - Reuse the project's existing test runner and routing test pattern; search before adding a test
-   - Assert the feature route renders its primary observable content
-   - Assert an existing navigation entry or direct router navigation reaches the feature route
-   - Use the real router configuration and the feature's mock data boundary; do not mock the router or service layer
-   - Run the narrow smoke test first, then the project's relevant typecheck/build command
-   - If no test harness exists, run the real local app and perform an equivalent browser/HTTP render plus navigation smoke check. Report the exact commands and evidence; do not install a framework just for the prototype
-
-3. **Present summary to user**:
-   ```
-   Created: src/pages/Feature/ (index.tsx, components/, mocks/)
-   Mock data registered in [resolved Vorbit project registry path]:
-   - data-source.ts (single boundary) → mocks/data.json → GET /api/...
-   Verified: [smoke-test command] — route render + navigation passed
-   Used existing components: Layout, Card, Button, Input
-   Next steps:
-   - $vorbit-epic to write the epic plan
-   - $vorbit-cleanup-mocks [feature] before backend handover
-   ```
-
-4. Mark all todos complete
-
-**Output**: Complete, documented prototype ready for handover
-
----
-
-# Prototype Schema & Validation
-
-## What is a Prototype?
-
-A prototype is a **complete page or feature** users can interact with — not a single reusable component, and not throwaway demo code. Only render/navigation smoke coverage is required here; full implementation tests come later.
-
-The directory layout, mock rules, and verification gates live in Phases 4-5; the Phase 5 checklist is the single completion gate.
+- The canvas link, and the flow in one line.
+- What was tested by clicking, and what was not.
+- Each control marked `data-cf-idle`, so the user knows what does nothing.
+- Next: `$vorbit-epic` to plan the real feature. Give it the canvas link as the behavior reference.

@@ -118,7 +118,7 @@ Locate the project's constants/config files.
 - Reuse constants for shared domain values and policy limits; do not create constants for obvious one-off literals
 
 ### 4.4 Check for Mock Data
-If prototype exists with mock data:
+If the feature already has registered mock data:
 - List all mock locations (`mocks/` folders)
 - Include "Swap mock to real API" as a task
 
@@ -440,7 +440,7 @@ Run `/vorbit:design:ui-patterns` before implementing UI components.
 | None expected | - | N/A |
 
 > **Handover note:** Run `/vorbit:implement:cleanup-mocks [feature]` before backend takes over.
-> Mocks must be registered in the runtime-neutral Vorbit project registry; copy the exact resolved registry path from the prototype/implementation context into this task. Never hardcode an agent-specific directory.
+> Mocks must be registered in the runtime-neutral Vorbit project registry; copy the exact resolved registry path from the implementation context into this task. Never hardcode an agent-specific directory.
 
 ## Acceptance Criteria (Task-specific)
 - [ ] [Criterion this task alone must satisfy]

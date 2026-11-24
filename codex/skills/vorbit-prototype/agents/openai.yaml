@@ -1,7 +1,7 @@
 interface:
   display_name: "Vorbit Prototype"
-  short_description: "Build production-shaped UI with mock data"
-  default_prompt: "Use $vorbit-prototype to build this frontend prototype with tracked mock data and project patterns."
+  short_description: "Clickable canvas prototype of a real flow"
+  default_prompt: "Use $vorbit-prototype to build a clickable canvas prototype of this flow that matches the real screen."
 
 policy:
   allow_implicit_invocation: true

@@ -13,7 +13,7 @@ The file uses schema 1.1:
       "type": "file",
       "path": "src/features/saved-searches/mocks/data.json",
       "endpoint": "proposed:GET /api/saved-searches",
-      "createdBy": "prototype",
+      "createdBy": "implement",
       "createdAt": "2026-01-01T00:00:00Z",
       "components": ["src/features/saved-searches/data-source.ts"]
     }
@@ -27,7 +27,7 @@ Each `mocks` item records one application integration boundary:
 - `type`: `file` or `state`;
 - `path`: project-relative source path;
 - `endpoint`: confirmed method/path, or `proposed:<method path>` until backend approval;
-- `createdBy`: `prototype` or `implement`;
+- `createdBy`: `implement` (entries from before the canvas prototype may say `prototype`);
 - `createdAt`: ISO 8601 timestamp;
 - `components`: production consumers of the boundary;
 - `location` and `stateType`: required only for a `state` item.

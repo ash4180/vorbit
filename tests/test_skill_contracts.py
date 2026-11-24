@@ -363,7 +363,6 @@ def test_mock_registry_guidance_labels_unapproved_endpoints():
 
     registry_skills = [
         CANONICAL_SKILLS / "implement" / "SKILL.md",
-        CANONICAL_SKILLS / "prototype" / "SKILL.md",
         CANONICAL_SKILLS / "implement-cleanup-mocks" / "SKILL.md",
     ]
     for skill in registry_skills:
